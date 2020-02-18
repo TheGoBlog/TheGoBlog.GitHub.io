@@ -1,0 +1,4 @@
+title: The Go Blog
+description: The Go Blog
+plugins:
+  - jekyll-redirect-from
