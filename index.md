@@ -620,7 +620,7 @@
 
 > Marcel van Lohuizen on 9 February 2016
 
-> `language` `locale` `BCP 47` `matching` 
+> `locale` `language tags` `BCP 47` `matching` 
 
 <br>
 
