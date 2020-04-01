@@ -1,5 +1,12 @@
 @import url("https://fonts.googleapis.com/css?family=Work+Sans:600|Roboto:400,700|Roboto+Mono:400,700");
 
+b,
+b *,
+strong,
+strong * {
+  font-weight: 700 !important;
+}
+
 .author {
   color: #6a737d;
 }
@@ -20,6 +27,7 @@ h4,
 a {
   color: #007d9c !important;
 }
+
 * {
   font-family: Roboto, sans-serif !important;
 }
