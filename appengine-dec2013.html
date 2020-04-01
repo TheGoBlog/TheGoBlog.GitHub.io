@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/appengine-dec2013" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>Go on App Engine: tools, tests, and concurrency | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>Go on App Engine: tools, tests, and concurrency</h2>
+    <p class="author">
+    Andrew Gerrand and Johan Euphrosine<br/>
+    13 December 2013
+    </p>
+    
+  
+  
+    
+      
+  <h4 id="TOC_1.">Background</h4>
+  <p>When we <a href="https://TheGoBlog.GitHub.io/go-and-google-app-engine" target="_blank" rel="noopener">launched Go for App Engine</a>
+in May 2011 the SDK was just a modified version of the Python SDK.
+At the time, there was no canonical way to build or organize Go programs, so it
+made sense to take the Python approach. Since then Go 1.0 was released,
+including the <a href="https://golang.google.cn/cmd/go/" target="_blank" rel="noopener">go tool</a> and a
+<a href="https://golang.google.cn/doc/code.html" target="_blank" rel="noopener">convention</a> for organizing Go programs.</p>
+<p>In January 2013 we announced
+<a href="https://TheGoBlog.GitHub.io/the-app-engine-sdk-and-workspaces-gopath" target="_blank" rel="noopener">better integration</a>
+between the Go App Engine SDK and the go tool, promoting the use of
+conventional import paths in App Engine apps and making it possible to use &#34;go
+get&#34; to fetch app dependencies.</p>
+<p>With the recent release of App Engine 1.8.8 we are pleased to announce more
+improvements to the developer experience for Go on App Engine.</p>
+
+
+    
+      
+  <h4 id="TOC_2.">The goapp tool</h4>
+  <p>The Go App Engine SDK now includes the &#34;goapp&#34; tool, an App Engine-specific
+version of the &#34;go&#34; tool. The new name permits users to keep both the regular
+&#34;go&#34; tool and the &#34;goapp&#34; tool in their system PATH.</p>
+<p>In addition to the existing &#34;go&#34; tool <a href="https://golang.google.cn/cmd/go/" target="_blank" rel="noopener">commands</a>,
+the &#34;goapp&#34; tool provides new commands for working with App Engine apps.
+The &#34;<a href="https://developers.google.com/appengine/docs/go/tools/devserver" target="_blank" rel="noopener">goapp serve</a>&#34;
+command starts the local development server and the
+&#34;<a href="https://developers.google.com/appengine/docs/go/tools/uploadinganapp" target="_blank" rel="noopener">goapp deploy</a>&#34;
+command uploads an app to App Engine.</p>
+<p>The main advantages offered by the &#34;goapp serve&#34; and &#34;goapp deploy&#34; commands
+are a simplified user interface and consistency with existing commands like
+&#34;go get&#34; and &#34;go fmt&#34;.
+For example, to run a local instance of the app in the current directory, run:</p>
+<pre><code>$ goapp serve
+</code></pre>
+<p>To upload it to App Engine:</p>
+<pre><code>$ goapp deploy
+</code></pre>
+<p>You can also specify the Go import path to serve or deploy:</p>
+<pre><code>$ goapp serve github.com/user/myapp
+</code></pre>
+<p>You can even specify a YAML file to serve or deploy a specific
+<a href="https://developers.google.com/appengine/docs/go/modules/" target="_blank" rel="noopener">module</a>:</p>
+<pre><code>$ goapp deploy mymodule.yaml
+</code></pre>
+<p>These commands can replace most uses of <code>dev_appserver.py</code> and <code>appcfg.py</code>,
+although the Python tools are still available for their less common uses.</p>
+
+
+    
+      
+  <h4 id="TOC_3.">Local unit testing</h4>
+  <p>The Go App Engine SDK now supports local unit testing, using Go&#39;s native
+<a href="https://developers.google.com/appengine/docs/go/tools/localunittesting" target="_blank" rel="noopener">testing package</a>
+and the &#34;<a href="https://golang.google.cn/cmd/go/#hdr-Test_packages" target="_blank" rel="noopener">go test</a>&#34; command
+(provided as &#34;goapp test&#34; by the SDK).</p>
+<p>Furthermore, you can now write tests that use App Engine services.
+The <a href="https://developers.google.com/appengine/docs/go/tools/localunittesting#Go_Introducing_the_aetest_package" target="_blank" rel="noopener">aetest package</a>
+provides an appengine.Context value that delegates requests to a temporary
+instance of the development server.</p>
+<p>For more information about using &#34;goapp test&#34; and the aetest package, see the
+<a href="https://developers.google.com/appengine/docs/go/tools/localunittesting" target="_blank" rel="noopener">Local Unit Testing for Go documentation</a>.
+Note that the aetest package is still in its early days;
+we hope to add more features over time.</p>
+
+
+    
+      
+  <h4 id="TOC_4.">Better concurrency support</h4>
+  <p>It is now possible to configure the number of concurrent requests served by
+each of your app&#39;s dynamic instances by setting the
+<a href="https://developers.google.com/appengine/docs/go/modules/#max_concurrent_requests" target="_blank" rel="noopener"><code>max_concurrent_requests</code></a> option
+(available to <a href="https://developers.google.com/appengine/docs/go/modules/#automatic_scaling" target="_blank" rel="noopener">Automatic Scaling modules</a> only).</p>
+<p>Here&#39;s an example <code>app.yaml</code> file:</p>
+<pre><code>application: maxigopher
+version: 1
+runtime: go
+api_version: go1
+automatic_scaling:
+  max_concurrent_requests: 100
+</code></pre>
+<p>This configures each instance of the app to serve up to 100 requests
+concurrently (up from the default of 10). You can configure Go instances to
+serve up to a maximum of 500 concurrent requests.</p>
+<p>This setting allows your instances to handle more simultaneous requests by
+taking advantage of Go&#39;s efficient handling of concurrency, which should yield
+better instance utilization and ultimately fewer billable instance hours.</p>
+
+
+    
+      
+  <h4 id="TOC_5.">Conclusion</h4>
+  <p>With these changes Go on App Engine is more convenient and efficient than ever,
+and we hope you enjoy the improvements. Please join the
+<a href="http://groups.google.com/group/google-appengine-go/" target="_blank" rel="noopener">google-appengine-go group</a>
+to raise questions or discuss these changes with the engineering team and the
+rest of the community.</p>
+
+
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

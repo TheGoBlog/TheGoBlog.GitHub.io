@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/appengine-171" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>Go updates in App Engine 1.7.1 | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>Go updates in App Engine 1.7.1</h2>
+    <p class="author">
+    Andrew Gerrand<br/>
+    22 August 2012
+    </p>
+    
+  
+  
+    
+      
+        <p>This week we released version 1.7.1 of the App Engine SDK.
+It includes some significant updates specific to the App Engine runtime for Go.</p>
+<p>The <a href="https://developers.google.com/appengine/docs/go/memcache/reference" target="_blank" rel="noopener">memcache package</a> has
+had some additions to its <a href="https://developers.google.com/appengine/docs/go/memcache/reference#Codec" target="_blank" rel="noopener">Codec</a> convenience type.
+The SetMulti, AddMulti, CompareAndSwap, and CompareAndSwapMulti methods
+make it easier to store and update encoded data in the <a href="https://developers.google.com/appengine/docs/go/memcache/overview" target="_blank" rel="noopener">Memcache Service</a>.</p>
+<p>The <a href="https://developers.google.com/appengine/docs/go/tools/uploadingdata" target="_blank" rel="noopener">bulkloader tool</a> can
+now be used with Go apps,
+allowing users to upload and download datastore records in bulk.
+This is useful for backups and offline processing,
+and a great help when migrating Python or Java apps to the Go runtime.</p>
+<p>The <a href="https://developers.google.com/appengine/docs/go/images/overview" target="_blank" rel="noopener">Images Service</a> is
+now available to Go users.
+The new <a href="https://developers.google.com/appengine/docs/go/images/reference" target="_blank" rel="noopener">appengine/image package</a> supports serving
+images directly from Blobstore and resizing or cropping those images on the fly.
+Note that this is not the full image service as provided by the Python and Java SDKs,
+as much of the equivalent functionality is available in the <a href="https://golang.google.cn/pkg/image/" target="_blank" rel="noopener">standard Go image package</a> and
+external packages such as <a href="http://code.google.com/p/graphics-go/" target="_blank" rel="noopener">graphics-go</a>.</p>
+<p>The new <a href="https://developers.google.com/appengine/docs/go/backends/runtime#RunInBackground" target="_blank" rel="noopener">runtime.RunInBackground</a> function
+allows backend requests to spawn a new request independent of the initial request.
+These can run in the background as long as the backend stays alive.</p>
+<p>Finally, we have filled in some missing functionality:
+the <a href="https://developers.google.com/appengine/docs/go/xmpp/reference" target="_blank" rel="noopener">xmpp package</a> now
+supports sending presence updates and chat invitations and retrieving the
+presence state of another user,
+and the <a href="https://developers.google.com/appengine/docs/go/users/reference" target="_blank" rel="noopener">user package</a> supports
+authenticating clients with OAuth.</p>
+<p>You can grab the new SDK from the <a href="https://developers.google.com/appengine/downloads#Google_App_Engine_SDK_for_Go" target="_blank" rel="noopener">App Engine downloads page</a> and
+browse the <a href="https://developers.google.com/appengine/docs/go" target="_blank" rel="noopener">updated documentation</a>.</p>
+
+      
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

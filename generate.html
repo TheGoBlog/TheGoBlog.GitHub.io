@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/generate" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>Generating code | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>Generating code</h2>
+    <p class="author">
+    Rob Pike<br/>
+    22 December 2014
+    </p>
+    
+  
+  
+    
+      
+        <p>A property of universal computation—Turing completeness—is that a computer program can write a computer program.
+This is a powerful idea that is not appreciated as often as it might be, even though it happens frequently.
+It&#39;s a big part of the definition of a compiler, for instance.
+It&#39;s also how the <code>go</code> <code>test</code> command works: it scans the packages to be tested,
+writes out a Go program containing a test harness customized for the package,
+and then compiles and runs it.
+Modern computers are so fast this expensive-sounding sequence can complete in a fraction of a second.</p>
+<p>There are lots of other examples of programs that write programs.
+<a href="https://godoc.org/golang.org/x/tools/cmd/goyacc" target="_blank" rel="noopener">Yacc</a>, for instance, reads in a description of a grammar and writes out a program to parse that grammar.
+The protocol buffer &#34;compiler&#34; reads an interface description and emits structure definitions,
+methods, and other support code.
+Configuration tools of all sorts work like this too, examining metadata or the environment
+and emitting scaffolding customized to the local state.</p>
+<p>Programs that write programs are therefore important elements in software engineering,
+but programs like Yacc that produce source code need to be integrated into the build
+process so their output can be compiled.
+When an external build tool like Make is being used, this is usually easy to do.
+But in Go, whose go tool gets all necessary build information from the Go source, there is a problem.
+There is simply no mechanism to run Yacc from the go tool alone.</p>
+<p>Until now, that is.</p>
+<p>The <a href="https://TheGoBlog.GitHub.io/go1.4" target="_blank" rel="noopener">latest Go release</a>, 1.4,
+includes a new command that makes it easier to run such tools.
+It&#39;s called <code>go</code> <code>generate</code>, and it works by scanning for special comments in Go source code
+that identify general commands to run.
+It&#39;s important to understand that <code>go</code> <code>generate</code> is not part of <code>go</code> <code>build</code>.
+It contains no dependency analysis and must be run explicitly before running <code>go</code> <code>build</code>.
+It is intended to be used by the author of the Go package, not its clients.</p>
+<p>The <code>go</code> <code>generate</code> command is easy to use.
+As a warmup, here&#39;s how to use it to generate a Yacc grammar.</p>
+<p>First, install Go&#39;s Yacc tool:</p>
+<pre><code>go get golang.org/x/tools/cmd/goyacc
+</code></pre>
+<p>Say you have a Yacc input file called <code>gopher.y</code> that defines a grammar for your new language.
+To produce the Go source file implementing the grammar,
+you would normally invoke the command like this:</p>
+<pre><code>goyacc -o gopher.go -p parser gopher.y
+</code></pre>
+<p>The <code>-o</code> option names the output file while <code>-p</code> specifies the package name.</p>
+<p>To have <code>go</code> <code>generate</code> drive the process, in any one of the regular (non-generated) <code>.go</code> files
+in the same directory, add this comment anywhere in the file:</p>
+<pre><code>//go:generate goyacc -o gopher.go -p parser gopher.y
+</code></pre>
+<p>This text is just the command above prefixed by a special comment recognized by <code>go</code> <code>generate</code>.
+The comment must start at the beginning of the line and have no spaces between the <code>//</code> and the <code>go:generate</code>.
+After that marker, the rest of the line specifies a command for <code>go</code> <code>generate</code> to run.</p>
+<p>Now run it. Change to the source directory and run <code>go</code> <code>generate</code>, then <code>go</code> <code>build</code> and so on:</p>
+<pre><code>$ cd $GOPATH/myrepo/gopher
+$ go generate
+$ go build
+$ go test
+</code></pre>
+<p>That&#39;s it.
+Assuming there are no errors, the <code>go</code> <code>generate</code> command will invoke <code>yacc</code> to create <code>gopher.go</code>,
+at which point the directory holds the full set of Go source files, so we can build, test, and work normally.
+Every time <code>gopher.y</code> is modified, just rerun <code>go</code> <code>generate</code> to regenerate the parser.</p>
+<p>For more details about how <code>go</code> <code>generate</code> works, including options, environment variables,
+and so on, see the <a href="https://golang.google.cn/s/go1.4-generate" target="_blank" rel="noopener">design document</a>.</p>
+<p>Go generate does nothing that couldn&#39;t be done with Make or some other build mechanism,
+but it comes with the <code>go</code> tool—no extra installation required—and fits nicely into the Go ecosystem.
+Just keep in mind that it is for package authors, not clients,
+if only for the reason that the program it invokes might not be available on the target machine.
+Also, if the containing package is intended for import by <code>go</code> <code>get</code>,
+once the file is generated (and tested!) it must be checked into the
+source code repository to be available to clients.</p>
+<p>Now that we have it, let&#39;s use it for something new.
+As a very different example of how <code>go</code> <code>generate</code> can help, there is a new program available in the
+<code>golang.org/x/tools</code> repository called <code>stringer</code>.
+It automatically writes string methods for sets of integer constants.
+It&#39;s not part of the released distribution, but it&#39;s easy to install:</p>
+<pre><code>$ go get golang.org/x/tools/cmd/stringer
+</code></pre>
+<p>Here&#39;s an example from the documentation for
+<a href="https://godoc.org/golang.org/x/tools/cmd/stringer" target="_blank" rel="noopener"><code>stringer</code></a>.
+Imagine we have some code that contains a set of integer constants defining different types of pills:</p>
+<pre><code>package painkiller
+
+type Pill int
+
+const (
+    Placebo Pill = iota
+    Aspirin
+    Ibuprofen
+    Paracetamol
+    Acetaminophen = Paracetamol
+)
+</code></pre>
+<p>For debugging, we&#39;d like these constants to pretty-print themselves, which means we want a method with signature,</p>
+<pre><code>func (p Pill) String() string
+</code></pre>
+<p>It&#39;s easy to write one by hand, perhaps like this:</p>
+<pre><code>func (p Pill) String() string {
+    switch p {
+    case Placebo:
+        return &#34;Placebo&#34;
+    case Aspirin:
+        return &#34;Aspirin&#34;
+    case Ibuprofen:
+        return &#34;Ibuprofen&#34;
+    case Paracetamol: // == Acetaminophen
+        return &#34;Paracetamol&#34;
+    }
+    return fmt.Sprintf(&#34;Pill(%d)&#34;, p)
+}
+</code></pre>
+<p>There are other ways to write this function, of course.
+We could use a slice of strings indexed by Pill, or a map, or some other technique.
+Whatever we do, we need to maintain it if we change the set of pills, and we need to make sure it&#39;s correct.
+(The two names for paracetamol make this trickier than it might otherwise be.)
+Plus the very question of which approach to take depends on the types and values:
+signed or unsigned, dense or sparse, zero-based or not, and so on.</p>
+<p>The <code>stringer</code> program takes care of all these details.
+Although it can be run in isolation, it is intended to be driven by <code>go</code> <code>generate</code>.
+To use it, add a generate comment to the source, perhaps near the type definition:</p>
+<pre><code>//go:generate stringer -type=Pill
+</code></pre>
+<p>This rule specifies that <code>go</code> <code>generate</code> should run the <code>stringer</code> tool to generate a <code>String</code> method for type <code>Pill</code>.
+The output is automatically written to <code>pill_string.go</code> (a default we could override with the
+<code>-output</code> flag).</p>
+<p>Let&#39;s run it:</p>
+<pre><code>$ go generate
+$ cat pill_string.go
+// Code generated by stringer -type Pill pill.go; DO NOT EDIT.
+
+package painkiller
+
+import &#34;fmt&#34;
+
+const _Pill_name = &#34;PlaceboAspirinIbuprofenParacetamol&#34;
+
+var _Pill_index = [...]uint8{0, 7, 14, 23, 34}
+
+func (i Pill) String() string {
+    if i &lt; 0 || i+1 &gt;= Pill(len(_Pill_index)) {
+        return fmt.Sprintf(&#34;Pill(%d)&#34;, i)
+    }
+    return _Pill_name[_Pill_index[i]:_Pill_index[i+1]]
+}
+$
+</code></pre>
+<p>Every time we change the definition of <code>Pill</code> or the constants, all we need to do is run</p>
+<pre><code>$ go generate
+</code></pre>
+<p>to update the <code>String</code> method.
+And of course if we&#39;ve got multiple types set up this way in the same package,
+that single command will update all their <code>String</code> methods with a single command.</p>
+<p>There&#39;s no question the generated method is ugly.
+That&#39;s OK, though, because humans don&#39;t need to work on it; machine-generated code is often ugly.
+It&#39;s working hard to be efficient.
+All the names are smashed together into a single string,
+which saves memory (only one string header for all the names, even if there are zillions of them).
+Then an array, <code>_Pill_index</code>, maps from value to name by a simple, efficient technique.
+Note too that <code>_Pill_index</code> is an array (not a slice; one more header eliminated) of <code>uint8</code>,
+the smallest integer sufficient to span the space of values.
+If there were more values, or there were negatives ones,
+the generated type of <code>_Pill_index</code> might change to <code>uint16</code> or <code>int8</code>: whatever works best.</p>
+<p>The approach used by the methods printed by <code>stringer</code> varies according to the properties of the constant set.
+For instance, if the constants are sparse, it might use a map.
+Here&#39;s a trivial example based on a constant set representing powers of two:</p>
+<pre><code>const _Power_name = &#34;p0p1p2p3p4p5...&#34;
+
+var _Power_map = map[Power]string{
+    1:    _Power_name[0:2],
+    2:    _Power_name[2:4],
+    4:    _Power_name[4:6],
+    8:    _Power_name[6:8],
+    16:   _Power_name[8:10],
+    32:   _Power_name[10:12],
+    ...,
+}
+
+func (i Power) String() string {
+    if str, ok := _Power_map[i]; ok {
+        return str
+    }
+    return fmt.Sprintf(&#34;Power(%d)&#34;, i)
+}
+</code></pre>
+<p>In short, generating the method automatically allows us to do a better job than we would expect a human to do.</p>
+<p>There are lots of other uses of <code>go</code> <code>generate</code> already installed in the Go tree.
+Examples include generating Unicode tables in the <code>unicode</code> package,
+creating efficient methods for encoding and decoding arrays in <code>encoding/gob</code>,
+producing time zone data in the <code>time</code> package, and so on.</p>
+<p>Please use <code>go</code> <code>generate</code> creatively.
+It&#39;s there to encourage experimentation.</p>
+<p>And even if you don&#39;t, use the new <code>stringer</code> tool to write your <code>String</code> methods for your integer constants.
+Let the machine do the work.</p>
+
+      
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

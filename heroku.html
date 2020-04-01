@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/heroku" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>Go at Heroku | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>Go at Heroku</h2>
+    <p class="author">
+    Keith Rarick and Blake Mizerany<br/>
+    21 April 2011
+    </p>
+    
+  
+  
+    
+      
+        <p><em>This week’s blog post is written by</em> <a href="http://xph.us/" target="_blank" rel="noopener"><em>Keith Rarick</em></a>
+<em>and</em> <a href="http://itsbonus.heroku.com/" target="_blank" rel="noopener"><em>Blake Mizerany</em></a>,
+<em>systems engineers at</em> <a href="http://www.heroku.com/" target="_blank" rel="noopener">Heroku</a>.
+<em>In their own words, they &#34;eat, drink, and sleep distributed systems.&#34; Here they discuss their experiences using Go.</em></p>
+<p>A big problem that comes with building distributed systems is the coordination
+of physical servers.
+Each server needs to know various facts about the system as a whole.
+This critical data includes locks, configuration data,
+and so on, and it must be consistent and available even during data store failures,
+so we need a data store with solid consistency guarantees.
+Our solution to this problem is <a href="http://xph.us/2011/04/13/introducing-doozer.html" target="_blank" rel="noopener">Doozer</a>,
+a new, consistent, highly-available data store written in Go.</p>
+<p>At Doozer&#39;s core is <a href="http://en.wikipedia.org/wiki/Paxos_(computer_science)" target="_blank" rel="noopener">Paxos</a>,
+a family of protocols for solving consensus in an unreliable network of unreliable nodes.
+While Paxos is essential to running a fault-tolerant system,
+it is notorious for being difficult to implement.
+Even example implementations that can be found online are complex and hard to follow,
+despite being simplified for educational purposes.
+Existing production systems have a reputation for being worse.</p>
+<p>Fortunately, Go&#39;s concurrency primitives made the task much easier.
+Paxos is defined in terms of independent,
+concurrent processes that communicate via passing messages.
+In Doozer, these processes are implemented as goroutines,
+and their communications as channel operations.
+In the same way that garbage collectors improve upon malloc and free,
+we found that <a href="https://TheGoBlog.GitHub.io/2010/07/share-memory-by-communicating.html" target="_blank" rel="noopener">goroutines and channels</a>
+improve upon the lock-based approach to concurrency.
+These tools let us avoid complex bookkeeping and stay focused on the problem at hand.
+We are still amazed at how few lines of code it took to achieve something
+renowned for being difficult.</p>
+<p>The standard packages in Go were another big win for Doozer.
+The Go team is very pragmatic about what goes into them.
+For instance, a package we quickly found useful was <a href="https://golang.google.cn/pkg/websocket/" target="_blank" rel="noopener">websocket</a>.
+Once we had a working data store, we needed an easy way to introspect it
+and visualize activity.
+Using the websocket package, Keith was able to add the web viewer on his
+train ride home and without requiring external dependencies.
+This is a real testament to how well Go mixes systems and application programming.</p>
+<p>One of our favorite productivity gains was provided by Go&#39;s source formatter:
+<a href="https://golang.google.cn/cmd/gofmt/" target="_blank" rel="noopener">gofmt</a>.
+We never argued over where to put a curly-brace,
+tabs vs. spaces, or if we should align assignments.
+We simply agreed that the buck stopped at the default output from gofmt.</p>
+<p>Deploying Doozer was satisfyingly simple.
+Go builds statically linked binaries which means Doozer has no external dependencies;
+it&#39;s a single file that can be copied to any machine and immediately launched
+to join a cluster of running Doozers.</p>
+<p>Finally, Go&#39;s maniacal focus on simplicity and orthogonality aligns with
+our view of software engineering.
+Like the Go team, we are pragmatic about what features go into Doozer.
+We sweat the details, preferring to change an existing feature instead of
+introducing a new one.
+In this sense, Go is a perfect match for Doozer.</p>
+<p>We already have future projects in mind for Go. Doozer is just the start of much bigger system.</p>
+
+      
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

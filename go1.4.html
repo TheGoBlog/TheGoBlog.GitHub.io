@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/go1.4" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>Go 1.4 is released | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>Go 1.4 is released</h2>
+    <p class="author">
+    Andrew Gerrand<br/>
+    10 December 2014
+    </p>
+    
+  
+  
+    
+      
+        <p>Today we announce Go 1.4, the fifth major stable release of Go, arriving six
+months after our previous major release <a href="https://TheGoBlog.GitHub.io/go1.3" target="_blank" rel="noopener">Go 1.3</a>.
+It contains a small language change, support for more operating systems
+and processor architectures, and improvements to the tool chain and libraries.
+As always, Go 1.4 keeps the promise of compatibility, and almost everything
+will continue to compile and run without change when moved to 1.4.
+For the full details, see the <a href="https://golang.google.cn/doc/go1.4" target="_blank" rel="noopener">Go 1.4 release notes</a>.</p>
+<p>The most notable new feature in this release is official support for Android.
+Using the support in the core and the libraries in the
+<a href="https://godoc.org/golang.org/x/mobile" target="_blank" rel="noopener">golang.org/x/mobile</a> repository,
+it is now possible to write simple Android apps using only Go code.
+At this stage, the support libraries are still nascent and under heavy development.
+Early adopters should expect a bumpy ride, but we welcome the community to get involved.</p>
+<p>The language change is a tweak to the syntax of for-range loops.
+You may now write &#34;for range s {&#34; to loop over each item from s,
+without having to assign the value, loop index, or map key.
+See the <a href="https://golang.google.cn/doc/go1.4#forrange" target="_blank" rel="noopener">release notes</a> for details.</p>
+<p>The go command has a new subcommand, go generate, to automate the running of
+tools to generate source code before compilation.
+For example, it can be used to automate the generation of String methods for
+typed constants using the
+<a href="https://godoc.org/golang.org/x/tools/cmd/stringer/" target="_blank" rel="noopener">new stringer tool</a>.
+For more information, see the <a href="https://golang.google.cn/s/go1.4-generate" target="_blank" rel="noopener">design document</a>.</p>
+<p>Most programs will run about the same speed or slightly faster in 1.4 than in
+1.3; some will be slightly slower.
+There are many changes, making it hard to be precise about what to expect.
+See the <a href="https://golang.google.cn/doc/go1.4#performance" target="_blank" rel="noopener">release notes</a> for more discussion.</p>
+<p>And, of course, there are many more improvements and bug fixes.</p>
+<p>In case you missed it, a few weeks ago the sub-repositories were moved to new locations.
+For example, the go.tools packages are now imported from &#34;golang.org/x/tools&#34;.
+See the <a href="https://groups.google.com/d/msg/golang-announce/eD8dh3T9yyA/HDOEU_ZSmvAJ" target="_blank" rel="noopener">announcement post</a> for details.</p>
+<p>This release also coincides with the project&#39;s move from Mercurial to Git (for
+source control), Rietveld to Gerrit (for code review), and Google Code to
+Github (for issue tracking and wiki).
+The move affects the core Go repository and its sub-repositories.
+You can find the canonical Git repositories at
+<a href="https://go.googlesource.com" target="_blank" rel="noopener">go.googlesource.com</a>,
+and the issue tracker and wiki at the
+<a href="https://github.com/golang/go" target="_blank" rel="noopener">golang/go GitHub repo</a>.</p>
+<p>While development has already moved over to the new infrastructure,
+for the 1.4 release we still recommend that users who
+<a href="https://golang.google.cn/doc/install/source" target="_blank" rel="noopener">install from source</a>
+use the Mercurial repositories.</p>
+<p>For App Engine users, Go 1.4 is now available for beta testing.
+See <a href="https://groups.google.com/d/msg/google-appengine-go/ndtQokV3oFo/25wV1W9JtywJ" target="_blank" rel="noopener">the announcement</a> for details.</p>
+<p>From all of us on the Go team, please enjoy Go 1.4, and have a happy holiday season.</p>
+
+      
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

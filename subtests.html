@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/subtests" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>Using Subtests and Sub-benchmarks | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>Using Subtests and Sub-benchmarks</h2>
+    <p class="author">
+    Marcel van Lohuizen<br/>
+    3 October 2016
+    </p>
+    
+  
+  
+    
+      
+  <h4 id="TOC_1.">Introduction</h4>
+  <p>In Go 1.7, the <code>testing</code> package introduces a Run method on the
+<a href="https://golang.google.cn/pkg/testing/#T.Run" target="_blank" rel="noopener"><code>T</code></a> and
+<a href="https://golang.google.cn/pkg/testing/#B.Run" target="_blank" rel="noopener"><code>B</code></a> types
+that allows for the creation of subtests and sub-benchmarks.
+The introduction of subtests and sub-benchmarks enables better handling of
+failures, fine-grained control of which tests to run from the command line,
+control of parallelism, and often results in simpler and more maintainable code.</p>
+
+
+    
+      
+  <h4 id="TOC_2.">Table-driven tests basics</h4>
+  <p>Before digging into the details, let&#39;s first discuss a common
+way of writing tests in Go.
+A series of related checks can be implemented by looping over a slice of test
+cases:</p>
+<pre><code>func TestTime(t *testing.T) {
+    testCases := []struct {
+        gmt  string
+        loc  string
+        want string
+    }{
+        {&#34;12:31&#34;, &#34;Europe/Zuri&#34;, &#34;13:31&#34;},     // incorrect location name
+        {&#34;12:31&#34;, &#34;America/New_York&#34;, &#34;7:31&#34;}, // should be 07:31
+        {&#34;08:08&#34;, &#34;Australia/Sydney&#34;, &#34;18:08&#34;},
+    }
+    for _, tc := range testCases {
+        loc, err := time.LoadLocation(tc.loc)
+        if err != nil {
+            t.Fatalf(&#34;could not load location %q&#34;, tc.loc)
+        }
+        gmt, _ := time.Parse(&#34;15:04&#34;, tc.gmt)
+        if got := gmt.In(loc).Format(&#34;15:04&#34;); got != tc.want {
+            t.Errorf(&#34;In(%s, %s) = %s; want %s&#34;, tc.gmt, tc.loc, got, tc.want)
+        }
+    }
+}
+</code></pre>
+<p>This approach, commonly referred to as table-driven tests, reduces the amount
+of repetitive code compared to repeating the same code for each test
+and makes it straightforward to add more test cases.</p>
+
+
+    
+      
+  <h4 id="TOC_3.">Table-driven benchmarks</h4>
+  <p>Before Go 1.7 it was not possible to use the same table-driven approach for
+benchmarks.
+A benchmark tests the performance of an entire function, so iterating over
+benchmarks would just measure all of them as a single benchmark.</p>
+<p>A common workaround was to define separate top-level benchmarks
+that each call a common function with different parameters.
+For instance, before 1.7 the <code>strconv</code> package&#39;s benchmarks for <code>AppendFloat</code>
+looked something like this:</p>
+<pre><code>func benchmarkAppendFloat(b *testing.B, f float64, fmt byte, prec, bitSize int) {
+    dst := make([]byte, 30)
+    b.ResetTimer() // Overkill here, but for illustrative purposes.
+    for i := 0; i &lt; b.N; i++ {
+        AppendFloat(dst[:0], f, fmt, prec, bitSize)
+    }
+}
+
+func BenchmarkAppendFloatDecimal(b *testing.B) { benchmarkAppendFloat(b, 33909, &#39;g&#39;, -1, 64) }
+func BenchmarkAppendFloat(b *testing.B)        { benchmarkAppendFloat(b, 339.7784, &#39;g&#39;, -1, 64) }
+func BenchmarkAppendFloatExp(b *testing.B)     { benchmarkAppendFloat(b, -5.09e75, &#39;g&#39;, -1, 64) }
+func BenchmarkAppendFloatNegExp(b *testing.B)  { benchmarkAppendFloat(b, -5.11e-95, &#39;g&#39;, -1, 64) }
+func BenchmarkAppendFloatBig(b *testing.B)     { benchmarkAppendFloat(b, 123456789123456789123456789, &#39;g&#39;, -1, 64) }
+...
+</code></pre>
+<p>Using the <code>Run</code> method available in Go 1.7, the same set of benchmarks is now
+expressed as a single top-level benchmark:</p>
+<pre><code>func BenchmarkAppendFloat(b *testing.B) {
+    benchmarks := []struct{
+        name    string
+        float   float64
+        fmt     byte
+        prec    int
+        bitSize int
+    }{
+        {&#34;Decimal&#34;, 33909, &#39;g&#39;, -1, 64},
+        {&#34;Float&#34;, 339.7784, &#39;g&#39;, -1, 64},
+        {&#34;Exp&#34;, -5.09e75, &#39;g&#39;, -1, 64},
+        {&#34;NegExp&#34;, -5.11e-95, &#39;g&#39;, -1, 64},
+        {&#34;Big&#34;, 123456789123456789123456789, &#39;g&#39;, -1, 64},
+        ...
+    }
+    dst := make([]byte, 30)
+    for _, bm := range benchmarks {
+        b.Run(bm.name, func(b *testing.B) {
+            for i := 0; i &lt; b.N; i++ {
+                AppendFloat(dst[:0], bm.float, bm.fmt, bm.prec, bm.bitSize)
+            }
+        })
+    }
+}
+</code></pre>
+<p>Each invocation of the <code>Run</code> method creates a separate benchmark.
+An enclosing benchmark function that calls a <code>Run</code> method is only run once and
+is not measured.</p>
+<p>The new code has more lines of code, but is more maintainable, more readable,
+and consistent with the table-driven approach commonly used for testing.
+Moreover, common setup code is now shared between runs while eliminating the
+need to reset the timer.</p>
+
+
+    
+      
+  <h4 id="TOC_4.">Table-driven tests using subtests</h4>
+  <p>Go 1.7 also introduces a <code>Run</code> method for creating subtests.
+This test is a rewritten version of our earlier example using subtests:</p>
+<pre><code>func TestTime(t *testing.T) {
+    testCases := []struct {
+        gmt  string
+        loc  string
+        want string
+    }{
+        {&#34;12:31&#34;, &#34;Europe/Zuri&#34;, &#34;13:31&#34;},
+        {&#34;12:31&#34;, &#34;America/New_York&#34;, &#34;7:31&#34;},
+        {&#34;08:08&#34;, &#34;Australia/Sydney&#34;, &#34;18:08&#34;},
+    }
+    for _, tc := range testCases {
+        t.Run(fmt.Sprintf(&#34;%s in %s&#34;, tc.gmt, tc.loc), func(t *testing.T) {
+            loc, err := time.LoadLocation(tc.loc)
+            if err != nil {
+                t.Fatal(&#34;could not load location&#34;)
+            }
+            gmt, _ := time.Parse(&#34;15:04&#34;, tc.gmt)
+            if got := gmt.In(loc).Format(&#34;15:04&#34;); got != tc.want {
+                t.Errorf(&#34;got %s; want %s&#34;, got, tc.want)
+            }
+        })
+    }
+}
+</code></pre>
+<p>The first thing to note is the difference in output from the two implementations.
+The original implementation prints:</p>
+<pre><code>--- FAIL: TestTime (0.00s)
+    time_test.go:62: could not load location &#34;Europe/Zuri&#34;
+</code></pre>
+<p>Even though there are two errors, execution of the test halts on the call to
+<code>Fatalf</code> and the second test never runs.</p>
+<p>The implementation using <code>Run</code> prints both:</p>
+<pre><code>--- FAIL: TestTime (0.00s)
+    --- FAIL: TestTime/12:31_in_Europe/Zuri (0.00s)
+        time_test.go:84: could not load location
+    --- FAIL: TestTime/12:31_in_America/New_York (0.00s)
+        time_test.go:88: got 07:31; want 7:31
+</code></pre>
+<p><code>Fatal</code> and its siblings causes a subtest to be skipped but not its parent or
+subsequent subtests.</p>
+<p>Another thing to note is the shorter error messages in the new implementation.
+Since the subtest name uniquely identifies the subtest there is no need to
+identify the test again within the error messages.</p>
+<p>There are several other benefits to using subtests or sub-benchmarks,
+as clarified by the following sections.</p>
+
+
+    
+      
+  <h4 id="TOC_5.">Running specific tests or benchmarks</h4>
+  <p>Both subtests and sub-benchmarks can be singled out on the command line using
+the <a href="https://golang.google.cn/cmd/go/#hdr-Description_of_testing_flags" target="_blank" rel="noopener"><code>-run</code> or <code>-bench</code> flag</a>.
+Both flags take a slash-separated list of regular expressions that match the
+corresponding parts of the full name of the subtest or sub-benchmark.</p>
+<p>The full name of a subtest or sub-benchmark is a slash-separated list of
+its name and the names of all of its parents, starting with the top-level.
+The name is the corresponding function name for top-level tests and benchmarks,
+and the first argument to <code>Run</code> otherwise.
+To avoid display and parsing issues, a name is sanitized by replacing spaces
+with underscores and escaping non-printable characters.
+The same sanitizing is applied to the regular expressions passed to
+the <code>-run</code> or <code>-bench</code> flags.</p>
+<p>A few examples:</p>
+<p>Run tests that use a timezone in Europe:</p>
+<pre><code>$ go test -run=TestTime/&#34;in Europe&#34;
+--- FAIL: TestTime (0.00s)
+    --- FAIL: TestTime/12:31_in_Europe/Zuri (0.00s)
+        time_test.go:85: could not load location
+</code></pre>
+<p>Run only tests for times after noon:</p>
+<pre><code>$ go test -run=Time/12:[0-9] -v
+=== RUN   TestTime
+=== RUN   TestTime/12:31_in_Europe/Zuri
+=== RUN   TestTime/12:31_in_America/New_York
+--- FAIL: TestTime (0.00s)
+    --- FAIL: TestTime/12:31_in_Europe/Zuri (0.00s)
+        time_test.go:85: could not load location
+    --- FAIL: TestTime/12:31_in_America/New_York (0.00s)
+        time_test.go:89: got 07:31; want 7:31
+</code></pre>
+<p>Perhaps a bit surprising, using <code>-run=TestTime/New_York</code> won&#39;t match any tests.
+This is because the slash present in the location names is treated as
+a separator as well.
+Instead use:</p>
+<pre><code>$ go test -run=Time//New_York
+--- FAIL: TestTime (0.00s)
+    --- FAIL: TestTime/12:31_in_America/New_York (0.00s)
+        time_test.go:88: got 07:31; want 7:31
+</code></pre>
+<p>Note the <code>//</code> in the string passed to <code>-run</code>.
+The <code>/</code> in time zone name <code>America/New_York</code> is handled as if it were
+a separator resulting from a subtest.
+The first regular expression of the pattern (<code>TestTime</code>) matches the top-level
+test.
+The second regular expression (the empty string) matches anything, in this case
+the time and the continent part of the location.
+The third regular expression (<code>New_York</code>) matches the city part of the location.</p>
+<p>Treating slashes in names as separators allows the user to refactor
+hierarchies of tests without the need to change the naming.
+It also simplifies the escaping rules.
+The user should escape slashes in names, for instance by replacing them with
+backslashes, if this poses a problem.</p>
+<p>A unique sequence number is appended to test names that are not unique.
+So one could just pass an empty string to <code>Run</code>
+if there is no obvious naming scheme for subtests and the subtests
+can easily be identified by their sequence number.</p>
+
+
+    
+      
+  <h4 id="TOC_6.">Setup and Tear-down</h4>
+  <p>Subtests and sub-benchmarks can be used to manage common setup and tear-down code:</p>
+<pre><code>func TestFoo(t *testing.T) {
+    // &lt;setup code&gt;
+    t.Run(&#34;A=1&#34;, func(t *testing.T) { ... })
+    t.Run(&#34;A=2&#34;, func(t *testing.T) { ... })
+    t.Run(&#34;B=1&#34;, func(t *testing.T) {
+        if !test(foo{B:1}) {
+            t.Fail()
+        }
+    })
+    // &lt;tear-down code&gt;
+}
+</code></pre>
+<p>The setup and tear-down code will run if any of the enclosed subtests are run
+and will run at most once.
+This applies even if any of the subtests calls <code>Skip</code>, <code>Fail</code>, or <code>Fatal</code>.</p>
+
+
+    
+      
+  <h4 id="TOC_7.">Control of Parallelism</h4>
+  <p>Subtests allow fine-grained control over parallelism.
+To understand how to use subtests in the way
+it is important to understand the semantics of parallel tests.</p>
+<p>Each test is associated with a test function.
+A test is called a parallel test if its test function calls the Parallel
+method on its instance of <code>testing.T</code>.
+A parallel test never runs concurrently with a sequential test and its execution
+is suspended until its calling test function, that of the parent test,
+has returned.
+The <code>-parallel</code> flag defines the maximum number of parallel tests that can run
+in parallel.</p>
+<p>A test blocks until its test function returns and all of its subtests
+have completed.
+This means that the parallel tests that are run by a sequential test will
+complete before any other consecutive sequential test is run.</p>
+<p>This behavior is identical for tests created by <code>Run</code> and top-level tests.
+In fact, under the hood top-level tests are implemented as subtests of
+a hidden master test.</p>
+
+  <h4 id="TOC_7.1.">Run a group of tests in parallel</h4>
+  <p>The above semantics allows for running a group of tests in parallel with
+each other but not with other parallel tests:</p>
+<pre><code>func TestGroupedParallel(t *testing.T) {
+    for _, tc := range testCases {
+        tc := tc // capture range variable
+        t.Run(tc.Name, func(t *testing.T) {
+            t.Parallel()
+            if got := foo(tc.in); got != tc.out {
+                t.Errorf(&#34;got %v; want %v&#34;, got, tc.out)
+            }
+            ...
+        })
+    }
+}
+</code></pre>
+<p>The outer test will not complete until all parallel tests started by <code>Run</code>
+have completed.
+As a result, no other parallel tests can run in parallel to these parallel tests.</p>
+<p>Note that we need to capture the range variable to ensure that <code>tc</code> gets bound to
+the correct instance.</p>
+
+
+  <h4 id="TOC_7.2.">Cleaning up after a group of parallel tests</h4>
+  <p>In the previous example we used the semantics to wait on a group of parallel
+tests to complete before commencing other tests.
+The same technique can be used to clean up after a group of parallel tests
+that share common resources:</p>
+<pre><code>func TestTeardownParallel(t *testing.T) {
+    // &lt;setup code&gt;
+    // This Run will not return until its parallel subtests complete.
+    t.Run(&#34;group&#34;, func(t *testing.T) {
+        t.Run(&#34;Test1&#34;, parallelTest1)
+        t.Run(&#34;Test2&#34;, parallelTest2)
+        t.Run(&#34;Test3&#34;, parallelTest3)
+    })
+    // &lt;tear-down code&gt;
+}
+</code></pre>
+<p>The behavior of waiting on a group of parallel tests is identical to that
+of the previous example.</p>
+
+
+
+    
+      
+  <h4 id="TOC_8.">Conclusion</h4>
+  <p>Go 1.7&#39;s addition of subtests and sub-benchmarks allows you to write structured
+tests and benchmarks in a natural way that blends nicely into the existing
+tools.
+One way to think about this is that earlier versions of the testing package had
+a 1-level hierarchy: the package-level test was structured as a set of
+individual tests and benchmarks.
+Now that structure has been extended to those individual tests and benchmarks,
+recursively.
+In fact, in the implementation, the top-level tests and benchmarks are tracked
+as if they were subtests and sub-benchmarks of an implicit master test and
+benchmark: the treatment really is the same at all levels.</p>
+<p>The ability for tests to define this structure enables fine-grained execution of
+specific test cases, shared setup and teardown, and better control over test
+parallelism.
+We are excited to see what other uses people find. Enjoy.</p>
+
+
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

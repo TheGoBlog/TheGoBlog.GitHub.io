@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/defer-panic-and-recover" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>Defer, Panic, and Recover | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>Defer, Panic, and Recover</h2>
+    <p class="author">
+    Andrew Gerrand<br/>
+    4 August 2010
+    </p>
+    
+  
+  
+    
+      
+        <p>Go has the usual mechanisms for control flow:
+if, for, switch, goto.
+It also has the go statement to run code in a separate goroutine.
+Here I&#39;d like to discuss some of the less common ones:
+defer, panic, and recover.</p>
+<p>A <strong>defer statement</strong> pushes a function call onto a list.
+The list of saved calls is executed after the surrounding function returns.
+Defer is commonly used to simplify functions that perform various clean-up actions.</p>
+<p>For example, let&#39;s look at a function that opens two files and copies the contents of one file to the other:</p>
+<pre><code>func CopyFile(dstName, srcName string) (written int64, err error) {
+    src, err := os.Open(srcName)
+    if err != nil {
+        return
+    }
+
+    dst, err := os.Create(dstName)
+    if err != nil {
+        return
+    }
+
+    written, err = io.Copy(dst, src)
+    dst.Close()
+    src.Close()
+    return
+}
+</code></pre>
+<p>This works, but there is a bug. If the call to os.Create fails,
+the function will return without closing the source file.
+This can be easily remedied by putting a call to src.Close before the second return statement,
+but if the function were more complex the problem might not be so easily
+noticed and resolved.
+By introducing defer statements we can ensure that the files are always closed:</p>
+<pre><code>func CopyFile(dstName, srcName string) (written int64, err error) {
+    src, err := os.Open(srcName)
+    if err != nil {
+        return
+    }
+    defer src.Close()
+
+    dst, err := os.Create(dstName)
+    if err != nil {
+        return
+    }
+    defer dst.Close()
+
+    return io.Copy(dst, src)
+}
+</code></pre>
+<p>Defer statements allow us to think about closing each file right after opening it,
+guaranteeing that, regardless of the number of return statements in the function,
+the files <em>will</em> be closed.</p>
+<p>The behavior of defer statements is straightforward and predictable. There are three simple rules:</p>
+<ol>
+<li><em>A deferred function&#39;s arguments are evaluated when the defer statement is evaluated.</em></li>
+</ol>
+<p>In this example, the expression &#34;i&#34; is evaluated when the Println call is deferred.
+The deferred call will print &#34;0&#34; after the function returns.</p>
+<pre><code>func a() {
+    i := 0
+    defer fmt.Println(i)
+    i++
+    return
+}
+</code></pre>
+<ol start="2">
+<li><em>Deferred function calls are executed in Last In First Out order after the surrounding function returns.</em></li>
+</ol>
+<p>This function prints &#34;3210&#34;:</p>
+<pre><code>func b() {
+    for i := 0; i &lt; 4; i++ {
+        defer fmt.Print(i)
+    }
+}
+</code></pre>
+<ol start="3">
+<li><em>Deferred functions may read and assign to the returning function&#39;s named return values.</em></li>
+</ol>
+<p>In this example, a deferred function increments the return value i <em>after</em>
+the surrounding function returns.
+Thus, this function returns 2:</p>
+<pre><code>func c() (i int) {
+    defer func() { i++ }()
+    return 1
+}
+</code></pre>
+<p>This is convenient for modifying the error return value of a function; we will see an example of this shortly.</p>
+<p><strong>Panic</strong> is a built-in function that stops the ordinary flow of control and begins <em>panicking</em>.
+When the function F calls panic, execution of F stops,
+any deferred functions in F are executed normally,
+and then F returns to its caller.
+To the caller, F then behaves like a call to panic.
+The process continues up the stack until all functions in the current goroutine have returned,
+at which point the program crashes.
+Panics can be initiated by invoking panic directly.
+They can also be caused by runtime errors,
+such as out-of-bounds array accesses.</p>
+<p><strong>Recover</strong> is a built-in function that regains control of a panicking goroutine.
+Recover is only useful inside deferred functions.
+During normal execution, a call to recover will return nil and have no other effect.
+If the current goroutine is panicking, a call to recover will capture the
+value given to panic and resume normal execution.</p>
+<p>Here&#39;s an example program that demonstrates the mechanics of panic and defer:</p>
+<pre><code>package main
+
+import &#34;fmt&#34;
+
+func main() {
+    f()
+    fmt.Println(&#34;Returned normally from f.&#34;)
+}
+
+func f() {
+    defer func() {
+        if r := recover(); r != nil {
+            fmt.Println(&#34;Recovered in f&#34;, r)
+        }
+    }()
+    fmt.Println(&#34;Calling g.&#34;)
+    g(0)
+    fmt.Println(&#34;Returned normally from g.&#34;)
+}
+
+func g(i int) {
+    if i &gt; 3 {
+        fmt.Println(&#34;Panicking!&#34;)
+        panic(fmt.Sprintf(&#34;%v&#34;, i))
+    }
+    defer fmt.Println(&#34;Defer in g&#34;, i)
+    fmt.Println(&#34;Printing in g&#34;, i)
+    g(i + 1)
+}
+</code></pre>
+<p>The function g takes the int i, and panics if i is greater than 3,
+or else it calls itself with the argument i+1.
+The function f defers a function that calls recover and prints the recovered
+value (if it is non-nil).
+Try to picture what the output of this program might be before reading on.</p>
+<p>The program will output:</p>
+<pre><code>Calling g.
+Printing in g 0
+Printing in g 1
+Printing in g 2
+Printing in g 3
+Panicking!
+Defer in g 3
+Defer in g 2
+Defer in g 1
+Defer in g 0
+Recovered in f 4
+Returned normally from f.
+</code></pre>
+<p>If we remove the deferred function from f the panic is not recovered and
+reaches the top of the goroutine&#39;s call stack,
+terminating the program.
+This modified program will output:</p>
+<pre><code>Calling g.
+Printing in g 0
+Printing in g 1
+Printing in g 2
+Printing in g 3
+Panicking!
+Defer in g 3
+Defer in g 2
+Defer in g 1
+Defer in g 0
+panic: 4
+
+panic PC=0x2a9cd8
+[stack trace omitted]
+</code></pre>
+<p>For a real-world example of <strong>panic</strong> and <strong>recover</strong>,
+see the <a href="https://golang.google.cn/pkg/encoding/json/" target="_blank" rel="noopener">json package</a> from the
+Go standard library.
+It encodes an interface with a set of recursive functions.
+If an error occurs when traversing the value,
+panic is called to unwind the stack to the top-level function call,
+which recovers from the panic and returns an appropriate error value (see
+the &#39;error&#39; and &#39;marshal&#39; methods of the encodeState type in <a href="https://golang.google.cn/src/pkg/encoding/json/encode.go" target="_blank" rel="noopener">encode.go</a>).</p>
+<p>The convention in the Go libraries is that even when a package uses panic internally,
+its external API still presents explicit error return values.</p>
+<p>Other uses of <strong>defer</strong> (beyond the file.Close example given earlier) include releasing a mutex:</p>
+<pre><code>mu.Lock()
+defer mu.Unlock()
+</code></pre>
+<p>printing a footer:</p>
+<pre><code>printHeader()
+defer printFooter()
+</code></pre>
+<p>and more.</p>
+<p>In summary, the defer statement (with or without panic and recover) provides
+an unusual and powerful mechanism for control flow.
+It can be used to model a number of features implemented by special-purpose
+structures in other programming languages. Try it out.</p>
+
+      
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

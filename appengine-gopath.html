@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/appengine-gopath" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>The App Engine SDK and workspaces (GOPATH) | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>The App Engine SDK and workspaces (GOPATH)</h2>
+    <p class="author">
+    Andrew Gerrand<br/>
+    9 January 2013
+    </p>
+    
+  
+  
+    
+      
+  <h4 id="TOC_1.">Introduction</h4>
+  <p>When we released Go 1 we introduced the <a href="https://golang.google.cn/cmd/go/" target="_blank" rel="noopener">go tool</a> and,
+with it, the concept of workspaces.
+Workspaces (specified by the GOPATH environment variable) are a convention
+for organizing code that simplifies fetching,
+building, and installing Go packages.
+If you&#39;re not familiar with workspaces, please read <a href="https://golang.google.cn/doc/code.html" target="_blank" rel="noopener">this article</a>
+or watch <a href="http://www.youtube.com/watch?v=XCsL89YtqCs" target="_blank" rel="noopener">this screencast</a> before reading on.</p>
+<p>Until recently, the tools in the App Engine SDK were not aware of workspaces.
+Without workspaces the &#34;<a href="https://golang.google.cn/cmd/go/#hdr-Download_and_install_packages_and_dependencies" target="_blank" rel="noopener">go get</a>&#34;
+command cannot function,
+and so app authors had to install and update their app dependencies manually. It was a pain.</p>
+<p>This has all changed with version 1.7.4 of the App Engine SDK.
+The <a href="https://developers.google.com/appengine/docs/go/tools/devserver" target="_blank" rel="noopener">dev_appserver</a>
+and <a href="https://developers.google.com/appengine/docs/go/tools/uploadinganapp" target="_blank" rel="noopener">appcfg</a>
+tools are now workspace-aware.
+When running locally or uploading an app,
+these tools now search for dependencies in the workspaces specified by the
+GOPATH environment variable.
+This means you can now use &#34;go get&#34; while building App Engine apps,
+and switch between normal Go programs and App Engine apps without changing
+your environment or habits.</p>
+<p>For example, let&#39;s say you want to build an app that uses OAuth 2.0 to authenticate
+with a remote service.
+A popular OAuth 2.0 library for Go is the <a href="https://godoc.org/golang.org/x/oauth2" target="_blank" rel="noopener">oauth2</a> package,
+which you can install to your workspace with this command:</p>
+<pre><code>go get golang.org/x/oauth2
+</code></pre>
+<p>When writing your App Engine app, import the oauth package just as you would in a regular Go program:</p>
+<pre><code>import &#34;golang.org/x/oauth2&#34;
+</code></pre>
+<p>Now, whether running your app with the dev_appserver or deploying it with appcfg,
+the tools will find the oauth package in your workspace. It just works.</p>
+
+
+    
+      
+  <h4 id="TOC_2.">Hybrid stand-alone/App Engine apps</h4>
+  <p>The Go App Engine SDK builds on Go&#39;s standard <a href="https://golang.google.cn/pkg/net/http/" target="_blank" rel="noopener">net/http</a>
+package to serve web requests and,
+as a result, many Go web servers can be run on App Engine with only a few changes.
+For example, <a href="https://golang.google.cn/cmd/godoc/" target="_blank" rel="noopener">godoc</a> is included in the
+Go distribution as a stand-alone program,
+but it can also run as an App Engine app (godoc serves <a href="https://golang.google.cn/" target="_blank" rel="noopener">golang.org</a> from App Engine).</p>
+<p>But wouldn&#39;t it be nice if you could write a program that is both a stand-alone
+web server and an App Engine app? By using <a href="https://golang.google.cn/pkg/go/build/#hdr-Build_Constraints" target="_blank" rel="noopener">build constraints</a>, you can.</p>
+<p>Build constraints are line comments that determine whether a file should
+be included in a package.
+They are most often used in code that handles a variety of operating systems
+or processor architectures.
+For instance, the <a href="https://golang.google.cn/pkg/path/filepath/" target="_blank" rel="noopener">path/filepath</a>
+package includes the file <a href="https://golang.google.cn/src/pkg/path/filepath/symlink.go" target="_blank" rel="noopener">symlink.go</a>,
+which specifies a build constraint to ensure that it is not built on Windows
+systems (which do not have symbolic links):</p>
+<pre><code>// +build !windows
+</code></pre>
+<p>The App Engine SDK introduces a new build constraint term: &#34;appengine&#34;. Files that specify</p>
+<pre><code>// +build appengine
+</code></pre>
+<p>will be built by the App Engine SDK and ignored by the go tool. Conversely, files that specify</p>
+<pre><code>// +build !appengine
+</code></pre>
+<p>are ignored by the App Engine SDK, while the go tool will happily build them.</p>
+<p>The <a href="http://code.google.com/p/goprotobuf/" target="_blank" rel="noopener">goprotobuf</a> library uses this
+mechanism to provide two implementations of a key part of its encode/decode machinery:
+<a href="http://code.google.com/p/goprotobuf/source/browse/proto/pointer_unsafe.go" target="_blank" rel="noopener">pointer_unsafe.go</a>
+is the faster version that cannot be used on App Engine because it uses
+the <a href="https://golang.google.cn/pkg/unsafe/" target="_blank" rel="noopener">unsafe package</a>,
+while <a href="http://code.google.com/p/goprotobuf/source/browse/proto/pointer_reflect.go" target="_blank" rel="noopener">pointer_reflect.go</a>
+is a slower version that avoids unsafe by using the <a href="https://golang.google.cn/pkg/reflect/" target="_blank" rel="noopener">reflect package</a> instead.</p>
+<p>Let&#39;s take a simple Go web server and turn it into a hybrid app. This is main.go:</p>
+<pre><code>package main
+
+import (
+    &#34;fmt&#34;
+    &#34;net/http&#34;
+)
+
+func main() {
+    http.HandleFunc(&#34;/&#34;, handler)
+    http.ListenAndServe(&#34;localhost:8080&#34;, nil)
+}
+
+func handler(w http.ResponseWriter, r *http.Request) {
+    fmt.Fprint(w, &#34;Hello!&#34;)
+}
+</code></pre>
+<p>Build this with the go tool and you&#39;ll get a stand-alone web server executable.</p>
+<p>The App Engine infrastructure provides its own main function that runs its
+equivalent to ListenAndServe.
+To convert main.go to an App Engine app, drop the call to ListenAndServe
+and register the handler in an init function (which runs before main). This is app.go:</p>
+<pre><code>package main
+
+import (
+    &#34;fmt&#34;
+    &#34;net/http&#34;
+)
+
+func init() {
+    http.HandleFunc(&#34;/&#34;, handler)
+}
+
+func handler(w http.ResponseWriter, r *http.Request) {
+    fmt.Fprint(w, &#34;Hello!&#34;)
+}
+</code></pre>
+<p>To make this a hybrid app, we need to split it into an App Engine-specific part,
+an stand-alone binary-specific part, and the parts common to both versions.
+In this case, there is no App Engine-specific part,
+so we split it into just two files:</p>
+<p>app.go specifies and registers the handler function.
+It is identical to the code listing above,
+and requires no build constraints as it should be included in all versions of the program.</p>
+<p>main.go runs the web server. It includes the &#34;!appengine&#34; build constraint,
+as it must only included when building the stand-alone binary.</p>
+<pre><code>// +build !appengine
+
+package main
+
+import &#34;net/http&#34;
+
+func main() {
+    http.ListenAndServe(&#34;localhost:8080&#34;, nil)
+}
+</code></pre>
+<p>To see a more complex hybrid app, take a look at the <a href="https://godoc.org/golang.org/x/tools/present" target="_blank" rel="noopener">present tool</a>.</p>
+
+
+    
+      
+  <h4 id="TOC_3.">Conclusions</h4>
+  <p>We hope these changes will make it easier to work on apps with external dependencies,
+and to maintain code bases that contain both stand-alone programs and App Engine apps.</p>
+
+
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

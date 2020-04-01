@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/go1-preview" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>A preview of Go version 1 | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>A preview of Go version 1</h2>
+    <p class="author">
+    Russ Cox<br/>
+    5 October 2011
+    </p>
+    
+  
+  
+    
+      
+        <p>We want to be able to provide a stable base for people using Go.
+People should be able to write Go programs and expect that they will continue
+to compile and run without change,
+on a timescale of years.
+Similarly, people should be able to write books about Go,
+be able to say which version of Go the book is describing,
+and have that version number still be meaningful much later.
+None of these properties is true for Go today.</p>
+<p>We propose to issue a Go release early next year that will be called “Go version 1”,
+Go 1 for short, that will be the first Go release to be stable in this way.
+Code that compiles in Go version 1 should,
+with few exceptions, continue to compile throughout the lifetime of that version,
+as we issue updates and bug fixes such as Go version 1.1, 1.2, and so on.
+It will also be maintained with fixes for bugs and security flaws even as
+other versions may evolve.
+Also, production environments such as Google App Engine will support it
+for an extended time.</p>
+<p>Go version 1 will be a stable language with stable libraries.
+Other than critical fixes, changes made to the library and packages for versions 1.1,
+1.2 and so on may add functionality but will not break existing Go version 1 programs.</p>
+<p>Our goal is for Go 1 to be a stable version of today’s Go,
+not a wholesale rethinking of the language.
+In particular, we are explicitly resisting any efforts to design new language
+features “by committee.”</p>
+<p>However, there are various changes to the Go language and packages that
+we have intended for some time and prototyped but have not deployed yet,
+primarily because they are significant and backwards-incompatible.
+If Go 1 is to be long-lasting, it is important that we plan,
+announce, implement, and test these changes as part of the preparation of Go 1,
+rather than delay them until after it is released and thereby introduce
+divergence that contradicts our goals.</p>
+<p>Today, we are publishing our preliminary <a href="https://docs.google.com/document/pub?id=1ny8uI-_BHrDCZv_zNBSthNKAMX_fR_0dc6epA6lztRE" target="_blank" rel="noopener">plan for Go 1</a>
+for feedback from the Go community.
+If you have feedback, please reply to the <a href="http://groups.google.com/group/golang-nuts/browse_thread/thread/badc4f323431a4f6" target="_blank" rel="noopener">thread on the golang-nuts mailing list</a>.</p>
+
+      
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

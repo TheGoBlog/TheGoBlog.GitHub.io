@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/declaration-syntax" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>Go's Declaration Syntax | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>Go's Declaration Syntax</h2>
+    <p class="author">
+    Rob Pike<br/>
+    7 July 2010
+    </p>
+    
+  
+  
+    
+      
+  <h4 id="TOC_1.">Introduction</h4>
+  <p>Newcomers to Go wonder why the declaration syntax is different from the
+tradition established in the C family.
+In this post we&#39;ll compare the two approaches and explain why Go&#39;s declarations look as they do.</p>
+
+
+    
+      
+  <h4 id="TOC_2.">C syntax</h4>
+  <p>First, let&#39;s talk about C syntax. C took an unusual and clever approach
+to declaration syntax.
+Instead of describing the types with special syntax,
+one writes an expression involving the item being declared,
+and states what type that expression will have. Thus</p>
+<pre><code>int x;
+</code></pre>
+<p>declares x to be an int: the expression &#39;x&#39; will have type int.
+In general, to figure out how to write the type of a new variable,
+write an expression involving that variable that evaluates to a basic type,
+then put the basic type on the left and the expression on the right.</p>
+<p>Thus, the declarations</p>
+<pre><code>int *p;
+int a[3];
+</code></pre>
+<p>state that p is a pointer to int because &#39;*p&#39; has type int,
+and that a is an array of ints because a[3] (ignoring the particular index value,
+which is punned to be the size of the array) has type int.</p>
+<p>What about functions? Originally, C&#39;s function declarations wrote the types
+of the arguments outside the parens, like this:</p>
+<pre><code>int main(argc, argv)
+    int argc;
+    char *argv[];
+{ /* ... */ }
+</code></pre>
+<p>Again, we see that main is a function because the expression main(argc,
+argv) returns an int.
+In modern notation we&#39;d write</p>
+<pre><code>int main(int argc, char *argv[]) { /* ... */ }
+</code></pre>
+<p>but the basic structure is the same.</p>
+<p>This is a clever syntactic idea that works well for simple types but can get confusing fast.
+The famous example is declaring a function pointer.
+Follow the rules and you get this:</p>
+<pre><code>int (*fp)(int a, int b);
+</code></pre>
+<p>Here, fp is a pointer to a function because if you write the expression (*fp)(a,
+b) you&#39;ll call a function that returns int.
+What if one of fp&#39;s arguments is itself a function?</p>
+<pre><code>int (*fp)(int (*ff)(int x, int y), int b)
+</code></pre>
+<p>That&#39;s starting to get hard to read.</p>
+<p>Of course, we can leave out the name of the parameters when we declare a function, so main can be declared</p>
+<pre><code>int main(int, char *[])
+</code></pre>
+<p>Recall that argv is declared like this,</p>
+<pre><code>char *argv[]
+</code></pre>
+<p>so you drop the name from the middle of its declaration to construct its type.
+It&#39;s not obvious, though, that you declare something of type char *[] by
+putting its name in the middle.</p>
+<p>And look what happens to fp&#39;s declaration if you don&#39;t name the parameters:</p>
+<pre><code>int (*fp)(int (*)(int, int), int)
+</code></pre>
+<p>Not only is it not obvious where to put the name inside</p>
+<pre><code>int (*)(int, int)
+</code></pre>
+<p>it&#39;s not exactly clear that it&#39;s a function pointer declaration at all.
+And what if the return type is a function pointer?</p>
+<pre><code>int (*(*fp)(int (*)(int, int), int))(int, int)
+</code></pre>
+<p>It&#39;s hard even to see that this declaration is about fp.</p>
+<p>You can construct more elaborate examples but these should illustrate some
+of the difficulties that C&#39;s declaration syntax can introduce.</p>
+<p>There&#39;s one more point that needs to be made, though.
+Because type and declaration syntax are the same,
+it can be difficult to parse expressions with types in the middle.
+This is why, for instance, C casts always parenthesize the type, as in</p>
+<pre><code>(int)M_PI</code></pre>
+
+
+    
+      
+  <h4 id="TOC_3.">Go syntax</h4>
+  <p>Languages outside the C family usually use a distinct type syntax in declarations.
+Although it&#39;s a separate point, the name usually comes first,
+often followed by a colon.
+Thus our examples above become something like (in a fictional but illustrative language)</p>
+<pre><code>x: int
+p: pointer to int
+a: array[3] of int
+</code></pre>
+<p>These declarations are clear, if verbose - you just read them left to right.
+Go takes its cue from here, but in the interests of brevity it drops the
+colon and removes some of the keywords:</p>
+<pre><code>x int
+p *int
+a [3]int
+</code></pre>
+<p>There is no direct correspondence between the look of [3]int and how to
+use a in an expression.
+(We&#39;ll come back to pointers in the next section.) You gain clarity at the
+cost of a separate syntax.</p>
+<p>Now consider functions. Let&#39;s transcribe the declaration for main as it would read in Go,
+although the real main function in Go takes no arguments:</p>
+<pre><code>func main(argc int, argv []string) int
+</code></pre>
+<p>Superficially that&#39;s not much different from C,
+other than the change from <code>char</code> arrays to strings,
+but it reads well from left to right:</p>
+<p>function main takes an int and a slice of strings and returns an int.</p>
+<p>Drop the parameter names and it&#39;s just as clear - they&#39;re always first so there&#39;s no confusion.</p>
+<pre><code>func main(int, []string) int
+</code></pre>
+<p>One merit of this left-to-right style is how well it works as the types
+become more complex.
+Here&#39;s a declaration of a function variable (analogous to a function pointer in C):</p>
+<pre><code>f func(func(int,int) int, int) int
+</code></pre>
+<p>Or if f returns a function:</p>
+<pre><code>f func(func(int,int) int, int) func(int, int) int
+</code></pre>
+<p>It still reads clearly, from left to right,
+and it&#39;s always obvious which name is being declared - the name comes first.</p>
+<p>The distinction between type and expression syntax makes it easy to write and invoke closures in Go:</p>
+<pre><code>sum := func(a, b int) int { return a+b } (3, 4)</code></pre>
+
+
+    
+      
+  <h4 id="TOC_4.">Pointers</h4>
+  <p>Pointers are the exception that proves the rule.
+Notice that in arrays and slices, for instance,
+Go&#39;s type syntax puts the brackets on the left of the type but the expression
+syntax puts them on the right of the expression:</p>
+<pre><code>var a []int
+x = a[1]
+</code></pre>
+<p>For familiarity, Go&#39;s pointers use the * notation from C,
+but we could not bring ourselves to make a similar reversal for pointer types.
+Thus pointers work like this</p>
+<pre><code>var p *int
+x = *p
+</code></pre>
+<p>We couldn&#39;t say</p>
+<pre><code>var p *int
+x = p*
+</code></pre>
+<p>because that postfix * would conflate with multiplication. We could have used the Pascal ^, for example:</p>
+<pre><code>var p ^int
+x = p^
+</code></pre>
+<p>and perhaps we should have (and chosen another operator for xor),
+because the prefix asterisk on both types and expressions complicates things
+in a number of ways.
+For instance, although one can write</p>
+<pre><code>[]int(&#34;hi&#34;)
+</code></pre>
+<p>as a conversion, one must parenthesize the type if it starts with a *:</p>
+<pre><code>(*int)(nil)
+</code></pre>
+<p>Had we been willing to give up * as pointer syntax, those parentheses would be unnecessary.</p>
+<p>So Go&#39;s pointer syntax is tied to the familiar C form,
+but those ties mean that we cannot break completely from using parentheses
+to disambiguate types and expressions in the grammar.</p>
+<p>Overall, though, we believe Go&#39;s type syntax is easier to understand than C&#39;s, especially when things get complicated.</p>
+
+
+    
+      
+  <h4 id="TOC_5.">Notes</h4>
+  <p>Go&#39;s declarations read left to right. It&#39;s been pointed out that C&#39;s read in a spiral!
+See <a href="http://c-faq.com/decl/spiral.anderson.html" target="_blank" rel="noopener"> The &#34;Clockwise/Spiral Rule&#34;</a> by David Anderson.</p>
+
+
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

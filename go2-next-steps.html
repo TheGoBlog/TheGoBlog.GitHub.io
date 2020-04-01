@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/go2-next-steps" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>Next steps toward Go 2 | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>Next steps toward Go 2</h2>
+    <p class="author">
+    Robert Griesemer, for the Go team<br/>
+    26 June 2019
+    </p>
+    
+  
+  
+    
+      
+  <h4 id="TOC_1.">Status</h4>
+  <p>We’re well on the way towards the release of Go 1.13,
+hopefully in early August of this year.
+This is the first release that will include concrete changes
+to the language (rather than just minor adjustments to the spec),
+after a longer moratorium on any such changes.</p>
+<p>To arrive at these language changes,
+we started out with a small set of viable proposals,
+selected from the much larger list of
+<a href="https://github.com/golang/go/issues?utf8=%E2%9C%93&amp;q=is%3Aissue+is%3Aopen+label%3AGo2+label%3AProposal" target="_blank" rel="noopener">Go 2 proposals</a>,
+per the new proposal evaluation process outlined
+in the
+“<a href="https://TheGoBlog.GitHub.io/go2-here-we-come" target="_blank" rel="noopener">Go 2, here we come!</a>” blog post.
+We wanted our initial selection of proposals
+to be relatively minor and mostly uncontroversial,
+to have a reasonably high chance of having them
+make it through the process.
+The proposed changes had to be backward-compatible
+to be minimally disruptive since
+<a href="https://TheGoBlog.GitHub.io/using-go-modules" target="_blank" rel="noopener">modules</a>,
+which eventually will allow module-specific language version selection,
+are not the default build mode quite yet.
+In short, this initial round of changes was more about
+getting the ball rolling again and gaining experience
+with the new process, rather than tackling big issues.</p>
+<p>Our
+<a href="https://TheGoBlog.GitHub.io/go2-here-we-come" target="_blank" rel="noopener">original list of proposals</a> –
+<a href="https://github.com/golang/go/issues/20706" target="_blank" rel="noopener">general Unicode identifiers</a>,
+<a href="https://github.com/golang/go/issues/19308" target="_blank" rel="noopener">binary integer literals</a>,
+<a href="https://github.com/golang/go/issues/28493" target="_blank" rel="noopener">separators for number literals</a>,
+<a href="https://github.com/golang/go/issues/19113" target="_blank" rel="noopener">signed integer shift counts</a> –
+got both trimmed and expanded.
+The general Unicode identifiers didn’t make the cut
+as we didn’t have a concrete design document in place in time.
+The proposal for binary integer literals was expanded significantly
+and led to a comprehensive overhaul and modernization of
+<a href="https://golang.google.cn/design/19308-number-literals" target="_blank" rel="noopener">Go’s number literal syntax</a>.
+And we added the Go 2 draft design proposal on
+<a href="https://golang.google.cn/design/go2draft-error-inspection" target="_blank" rel="noopener">error inspection</a>,
+which has been
+<a href="https://github.com/golang/go/issues/29934#issuecomment-489682919" target="_blank" rel="noopener">partially accepted</a>.</p>
+<p>With these initial changes in place for Go 1.13,
+it’s now time to look forward to Go 1.14
+and determine what we want to tackle next.</p>
+
+
+    
+      
+  <h4 id="TOC_2.">Proposals for Go 1.14</h4>
+  <p>The goals we have for Go today are the same as in 2007: to
+<a href="https://TheGoBlog.GitHub.io/toward-go2" target="_blank" rel="noopener">make software development scale</a>.
+The three biggest hurdles on this path to improved scalability for Go are
+package and version management,
+better error handling support,
+and generics.</p>
+<p>With Go module support getting increasingly stronger,
+support for package and version management is being addressed.
+This leaves better error handling support and generics.
+We have been working on both of these and presented
+<a href="https://golang.google.cn/design/go2draft" target="_blank" rel="noopener">draft designs</a>
+at last year’s GopherCon in Denver.
+Since then we have been iterating those designs.
+For error handling, we have published a concrete,
+significantly revised and simplified proposal (see below).
+For generics, we are making progress, with a talk
+(“Generics in Go” by Ian Lance Taylor)
+<a href="https://www.gophercon.com/agenda/session/49028" target="_blank" rel="noopener">coming up</a>
+at this year’s GopherCon in San Diego,
+but we have not reached the concrete proposal stage yet.</p>
+<p>We also want to continue with smaller
+improvements to the language.
+For Go 1.14, we have selected the following proposals:</p>
+<p><a href="https://github.com/golang/go/issues/32437" target="_blank" rel="noopener">#32437</a>.
+A built-in Go error check function, “try”
+(<a href="https://golang.google.cn/design/32437-try-builtin" target="_blank" rel="noopener">design doc</a>).</p>
+<p>This is our concrete proposal for improved error handling.
+While the proposed, fully backwards-compatible language extension
+is minimal, we expect an outsize impact on error handling code.
+This proposal has already attracted an enormous amount of comments,
+and it’s not easy to follow up.
+We recommend starting with the
+<a href="https://github.com/golang/go/issues/32437#issue-452239211" target="_blank" rel="noopener">initial comment</a>
+for a quick outline and then to read the detailed design doc.
+The initial comment contains a couple of links leading to summaries
+of the feedback so far.
+Please follow the feedback recommendations
+(see the “Next steps” section below) before posting.</p>
+<p><a href="https://github.com/golang/go/issues/6977" target="_blank" rel="noopener">#6977</a>.
+Allow embedding overlapping interfaces
+(<a href="https://golang.google.cn/design/6977-overlapping-interfaces" target="_blank" rel="noopener">design doc</a>).</p>
+<p>This is an old, backwards-compatible proposal for making interface embedding more tolerant.</p>
+<p><a href="https://github.com/golang/go/issues/32479" target="_blank" rel="noopener">#32479</a> Diagnose <code>string(int)</code> conversion in <code>go vet</code>.</p>
+<p>The <code>string(int)</code> conversion was introduced early in Go for convenience,
+but it is confusing to newcomers (<code>string(10)</code> is <code>&#34;\n&#34;</code> not <code>&#34;10&#34;</code>)
+and not justified anymore now that the conversion is available
+in the <code>unicode/utf8</code> package.
+Since removing this conversion is not a backwards-compatible change,
+we propose to start with a <code>vet</code> error instead.</p>
+<p><a href="https://github.com/golang/go/issues/32466" target="_blank" rel="noopener">#32466</a> Adopt crypto principles
+(<a href="https://golang.google.cn/design/cryptography-principles" target="_blank" rel="noopener">design doc</a>).</p>
+<p>This is a request for feedback on a set of design principles for
+cryptographic libraries that we would like to adopt.
+See also the related
+<a href="https://github.com/golang/go/issues/32716" target="_blank" rel="noopener">proposal to remove SSLv3 support</a>
+from <code>crypto/tls</code>.</p>
+
+
+    
+      
+  <h4 id="TOC_3.">Next steps</h4>
+  <p>We are actively soliciting feedback on all these proposals.
+We are especially interested in fact-based evidence
+illustrating why a proposal might not work well in practice,
+or problematic aspects we might have missed in the design.
+Convincing examples in support of a proposal are also very helpful.
+On the other hand, comments containing only personal opinions
+are less actionable:
+we can acknowledge them but we can’t address them
+in any constructive way.
+Before posting, please take the time to read the detailed
+design docs and prior feedback or feedback summaries.
+Especially in long discussions, your concern may have already
+been raised and discussed in earlier comments.</p>
+<p>Unless there are strong reasons to not even proceed into the
+experimental phase with a given proposal,
+we are planning to have all these implemented at the
+start of the
+<a href="https://github.com/golang/go/wiki/Go-Release-Cycle" target="_blank" rel="noopener">Go 1.14 cycle</a>
+(beginning of August, 2019)
+so that they can be evaluated in practice.
+Per the
+<a href="https://TheGoBlog.GitHub.io/go2-here-we-come" target="_blank" rel="noopener">proposal evaluation process</a>,
+the final decision will be
+made at the end of the development cycle (beginning of November, 2019).</p>
+<p>Thank you for helping making Go a better language!</p>
+
+
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

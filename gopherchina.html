@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/gopherchina" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>GopherChina Trip Report | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>GopherChina Trip Report</h2>
+    <p class="author">
+    Robert Griesemer<br/>
+    1 July 2015
+    </p>
+    
+  
+  
+    
+      
+        <p>We have known for some time that Go is more popular in China than in any other
+country.
+According to Google Trends, most <a href="https://www.google.com/trends/explore#q=golang" target="_blank" rel="noopener">searches for the term “golang”</a> come from The People’s Republic than anywhere else.
+<a href="http://herman.asia/why-is-go-popular-in-china" target="_blank" rel="noopener">Others</a> have speculated on
+the same observation, yet so far we have had
+<a href="https://news.ycombinator.com/item?id=8872400" target="_blank" rel="noopener">sparse concrete information</a>
+about the phenomenon.</p>
+<p>The first Go conference in China, <a href="http://gopherchina.org/" target="_blank" rel="noopener">GopherChina</a>,
+seemed like an excellent opportunity to explore the situation by putting some
+Western Gopher feet on Chinese ground. An actual invitation made it real and I
+decided to accept and give a presentation about gofmt’s impact on software
+development.</p>
+
+      
+        
+<div class="image">
+  <img src="gopherchina/image04.jpg" alt=""/>
+</div>
+
+      
+        <p><em>Hello, Shanghai!</em></p>
+<p>The conference took place over an April weekend in Shanghai, in the
+<a href="https://www.google.com/maps/place/Puruan+Bldg,+Pudong,+Shanghai,+China" target="_blank" rel="noopener">Puruan Building</a>
+of the Shanghai Pudong Software Park, easily reachable by subway within an hour
+or less from Shanghai’s more central parts.
+Modelled after <a href="http://www.gophercon.com" target="_blank" rel="noopener">GopherCon</a>, the conference was
+single-track, with all talks presented in a conference room that fit about 400
+attendees.
+It was organized by volunteers, lead by <a href="https://github.com/astaxie" target="_blank" rel="noopener">Asta Xie</a>,
+and with robust sponsorship from major industry names. According to the
+organizers, many more people were hoping to attend than could be accommodated
+due to space constraints.</p>
+
+      
+        
+<div class="image">
+  <img src="gopherchina/image01.jpg" alt=""/>
+</div>
+
+      
+        <p><em>The welcoming committee with Asta Xie (2nd from left), the primary organizer.</em></p>
+<p>Each attendee received a bag filled with the obligatory GopherChina t-shirt,
+various sponsor-related informational brochures, stickers, and the occasional
+stuffed “something” (no fluffy Gophers, though). At least one 3rd party vendor
+was advertising technical books, including several original (not translated
+from English) Go books.</p>
+
+      
+        
+<div class="image">
+  <img src="gopherchina/image05.jpg" alt=""/>
+</div>
+
+      
+        <p><em>Go books!</em></p>
+<p>On first impression, the average attendee seemed pretty young, which made for
+an enthusiastic crowd, and the event appeared well run.</p>
+<p>With the exception of my talk, all presentations were given in Mandarin and
+thus were incomprehensible to me. Asta Xie, the primary organizer, assisted
+with a few simultaneous translations whispered into my ear, and the occasional
+English slide provided additional clues: “69GB” stands out even without any
+Mandarin knowledge (more on that below). Consequently, I ended up listening to
+a handful of presentations only, and instead spent much of my time talking with
+attendees outside the main conference room. Yet judging from the slides, the
+quality of most presentations seemed high, comparable with our experience at
+GopherCon in Denver last year. Each talk got a one hour time slot which allowed
+for plenty of technical detail, and many (dozens) of questions from an
+enthusiastic audience.</p>
+<p>As expected, many of the presentations were about web services, backends for
+mobile applications, and so on. Some of the systems appear to be huge by any
+measure.
+For instance, a talk by <a href="http://gopherchina.org/user/zhouyang" target="_blank" rel="noopener">Yang Zhou</a>
+described a large-scale internal messaging system, used by
+<a href="http://www.360.cn/" target="_blank" rel="noopener">Qihoo 360</a>, a major Chinese software firm, all written
+in Go. The presentation discussed how his team managed to reduce an original
+heap size of 69GB (!) and the resulting long GC pauses of 3-6s to more
+manageable numbers, and how they run millions of goroutines per machine, on a
+fleet of thousands of machines. A future guest blog post is planned describing
+this system in more detail.</p>
+
+      
+        
+<div class="image">
+  <img src="gopherchina/image03.jpg" alt=""/>
+</div>
+
+      
+        <p><em>Packed conference room on Saturday.</em></p>
+<p>In another presentation, <a href="http://gopherchina.org/user/guofeng" target="_blank" rel="noopener">Feng Guo</a> from
+<a href="https://www.daocloud.io/" target="_blank" rel="noopener">DaoCloud</a> talked about how they use Go in their
+company for what they call the “continuous delivery” of applications. DaoCloud
+takes care of automatically moving software hosted on GitHub (and Chinese
+equivalents) to the cloud. A software developer simply pushes a new version on
+GitHub and DaoCloud takes care of the rest: running tests,
+<a href="https://www.docker.com/" target="_blank" rel="noopener">Dockerizing</a> it, and shipping it using your
+preferred cloud service provider.</p>
+<p>Several speakers were from well-recognized major software firms (I showed the
+conference program to non-technical people and they easily recognized several
+of the firm’s names). Much more so than in the US, it seems Go is not just
+hugely popular with newcomers and startups, but has very much found its way
+into larger organizations and is employed at a scale that we are only starting
+to see elsewhere.</p>
+<p>Not being an expert in web services myself, in my presentation I veered off the
+general conference theme a bit by talking about
+<a href="https://golang.google.cn/cmd/gofmt/" target="_blank" rel="noopener">gofmt</a> and how its widespread use has started
+to shape expectations not just for Go but other languages as well.
+I presented in English but had my slides translated to Mandarin beforehand. Due
+to the significant language barrier I wasn’t expecting too many questions on my
+talk itself.
+Instead I decided the keep it short and leave plenty of time for general
+questions on Go, which the audience appreciated.</p>
+
+      
+        
+<div class="image">
+  <img src="gopherchina/image06.jpg" alt=""/>
+</div>
+
+      
+        <p><em>No social event in China is complete without fantastic food.</em></p>
+<p>A couple of days after the conference I visited the 4-year-old startup company
+<a href="http://www.qiniu.com/" target="_blank" rel="noopener">Qiniu</a> (“Seven Bulls”), at the invitation of its
+<a href="http://gopherchina.org/user/xushiwei" target="_blank" rel="noopener">CEO</a> Wei Hsu, facilitated and
+translated with the help of Asta Xie. Qiniu is a cloud-based storage provider
+for mobile applications; Wei Hsu presented at the conference and also happens
+to be the author of one of the first Chinese books on Go (the leftmost one in
+the picture above).</p>
+
+      
+        
+<div class="image">
+  <img src="gopherchina/image02.jpg" alt=""/>
+</div>
+
+      
+        
+<div class="image">
+  <img src="gopherchina/image00.jpg" alt=""/>
+</div>
+
+      
+        <p><em>Qiniu lobby, engineering.</em></p>
+<p>Qiniu is an extremely successful all-Go shop, with about 160 employees, serving
+over 150,000 companies and developers, storing over 50 Billion files, and
+growing by over 500 Million files per day. When asked about the reasons for
+Go’s success in China, Wei Hsu is quick to answer: PHP is extremely popular in
+China, but relatively slow and not well-suited for large systems. Like in the
+US, universities teach C++ and Java as primary languages, but for many
+applications C++ is too complex a tool and Java too bulky. In his opinion, Go
+now plays the role that traditionally belonged to PHP, but Go runs much faster,
+is type safe, and scales more easily. He loves the fact that Go is simple and
+applications are easy to deploy. He thought the language to be “perfect” for
+them and his primary request was for a recommended or even standardized package
+to easily access database systems. He did mention that they had GC problems in
+the past but were able to work around them. Hopefully our upcoming 1.5 release
+will address this. For Qiniu, Go appeared just at the right time and the right
+(open source) place.</p>
+<p>According to Asta Xie, Qiniu is just one of many Go shops in the PRC. Large
+companies such as Alibaba, Baidu, Tencent, and Weibo, are now all using Go in
+one form or another. He pointed out that while Shanghai and neighboring cities
+like <a href="https://www.google.com/maps/place/Suzhou,+Jiangsu,+China" target="_blank" rel="noopener">Suzhou</a> are
+high-tech centres, even more software developers are found in the Beijing area.
+For 2016,  Asta hopes to organize a larger (1000, perhaps 1500 people)
+successor conference in Beijing.</p>
+<p>It appears that we have found the Go users in China: They are everywhere!</p>
+<p><em>Some of the GopherChina materials, including videos, are now available alongside Go coursework on a</em> <a href="http://www.imooc.com/view/407" target="_blank" rel="noopener"><em>3rd party site</em></a>.</p>
+
+      
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

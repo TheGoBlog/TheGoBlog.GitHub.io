@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/examples" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>Testable Examples in Go | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>Testable Examples in Go</h2>
+    <p class="author">
+    Andrew Gerrand<br/>
+    7 May 2015
+    </p>
+    
+  
+  
+    
+      
+  <h4 id="TOC_1.">Introduction</h4>
+  <p>Godoc <a href="https://golang.google.cn/pkg/testing/#hdr-Examples" target="_blank" rel="noopener">examples</a> are snippets of
+Go code that are displayed as package documentation and that are verified by
+running them as tests.
+They can also be run by a user visiting the godoc web page for the package
+and clicking the associated &#34;Run&#34; button.</p>
+<p>Having executable documentation for a package guarantees that the information
+will not go out of date as the API changes.</p>
+<p>The standard library includes many such examples
+(see the <a href="https://golang.google.cn/pkg/strings/#Contains" target="_blank" rel="noopener"><code>strings</code> package</a>,
+for instance).</p>
+<p>This article explains how to write your own example functions.</p>
+
+
+    
+      
+  <h4 id="TOC_2.">Examples are tests</h4>
+  <p>Examples are compiled (and optionally executed) as part of a package&#39;s test
+suite.</p>
+<p>As with typical tests, examples are functions that reside in a package&#39;s
+<code>_test.go</code> files.
+Unlike normal test functions, though, example functions take no arguments
+and begin with the word <code>Example</code> instead of <code>Test</code>.</p>
+<p>The <a href="https://godoc.org/github.com/golang/example/stringutil/" target="_blank" rel="noopener"><code>stringutil</code> package</a>
+is part of the <a href="https://github.com/golang/example" target="_blank" rel="noopener">Go example repository</a>.
+Here&#39;s an example that demonstrates its <code>Reverse</code> function:</p>
+<pre><code>package stringutil_test
+
+import (
+    &#34;fmt&#34;
+
+    &#34;github.com/golang/example/stringutil&#34;
+)
+
+func ExampleReverse() {
+    fmt.Println(stringutil.Reverse(&#34;hello&#34;))
+    // Output: olleh
+}
+</code></pre>
+<p>This code might live in <code>example_test.go</code> in the <code>stringutil</code> directory.</p>
+<p>Godoc will present this example alongside the <code>Reverse</code> function&#39;s documentation:</p>
+
+<div class="image">
+  <img src="examples/reverse.png" alt=""/>
+</div>
+<p>Running the package&#39;s test suite, we can see the example function is executed
+with no further arrangement from us:</p>
+<pre><code>$ go test -v
+=== RUN TestReverse
+--- PASS: TestReverse (0.00s)
+=== RUN: ExampleReverse
+--- PASS: ExampleReverse (0.00s)
+PASS
+ok  	github.com/golang/example/stringutil	0.009s</code></pre>
+
+
+    
+      
+  <h4 id="TOC_3.">Output comments</h4>
+  <p>What does it mean that the <code>ExampleReverse</code> function &#34;passes&#34;?</p>
+<p>As it executes the example,
+the testing framework captures data written to standard output
+and then compares the output against the example&#39;s &#34;Output:&#34; comment.
+The test passes if the test&#39;s output matches its output comment.</p>
+<p>To see a failing example we can change the output comment text to something
+obviously incorrect</p>
+<pre><code>func ExampleReverse() {
+    fmt.Println(stringutil.Reverse(&#34;hello&#34;))
+    // Output: golly
+}
+</code></pre>
+<p>and run the tests again:</p>
+<pre><code>$ go test
+--- FAIL: ExampleReverse (0.00s)
+got:
+olleh
+want:
+golly
+FAIL
+</code></pre>
+<p>If we remove the output comment entirely</p>
+<pre><code>func ExampleReverse() {
+    fmt.Println(stringutil.Reverse(&#34;hello&#34;))
+}
+</code></pre>
+<p>then the example function is compiled but not executed:</p>
+<pre><code>$ go test -v
+=== RUN TestReverse
+--- PASS: TestReverse (0.00s)
+PASS
+ok  	github.com/golang/example/stringutil	0.009s
+</code></pre>
+<p>Examples without output comments are useful for demonstrating code that cannot
+run as unit tests, such as that which accesses the network,
+while guaranteeing the example at least compiles.</p>
+
+
+    
+      
+  <h4 id="TOC_4.">Example function names</h4>
+  <p>Godoc uses a naming convention to associate an example function with a
+package-level identifier.</p>
+<pre><code>func ExampleFoo()     // documents the Foo function or type
+func ExampleBar_Qux() // documents the Qux method of type Bar
+func Example()        // documents the package as a whole
+</code></pre>
+<p>Following this convention, godoc displays the <code>ExampleReverse</code> example
+alongside the documentation for the <code>Reverse</code> function.</p>
+<p>Multiple examples can be provided for a given identifier by using a suffix
+beginning with an underscore followed by a lowercase letter.
+Each of these examples documents the <code>Reverse</code> function:</p>
+<pre><code>func ExampleReverse()
+func ExampleReverse_second()
+func ExampleReverse_third()</code></pre>
+
+
+    
+      
+  <h4 id="TOC_5.">Larger examples</h4>
+  <p>Sometimes we need more than just a function to write a good example.</p>
+<p>For instance, to demonstrate the <a href="https://golang.google.cn/pkg/sort/" target="_blank" rel="noopener"><code>sort</code> package</a>
+we should show an implementation of <code>sort.Interface</code>.
+Since methods cannot be declared inside a function body, the example must
+include some context in addition to the example function.</p>
+<p>To achieve this we can use a &#34;whole file example.&#34;
+A whole file example is a file that ends in <code>_test.go</code> and contains exactly one
+example function, no test or benchmark functions, and at least one other
+package-level declaration.
+When displaying such examples godoc will show the entire file.</p>
+<p>Here is a whole file example from the <code>sort</code> package:</p>
+<pre><code>package sort_test
+
+import (
+    &#34;fmt&#34;
+    &#34;sort&#34;
+)
+
+type Person struct {
+    Name string
+    Age  int
+}
+
+func (p Person) String() string {
+    return fmt.Sprintf(&#34;%s: %d&#34;, p.Name, p.Age)
+}
+
+// ByAge implements sort.Interface for []Person based on
+// the Age field.
+type ByAge []Person
+
+func (a ByAge) Len() int           { return len(a) }
+func (a ByAge) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByAge) Less(i, j int) bool { return a[i].Age &lt; a[j].Age }
+
+func Example() {
+    people := []Person{
+        {&#34;Bob&#34;, 31},
+        {&#34;John&#34;, 42},
+        {&#34;Michael&#34;, 17},
+        {&#34;Jenny&#34;, 26},
+    }
+
+    fmt.Println(people)
+    sort.Sort(ByAge(people))
+    fmt.Println(people)
+
+    // Output:
+    // [Bob: 31 John: 42 Michael: 17 Jenny: 26]
+    // [Michael: 17 Jenny: 26 Bob: 31 John: 42]
+}
+</code></pre>
+<p>A package can contain multiple whole file examples; one example per file.
+Take a look at the <a href="https://golang.google.cn/src/sort/" target="_blank" rel="noopener"><code>sort</code> package&#39;s source code</a>
+to see this in practice.</p>
+
+
+    
+      
+  <h4 id="TOC_6.">Conclusion</h4>
+  <p>Godoc examples are a great way to write and maintain code as documentation.
+They also present editable, working, runnable examples your users can build on.
+Use them!</p>
+
+
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

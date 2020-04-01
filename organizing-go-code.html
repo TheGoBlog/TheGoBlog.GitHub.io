@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/organizing-go-code" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>Organizing Go code | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>Organizing Go code</h2>
+    <p class="author">
+    Andrew Gerrand<br/>
+    16 August 2012
+    </p>
+    
+  
+  
+    
+      
+  <h4 id="TOC_1.">Introduction</h4>
+  <p>Go code is organized differently to that of other languages.
+This post discusses how to name and package the elements of your Go program
+to best serve its users.</p>
+
+
+    
+      
+  <h4 id="TOC_2.">Choose good names</h4>
+  <p>The names you choose affect how you think about your code,
+so take care when naming your package and its exported identifiers.</p>
+<p>A package&#39;s name provides context for its contents.
+For instance, the <a href="https://golang.google.cn/pkg/bytes/" target="_blank" rel="noopener">bytes package</a> from
+the standard library exports the <code>Buffer</code> type.
+On its own, the name <code>Buffer</code> isn&#39;t very descriptive,
+but when combined with its package name its meaning becomes clear: <code>bytes.Buffer</code>.
+If the package had a less descriptive name,
+like <code>util</code>, the buffer would likely acquire the longer and clumsier name <code>util.BytesBuffer</code>.</p>
+<p>Don&#39;t be shy about renaming things as you work.
+As you spend time with your program you will better understand how its pieces fit together and,
+therefore, what their names should be.
+There&#39;s no need to lock yourself into early decisions.
+(The <a href="https://golang.google.cn/cmd/gofmt/" target="_blank" rel="noopener">gofmt command</a> has a <code>-r</code> flag that
+provides a syntax-aware search and replace,
+making large-scale refactoring easier.)</p>
+<p>A good name is the most important part of a software interface:
+the name is the first thing every client of the code will see.
+A well-chosen name is therefore the starting point for good documentation.
+Many of the following practices result organically from good naming.</p>
+
+
+    
+      
+  <h4 id="TOC_3.">Choose a good import path (make your package &#34;go get&#34;-able)</h4>
+  <p>An import path is the string with which users import a package.
+It specifies the directory (relative to <code>$GOROOT/src/pkg</code> or <code>$GOPATH/src</code>)
+in which the package&#39;s source code resides.</p>
+<p>Import paths should be globally unique, so use the path of your source repository as its base.
+For instance, the <code>websocket</code> package from the <code>go.net</code> sub-repository has
+an import path of <code>&#34;golang.org/x/net/websocket&#34;</code>.
+The Go project owns the path <code>&#34;github.com/golang&#34;</code>,
+so that path cannot be used by another author for a different package.
+Because the repository URL and import path are one and the same,
+the <code>go get</code> command can fetch and install the package automatically.</p>
+<p>If you don&#39;t use a hosted source repository,
+choose some unique prefix such as a domain,
+company, or project name.
+As an example, the import path of all Google&#39;s internal Go code starts with
+the string <code>&#34;google&#34;</code>.</p>
+<p>The last element of the import path is typically the same as the package name.
+For instance, the import path <code>&#34;net/http&#34;</code> contains package <code>http</code>.
+This is not a requirement - you can make them different if you like - but
+you should follow the convention for predictability&#39;s sake:
+a user might be surprised that import <code>&#34;foo/bar&#34;</code> introduces the identifier
+<code>quux</code> into the package name space.</p>
+<p>Sometimes people set <code>GOPATH</code> to the root of their source repository and
+put their packages in directories relative to the repository root,
+such as <code>&#34;src/my/package&#34;</code>.
+On one hand, this keeps the import paths short (<code>&#34;my/package&#34;</code> instead of
+<code>&#34;github.com/me/project/my/package&#34;</code>),
+but on the other it breaks <code>go get</code> and forces users to re-set their <code>GOPATH</code>
+to use the package. Don&#39;t do this.</p>
+
+
+    
+      
+  <h4 id="TOC_4.">Minimize the exported interface</h4>
+  <p>Your code is likely composed of many small pieces of useful code,
+and so it is tempting to expose much of that functionality in your package&#39;s
+exported interface. Resist that urge!</p>
+<p>The larger the interface you provide, the more you must support.
+Users will quickly come to depend on every type,
+function, variable, and constant you export,
+creating an implicit contract that you must honor in perpetuity or risk
+breaking your users&#39; programs.
+In preparing Go 1 we carefully reviewed the standard library&#39;s exported
+interfaces and removed the parts we weren&#39;t ready to commit to.
+You should take similar care when distributing your own libraries.</p>
+<p>If in doubt, leave it out!</p>
+
+
+    
+      
+  <h4 id="TOC_5.">What to put into a package</h4>
+  <p>It is easy to just throw everything into a &#34;grab bag&#34; package,
+but this dilutes the meaning of the package name (as it must encompass a
+lot of functionality) and forces the users of small parts of the package
+to compile and link a lot of unrelated code.</p>
+<p>On the other hand, it is also easy to go overboard in splitting your code
+into small packages,
+in which case you will likely becomes bogged down in interface design,
+rather than just getting the job done.</p>
+<p>Look to the Go standard libraries as a guide.
+Some of its packages are large and some are small.
+For instance, the <a href="https://golang.google.cn/pkg/net/http/" target="_blank" rel="noopener">http package</a> comprises
+17 go source files (excluding tests) and exports 109 identifiers,
+and the <a href="https://golang.google.cn/pkg/hash/" target="_blank" rel="noopener">hash package</a> consists of one file
+that exports just three declarations.
+There is no hard and fast rule; both approaches are appropriate given their context.</p>
+<p>With that said, package main is often larger than other packages.
+Complex commands contain a lot of code that is of little use outside the
+context of the executable,
+and often it&#39;s simpler to just keep it all in the one place.
+For instance, the go tool is more than 12000 lines spread across <a href="https://golang.google.cn/src/cmd/go/" target="_blank" rel="noopener">34 files</a>.</p>
+
+
+    
+      
+  <h4 id="TOC_6.">Document your code</h4>
+  <p>Good documentation is an essential quality of usable and maintainable code.
+Read the <a href="https://TheGoBlog.GitHub.io/godoc.html" target="_blank" rel="noopener">Godoc: documenting Go code</a>
+article to learn how to write good doc comments.</p>
+
+
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

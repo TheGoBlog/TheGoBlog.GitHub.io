@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/1year" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>Go: one year ago today | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>Go: one year ago today</h2>
+    <p class="author">
+    Andrew Gerrand<br/>
+    10 November 2010
+    </p>
+    
+  
+  
+    
+      
+        <p>On the 10th of November 2009 we launched the Go project:
+an open-source programming language with a focus on simplicity and efficiency.
+The intervening year has seen a great many developments both in the Go project
+itself and in its community.</p>
+<p>We set out to build a language for systems programming - the kinds of programs
+one might typically write in C or C++ - and we were surprised by Go’s
+utility as a general purpose language.
+We had anticipated interest from C, C++, and Java programmers,
+but the flurry of interest from users of dynamically-typed languages like
+Python and JavaScript was unexpected.
+Go’s combination of native compilation,
+static typing, memory management, and lightweight syntax seemed to strike
+a chord with a broad cross-section of the programming community.</p>
+<p>That cross-section grew to become a dedicated community of enthusiastic Go coders.
+Our <a href="http://groups.google.com/group/golang-nuts" target="_blank" rel="noopener">mailing list</a> has over 3,800 members,
+with around 1,500 posts each month.
+The project has over 130 <a href="https://golang.google.cn/CONTRIBUTORS" target="_blank" rel="noopener">contributors</a>
+(people who have submitted code or documentation),
+and of the 2,800 commits since launch almost one third were contributed
+by programmers outside the core team.
+To get all that code into shape, nearly 14,000 emails were exchanged on
+our <a href="http://groups.google.com/group/golang-dev" target="_blank" rel="noopener">development mailing list</a>.</p>
+<p>Those numbers reflect a labor whose fruits are evident in the project’s code base.
+The compilers have improved substantially,
+with faster and more efficient code generation,
+more than one hundred reported bugs fixed,
+and support for a widening range of operating systems and architectures.
+The Windows port is approaching completion thanks to a dedicated group of
+contributors (one of whom became our first non-Google committer to the project).
+The ARM port has also made great progress,
+recently reaching the milestone of passing all tests.</p>
+<p>The Go tool set has been expanded and improved.
+The Go documentation tool, <a href="https://golang.google.cn/cmd/godoc/" target="_blank" rel="noopener">godoc</a>,
+now supports the documentation of other source trees (you can browse and
+search your own code) and provides a <a href="https://golang.google.cn/doc/codewalk/" target="_blank" rel="noopener">&#34;code walk&#34;</a>
+interface for presenting tutorial materials (among many more improvements).
+<a href="https://golang.google.cn/cmd/goinstall/" target="_blank" rel="noopener">Goinstall</a> ,
+a new package management tool, allows users to install and update external
+packages with a single command.
+<a href="https://golang.google.cn/cmd/gofmt/" target="_blank" rel="noopener">Gofmt</a>,
+the Go pretty-printer, now makes syntactic simplifications where possible.
+<a href="https://golang.google.cn/misc/goplay/" target="_blank" rel="noopener">Goplay</a>,
+a web-based “compile-as-you-type” tool,
+is a convenient way to experiment with Go for those times when you don’t
+have access to the <a href="https://golang.google.cn/doc/play/" target="_blank" rel="noopener">Go Playground</a>.</p>
+<p>The standard library has grown by over 42,000 lines of code and includes
+20 new <a href="https://golang.google.cn/pkg/" target="_blank" rel="noopener">packages</a>.
+Among the additions are the <a href="https://golang.google.cn/pkg/image/jpeg/" target="_blank" rel="noopener">jpeg</a>,
+<a href="https://golang.google.cn/pkg/rpc/jsonrpc/" target="_blank" rel="noopener">jsonrpc</a>,
+<a href="https://golang.google.cn/pkg/mime/" target="_blank" rel="noopener">mime</a>, <a href="https://golang.google.cn/pkg/netchan/" target="_blank" rel="noopener">netchan</a>,
+and <a href="https://golang.google.cn/pkg/smtp/" target="_blank" rel="noopener">smtp</a> packages,
+as well as a slew of new <a href="https://golang.google.cn/pkg/crypto/" target="_blank" rel="noopener">cryptography</a> packages.
+More generally, the standard library has been continuously refined and revised
+as our understanding of Go’s idioms deepens.</p>
+<p>The debugging story has gotten better, too.
+Recent improvements to the DWARF output of the gc compilers make the GNU debugger,
+GDB, useful for Go binaries, and we’re actively working on making that
+debugging information more complete.
+(See the <a href="https://TheGoBlog.GitHub.io/2010/11/debugging-go-code-status-report.html" target="_blank" rel="noopener"> recent blog post</a> for details.)</p>
+<p>It’s now easier than ever to link against existing libraries written in
+languages other than Go.
+Go support is in the most recent <a href="http://www.swig.org/" target="_blank" rel="noopener">SWIG</a> release,
+version 2.0.1, making it easier to link against C and C++ code,
+and our <a href="https://golang.google.cn/cmd/cgo/" target="_blank" rel="noopener">cgo</a> tool has seen many fixes and improvements.</p>
+<p><a href="https://golang.google.cn/doc/gccgo_install.html" target="_blank" rel="noopener">Gccgo</a>,
+the Go front end for the GNU C Compiler, has kept pace with the gc compiler
+as a parallel Go implementation.
+It now has a working garbage collector, and has been accepted into the GCC core.
+We’re now working toward making <a href="http://code.google.com/p/gofrontend/" target="_blank" rel="noopener">gofrontend</a>
+available as a BSD-licensed Go compiler front end,
+fully decoupled from GCC.</p>
+<p>Outside the Go project itself Go is starting to be used to build real software.
+There are more than 200 Go programs and libraries listed on our <a href="http://godashboard.appspot.com/project" target="_blank" rel="noopener">Project dashboard</a>,
+and hundreds more on <a href="http://code.google.com/hosting/search?q=label:Go" target="_blank" rel="noopener">Google Code</a>
+and <a href="https://github.com/search?q=language:Go" target="_blank" rel="noopener">Github</a>.
+On our mailing list and IRC channel you can find coders from around the
+world who use Go for their programming projects.
+(See our <a href="https://TheGoBlog.GitHub.io/2010/10/real-go-projects-smarttwitter-and-webgo.html" target="_blank" rel="noopener">guest blog post</a>
+from last month for a real-world example.) Internally at Google there are
+several teams that choose Go for building production software,
+and we have received reports from other companies that are developing sizable systems in Go.
+We have also been in touch with several educators who are using Go as a teaching language.</p>
+<p>The language itself has grown and matured, too.
+In the past year we have received many feature requests.
+But Go is a small language, and we’ve worked hard to ensure that any new
+feature strikes the right compromise between simplicity and utility.
+Since the launch we have made a number of language changes,
+many of which were driven by feedback from the community.</p>
+<ul>
+<li>Semicolons are now optional in almost all instances. <a href="https://golang.google.cn/doc/go_spec.html#Semicolons" target="_blank" rel="noopener">spec</a></li>
+<li>The new built-in functions <code>copy</code> and <code>append</code> make management of slices
+more efficient and straightforward.
+<a href="https://golang.google.cn/doc/go_spec.html#Appending_and_copying_slices" target="_blank" rel="noopener">spec</a></li>
+<li>The upper and lower bounds may be omitted when making a sub-slice.
+This means that <code>s[:]</code> is shorthand for <code>s[0:len(s)]</code>.
+<a href="https://golang.google.cn/doc/go_spec.html#Slices" target="_blank" rel="noopener">spec</a></li>
+<li>The new built-in function <code>recover</code> complements <code>panic</code> and <code>defer</code> as
+an error handling mechanism.
+<a href="https://TheGoBlog.GitHub.io/2010/08/defer-panic-and-recover.html" target="_blank" rel="noopener">blog</a>,
+<a href="https://golang.google.cn/doc/go_spec.html#Handling_panics" target="_blank" rel="noopener">spec</a></li>
+<li>The new complex number types (<code>complex</code>,
+<code>complex64</code>, and <code>complex128</code>) simplify certain mathematical operations.
+<a href="https://golang.google.cn/doc/go_spec.html#Complex_numbers" target="_blank" rel="noopener">spec</a>,
+<a href="https://golang.google.cn/doc/go_spec.html#Imaginary_literals" target="_blank" rel="noopener">spec</a></li>
+<li>The composite literal syntax permits the omission of redundant type information
+(when specifying two-dimensional arrays, for example).
+<a href="https://golang.google.cn/doc/devel/release.html#2010-10-27" target="_blank" rel="noopener">release.2010-10-27</a>,
+<a href="https://golang.google.cn/doc/go_spec.html#Composite_literals" target="_blank" rel="noopener">spec</a></li>
+<li>A general syntax for variable function arguments (<code>...T</code>) and their propagation
+(<code>v...</code>) is now specified.
+<a href="https://golang.google.cn/doc/go_spec.html#Function_Types" target="_blank" rel="noopener">spec</a>,
+<a href="https://golang.google.cn/doc/go_spec.html#Passing_arguments_to_..._parameters" target="_blank" rel="noopener"> spec</a>,
+<a href="https://golang.google.cn/doc/devel/release.html#2010-09-29" target="_blank" rel="noopener">release.2010-09-29</a></li>
+</ul>
+<p>Go is certainly ready for production use,
+but there is still room for improvement.
+Our focus for the immediate future is making Go programs faster and more
+efficient in the context of high performance systems.
+This means improving the garbage collector,
+optimizing generated code, and improving the core libraries.
+We’re also exploring some further additions to the type system to make
+generic programming easier.
+A lot has happened in a year; it’s been both thrilling and satisfying.
+We hope that this coming year will be even more fruitful than the last.</p>
+<p><em>If you’ve been meaning to get [back] into Go, now is a great time to do so! Check out the</em>
+<a href="https://golang.google.cn/doc/docs.html" target="_blank" rel="noopener"><em>Documentation</em></a> <em>and</em> <a href="https://golang.google.cn/doc/install.html" target="_blank" rel="noopener"><em>Getting Started</em></a>
+<em>pages for more information, or just go nuts in the</em> <a href="https://golang.google.cn/doc/play/" target="_blank" rel="noopener"><em>Go Playground</em></a>.</p>
+
+      
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/stable-releases" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>Go becomes more stable | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>Go becomes more stable</h2>
+    <p class="author">
+    Andrew Gerrand<br/>
+    16 March 2011
+    </p>
+    
+  
+  
+    
+      
+        <p>The Go project is moving fast. As we learn more about Go we are compelled
+to change our tools,
+libraries, and occasionally even the language itself.
+We permit backward-incompatible changes so that we can learn from,
+rather than immortalize, our mistakes.
+We believe flexibility at this stage of Go’s development is essential
+to the project’s development and,
+ultimately, its longevity.</p>
+<p>Since Go&#39;s launch we have been making releases approximately once a week.
+Accompanying each release are <a href="https://golang.google.cn/doc/devel/release.html" target="_blank" rel="noopener">notes describing what changed</a>,
+with any backwards-incompatible changes signposted.
+Questions I hear often are &#34;Is Go stable? How can I be sure that I won’t
+have to update my Go code every week?&#34; The answer to those questions are
+now &#34;Yes,&#34; and &#34;You won&#39;t.&#34;</p>
+<p>With this week’s release we’re introducing a new release tagging scheme.
+We intend to continue with our weekly releases,
+but have renamed the existing tags from <code>release</code> to <code>weekly</code>.
+The <code>release</code> tag will now be applied to one hand-picked stable release each month or two.
+This more relaxed release schedule should make life easier for the average Go programmer.</p>
+<p>Users will still need to update their code periodically (this is the cost
+of using a young language) but with less frequency.
+An additional benefit is that by tagging stable releases less often we can
+put more effort into automating updates.
+To this end we have introduced gofix, a tool that will help you update your code.</p>
+<p>The revision formerly tagged <code>release.2011-03-07.1</code> (now <code>weekly.2011-03-07.1</code>)
+has been nominated our first stable release,
+and has been given the tag <code>release.r56</code>.
+As we tag each stable release we will post an announcement to the new <a href="http://groups.google.com/group/golang-announce" target="_blank" rel="noopener">golang-announce</a> mailing list.
+(Why not <a href="http://groups.google.com/group/golang-announce/subscribe" target="_blank" rel="noopener">subscribe now</a>?)</p>
+<p>What’s the upshot of all this? You can continue to keep your Go installation
+updated using <code>hg update release</code>,
+but now you should only need to update when we tag a new stable release.
+If you wish to stay at the leading edge, you should switch to the weekly
+tag with <code>hg update weekly</code>.</p>
+<p>Happy coding!</p>
+
+      
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

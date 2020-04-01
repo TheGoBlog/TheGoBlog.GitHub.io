@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/godoc" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>Godoc: documenting Go code | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>Godoc: documenting Go code</h2>
+    <p class="author">
+    Andrew Gerrand<br/>
+    31 March 2011
+    </p>
+    
+  
+  
+    
+      
+        <p>The Go project takes documentation seriously.
+Documentation is a huge part of making software accessible and maintainable.
+Of course it must be well-written and accurate,
+but it also must be easy to write and to maintain.
+Ideally, it should be coupled to the code itself so the documentation evolves
+along with the code.
+The easier it is for programmers to produce good documentation,
+the better for everyone.</p>
+<p>To that end, we have developed the <a href="https://golang.google.cn/cmd/godoc/" target="_blank" rel="noopener">godoc</a> documentation tool.
+This article describes godoc&#39;s approach to documentation,
+and explains how you can use our conventions and tools to write good documentation
+for your own projects.</p>
+<p>Godoc parses Go source code - including comments - and produces documentation
+as HTML or plain text.
+The end result is documentation tightly coupled with the code it documents.
+For example, through godoc&#39;s web interface you can navigate from a function&#39;s
+<a href="https://golang.google.cn/pkg/strings/#HasPrefix" target="_blank" rel="noopener">documentation</a> to its <a href="https://golang.google.cn/src/pkg/strings/strings.go#L493" target="_blank" rel="noopener">implementation</a> with one click.</p>
+<p>Godoc is conceptually related to Python&#39;s <a href="http://www.python.org/dev/peps/pep-0257/" target="_blank" rel="noopener">Docstring</a>
+and Java&#39;s <a href="http://www.oracle.com/technetwork/java/javase/documentation/index-jsp-135444.html" target="_blank" rel="noopener">Javadoc</a>,
+but its design is simpler.
+The comments read by godoc are not language constructs (as with Docstring)
+nor must they have their own machine-readable syntax (as with Javadoc).
+Godoc comments are just good comments, the sort you would want to read even
+if godoc didn&#39;t exist.</p>
+<p>The convention is simple: to document a type,
+variable, constant, function, or even a package,
+write a regular comment directly preceding its declaration,
+with no intervening blank line.
+Godoc will then present that comment as text alongside the item it documents.
+For example, this is the documentation for the <code>fmt</code> package&#39;s <a href="https://golang.google.cn/pkg/fmt/#Fprint" target="_blank" rel="noopener"><code>Fprint</code></a> function:</p>
+<pre><code>// Fprint formats using the default formats for its operands and writes to w.
+// Spaces are added between operands when neither is a string.
+// It returns the number of bytes written and any write error encountered.
+func Fprint(w io.Writer, a ...interface{}) (n int, err error) {
+</code></pre>
+<p>Notice this comment is a complete sentence that begins with the name of
+the element it describes.
+This important convention allows us to generate documentation in a variety of formats,
+from plain text to HTML to UNIX man pages,
+and makes it read better when tools truncate it for brevity,
+such as when they extract the first line or sentence.</p>
+<p>Comments on package declarations should provide general package documentation.
+These comments can be short, like the <a href="https://golang.google.cn/pkg/sort/" target="_blank" rel="noopener"><code>sort</code></a>
+package&#39;s brief description:</p>
+<pre><code>// Package sort provides primitives for sorting slices and user-defined
+// collections.
+package sort
+</code></pre>
+<p>They can also be detailed like the <a href="https://golang.google.cn/pkg/encoding/gob/" target="_blank" rel="noopener">gob package</a>&#39;s overview.
+That package uses another convention for packages that need large amounts
+of introductory documentation:
+the package comment is placed in its own file,
+<a href="https://golang.google.cn/src/pkg/encoding/gob/doc.go" target="_blank" rel="noopener">doc.go</a>,
+which contains only those comments and a package clause.</p>
+<p>When writing package comments of any size,
+keep in mind that their first sentence will appear in godoc&#39;s <a href="https://golang.google.cn/pkg/" target="_blank" rel="noopener">package list</a>.</p>
+<p>Comments that are not adjacent to a top-level declaration are omitted from godoc&#39;s output,
+with one notable exception.
+Top-level comments that begin with the word <code>&#34;BUG(who)”</code> are recognized as known bugs,
+and included in the &#34;Bugs” section of the package documentation.
+The &#34;who” part should be the user name of someone who could provide more information.
+For example, this is a known issue from the <a href="https://golang.google.cn/pkg/bytes/#pkg-note-BUG" target="_blank" rel="noopener">bytes package</a>:</p>
+<pre><code>// BUG(r): The rule Title uses for word boundaries does not handle Unicode punctuation properly.
+</code></pre>
+<p>Sometimes a struct field, function, type, or even a whole package becomes
+redundant or unnecessary, but must be kept for compatibility with existing
+programs.
+To signal that an identifier should not be used, add a paragraph to its doc
+comment that begins with &#34;Deprecated:&#34; followed by some information about the
+deprecation.
+There are a few examples <a href="https://golang.google.cn/search?q=Deprecated:" target="_blank" rel="noopener">in the standard library</a>.</p>
+<p>There are a few formatting rules that Godoc uses when converting comments to HTML:</p>
+<ul>
+<li>
+<p>Subsequent lines of text are considered part of the same paragraph;
+you must leave a blank line to separate paragraphs.</p>
+</li>
+<li>
+<p>Pre-formatted text must be indented relative to the surrounding comment
+text (see gob&#39;s <a href="https://golang.google.cn/src/pkg/encoding/gob/doc.go" target="_blank" rel="noopener">doc.go</a> for an example).</p>
+</li>
+<li>
+<p>URLs will be converted to HTML links; no special markup is necessary.</p>
+</li>
+</ul>
+<p>Note that none of these rules requires you to do anything out of the ordinary.</p>
+<p>In fact, the best thing about godoc&#39;s minimal approach is how easy it is to use.
+As a result, a lot of Go code, including all of the standard library,
+already follows the conventions.</p>
+<p>Your own code can present good documentation just by having comments as described above.
+Any Go packages installed inside <code>$GOROOT/src/pkg</code> and any <code>GOPATH</code> work
+spaces will already be accessible via godoc&#39;s command-line and HTTP interfaces,
+and you can specify additional paths for indexing via the <code>-path</code> flag or
+just by running <code>&#34;godoc .&#34;</code> in the source directory.
+See the <a href="https://golang.google.cn/cmd/godoc/" target="_blank" rel="noopener">godoc documentation</a> for more details.</p>
+
+      
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

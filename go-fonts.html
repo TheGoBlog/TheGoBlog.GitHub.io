@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/go-fonts" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>Go fonts | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>Go fonts</h2>
+    <p class="author">
+    Nigel Tao, Chuck Bigelow, and Rob Pike<br/>
+    16 November 2016
+    </p>
+    
+  
+  
+    
+      
+  <h4 id="TOC_1.">An Announcement</h4>
+  <p>The experimental user interface toolkit being built at
+<a href="https://godoc.org/golang.org/x/exp/shiny" target="_blank" rel="noopener"><code>golang.org/x/exp/shiny</code></a>
+includes several text elements, but there is a problem with testing them:
+What font should be used?
+Answering this question led us to today&#39;s announcement,
+the release of a family of high-quality <a href="https://en.wikipedia.org/wiki/Windows_Glyph_List_4" target="_blank" rel="noopener">WGL4</a> TrueType fonts,
+created by the <a href="http://bigelowandholmes.typepad.com/" target="_blank" rel="noopener">Bigelow &amp; Holmes</a> type foundry specifically for the Go project.</p>
+<p>The font family, called Go (naturally), includes proportional- and fixed-width faces in normal,
+bold, and italic renderings.
+The fonts have been tested for technical uses, particularly programming.
+Go source code looks particularly good when displayed in Go fonts, as its name implies, with things like
+punctuation characters easily distinguishable and operators lined up and placed consistently:</p>
+
+<div class="image">
+  <img src="go-fonts/go-font-code.png" width="519" alt=""/>
+</div>
+<p>Perhaps the most remarkable feature of the Go fonts is their license:
+They are licensed under the same open source license as the rest of the Go project&#39;s software,
+an unusually free arrangement for a high-quality font set.</p>
+<p>Here are samples of the proportionally-spaced...</p>
+
+<div class="image">
+  <img src="go-fonts/go-regular.png" width="600" alt=""/>
+</div>
+<p>and monospaced fonts:</p>
+
+<div class="image">
+  <img src="go-fonts/go-mono.png" width="600" alt=""/>
+</div>
+
+
+    
+      
+  <h4 id="TOC_2.">How to use them</h4>
+  <p>If you just want the TTF files, run</p>
+<pre><code>git clone https://go.googlesource.com/image
+</code></pre>
+<p>and copy them from the subsequent <code>image/font/gofont/ttfs</code> directory.
+If you want to use Go (the fonts) with Go (the software), each font is provided by a separate package.
+To use the Go Regular font in a program, import <code>golang.org/x/image/font/gofont/goregular</code>, and write:</p>
+<pre><code>font, err := truetype.Parse(goregular.TTF)
+</code></pre>
+<p>The <a href="https://godoc.org/github.com/golang/freetype/truetype" target="_blank" rel="noopener"><code>github.com/golang/freetype/truetype</code></a>
+package provides the <a href="https://godoc.org/github.com/golang/freetype/truetype#Parse" target="_blank" rel="noopener"><code>truetype.Parse</code></a> function today.
+There is also work underway to add a TrueType package under <code>golang.org/x</code>
+again licensed under the same open source license as the rest of the Go project&#39;s software.</p>
+<p>We leave it to you to find some of the other unusual properties the fonts have,
+but for an overview of the fonts&#39; design we asked Chuck Bigelow to provide some background.
+The remainder of this blog post is his response.</p>
+
+
+    
+      
+  <h4 id="TOC_3.">Notes on the fonts, by Chuck Bigelow</h4>
+  <p>The Go fonts are divided into two sets, Go proportional, which is
+sans-serif, and Go Mono, which is slab-serif.</p>
+
+
+    
+      
+  <h4 id="TOC_4.">Go proportional fonts</h4>
+  
+  <h4 id="TOC_4.1.">Sans-serif</h4>
+  <p>Go proportional fonts are sans-serif, like several popular fonts
+for screen displays. There is some evidence that some sans-serif
+faces at small sizes and low resolutions on screens are slightly
+more legible than their seriffed counterparts, while at large sizes,
+there is not a significant difference in legibility between sans and
+seriffed faces, at least in the pair tested. [1] (The bracketed numbers
+refer to the references listed at the end of this article.)</p>
+
+
+  <h4 id="TOC_4.2.">Style</h4>
+  <p>Go sans-serif fonts are &#34;humanist&#34; rather than &#34;grotesque&#34; in
+style. This is an historical distinction, not an aesthetic judgment.
+Widely used sans-serif fonts like Helvetica and Arial are called
+grotesque because an early 19th century sans-serif typeface
+was named &#34;Grotesque,&#34; and the name became generic.</p>
+<p>The shapes of modern grotesque fonts like Helvetica are sculpted,
+with smooth, assimilated forms.</p>
+<p>Humanist sans-serifs are derived from Humanist handwriting
+and early fonts of the Italian Renaissance and still show subtle
+traces of pen-written calligraphy. There is some evidence that
+humanist fonts are more legible than grotesque fonts. [2]</p>
+
+
+  <h4 id="TOC_4.3.">Italics</h4>
+  <p>Go proportional italics have the same width metrics as the roman
+fonts. Go italics are oblique versions of the romans, with one
+noticeable exception: the italic lowercase &#39;a&#39; is redesigned as a
+cursive single-story form to harmonize with the bowl shapes of
+the b d g p q set, in which the upright forms also adapt well to
+slanting, The addition of cursive &#39;a&#39; makes the italics appear more
+lively than a simply slanted roman. Some typographers believe that
+slanted roman sans-serif italics are preferable to truly &#34;cursive&#34; sans
+Italics, in part because of history and design. [3]</p>
+
+<div class="image">
+  <img src="go-fonts/abdgpq-proportional.png" alt=""/>
+</div>
+
+
+  <h4 id="TOC_4.4.">The x-height</h4>
+  <p>The x-height of a typeface is the height of the lowercase &#39;x&#39; relative
+to the body size. The x-height of Go fonts is 53.0% of body size, a
+bit larger than the x-heights of Helvetica (52.3%) or Arial (51.9%),
+but the difference is usually unnoticeable at normal reading sizes.
+Typographers believe that larger x-heights contribute to greater
+legibility in small sizes and on screens. A study of &#34;print size&#34;
+(particularly x-height) and reading noted that types for reading on
+screens and for small sizes tend to have large x-heights. [4]</p>
+
+
+  <h4 id="TOC_4.5.">DIN Legibility Standard</h4>
+  <p>The recent German DIN 1450 legibility standard recommends
+several features for font legibility, including differentiation of
+letter shapes to reduce confusion. The Go fonts conform to the
+1450 standard by carefully differentiating zero from capital O;
+numeral 1 from capital I (eye) and lowercase l (ell); numeral 5 from
+capital S; and numeral 8 from capital B. The shapes of bowls of
+b d p q follow the natural asymmetries of legible Renaissance
+handwriting, aiding differentiation to reduce confusion. [5]</p>
+
+
+  <h4 id="TOC_4.6.">Weights</h4>
+  <p>The Go proportional fonts come in three weights: Normal, Medium,
+and Bold. The Normal weight is strong enough that it maintains
+clarity on backlit screens, which often tend to erode letter features
+and thickness. The Medium weight has stem thickness 1.25 times
+the Normal, for greater sturdiness on bright screens or for users
+who prefer a sturdy font. The Bold weight has stem thickness
+1.5 times the Normal, bold enough to be distinct from the normal
+weight. These Go fonts have CSS numerical weights of 400, 500,
+and 600. Although CSS specifies &#34;Bold&#34; as a 700 weight and 600
+as Semibold or Demibold, the Go numerical weights match the
+actual progression of the ratios of stem thicknesses:
+Normal:Medium = 400:500; Normal:Bold = 400:600. The Bold
+weight name matches the use of “Bold” as the usual corresponding
+bold weight of a normal font. More discussion of the relationship of
+stem thicknesses, weight names, and CSS numbering is in [6].</p>
+
+
+  <h4 id="TOC_4.7.">WGL4 character set</h4>
+  <p>The WGL4 character set, originally developed by Microsoft, is often
+used as an informal standard character set. WGL4 includes Western
+and Eastern European Latin characters plus Modern Greek and
+Cyrillic, with additional symbols, signs, and graphical characters,
+totalling more than 650 characters in all. The Go WGL4 fonts can
+be used to compose a wide range of languages. [7]</p>
+
+
+  <h4 id="TOC_4.8.">Metric compatibility with Arial and Helvetica</h4>
+  <p>The Go sans-serif fonts are nearly metrically compatible with
+standard Helvetica or Arial characters. Texts set in Go occupy
+nearly the same space as texts in Helvetica or Arial (at the same
+size), but Go has a different look and texture because of its
+humanist style. Some Go letters with DIN legibility features are
+wider than corresponding letters in Helvetica or Arial, so some
+texts set in Go may take slightly more space.</p>
+
+
+
+    
+      
+  <h4 id="TOC_5.">Go Mono fonts</h4>
+  
+  <h4 id="TOC_5.1.">Monospaced</h4>
+  <p>Go Mono fonts are monospaced—each letter has the same width as
+the other letters. Monospaced fonts have been used in programming
+since the beginning of computing and are still widely used because the
+typewriter regularity of their spacing makes text align in columns and
+rows, a style also found in Greek inscriptions of the 5th century BC.
+(The ancient Greeks didn&#39;t have typewriters or computer keyboards,
+but they did have great mathematicians and a great sense of symmetry
+and pattern that shaped their alphabet.)</p>
+
+
+  <h4 id="TOC_5.2.">Slab-serif</h4>
+  <p>The Go Mono fonts have slab-shaped serifs, giving them a sturdy
+appearance.</p>
+
+
+  <h4 id="TOC_5.3.">Style</h4>
+  <p>The underlying letter shapes of Go Mono are, like the Go sans-serif fonts,
+derived from humanist handwriting, but the monospacing and slab serifs
+tend to obscure the historical and stylistic connections.</p>
+
+
+  <h4 id="TOC_5.4.">Italics</h4>
+  <p>Go Mono Italics are oblique versions of the romans, with the exception
+that the italic lowercase &#39;a&#39; is redesigned as a cursive single-story form
+to harmonize with the bowl shapes of the b d g p q. The cursive &#39;a&#39; makes
+the italics appear more lively than a simply slanted roman. As with many
+sans-serif fonts, it is believed that slanted roman slab-serifs fonts may
+be more legible than truly &#34;cursive&#34; italics.</p>
+
+<div class="image">
+  <img src="go-fonts/abdgpq-mono.png" alt=""/>
+</div>
+
+
+  <h4 id="TOC_5.5.">The x-height</h4>
+  <p>Go Mono fonts have the same x-height as Go sans-serif fonts, 53% of
+the body size. Go Mono looks almost 18% bigger than Courier, which
+has an x-height 45% of body size. Yet Go Mono has the same width
+as Courier, so the bigger look is gained with no loss of economy in
+characters per line.</p>
+
+
+  <h4 id="TOC_5.6.">DIN Legibility Standard</h4>
+  <p>Go Mono fonts conform to the DIN 1450 standard by differentiating
+zero from capital O; numeral 1 from capital I (eye) and lowercase l (ell);
+numeral 5 from capital S; and numeral 8 from capital B. The shapes of
+bowls of b d p q follow the natural asymmetries of legible Renaissance
+handwriting, aiding differentiation and reducing confusion.</p>
+
+
+  <h4 id="TOC_5.7.">Weights</h4>
+  <p>Go Mono fonts have two weights: Normal and Bold. The normal weight
+stem is the same as in Go Normal and thus maintains clarity on backlit
+screens, which tend to erode letter features and stem thickness. The
+bold stem thickness is 1.5 times thicker than the normal weight, hence
+the Bold Mono has the same stem thickness as Bold Go proportional.
+Because the letter width of monospaced bold is identical to the width of
+monospaced normal, the bold Mono appears slightly bolder than the
+proportional Go Bold, as more black pixels are put into the same area.)</p>
+
+
+  <h4 id="TOC_5.8.">Metric compatibility with popular monospaced fonts</h4>
+  <p>Go Mono is metrically compatible with Courier and other monospaced
+fonts that match the &#34;Pica&#34; typewriter type widths of 10 characters per
+linear inch at 12 point. At 10 point, Go Mono fonts set 12 characters
+per inch. The TrueType fonts are scalable, of course, so Go Mono can
+be set at any size.</p>
+
+
+  <h4 id="TOC_5.9.">WGL4 character set</h4>
+  <p>The Go Mono fonts offer the WGL4 character set often used as an
+informal standard character set. WGL4 includes Western and Eastern
+European Latin characters plus Modern Greek and Cyrillic, with
+additional symbols, signs, and graphical characters. The 650+ characters
+of the Go WGL4 sets can be used for a wide range of languages.</p>
+
+
+
+    
+      
+  <h4 id="TOC_6.">References</h4>
+  <p>[1] Morris, R. A., Aquilante, K., Yager, D., &amp; Bigelow, C.
+(2002, May). P‐13: Serifs Slow RSVP Reading at Very Small Sizes,
+but Don&#39;t Matter at Larger Sizes.
+In SID Symposium Digest of Technical Papers (Vol.
+33, No. 1, pp. 244-247). Blackwell Publishing Ltd.</p>
+<p>[2] Bryan Reimer et al. (2014) “Assessing the impact of typeface design
+in a text-rich automotive user interface”,
+Ergonomics, 57:11, 1643-1658.
+http://www.tandfonline.com/doi/abs/10.1080/00140139.2014.940000</p>
+<p>[3] Adrian Frutiger - Typefaces: The Complete Works.
+H. Osterer and P. Stamm, editors. Birkhäuser,
+Basel, 2009, page 257.</p>
+<p>[4] Legge, G. E., &amp; Bigelow, C. A. (2011).
+Does print size matter for reading? A review of findings from vision science and typography.
+Journal of Vision, 11(5), 8-8. http://jov.arvojournals.org/article.aspx?articleid=2191906</p>
+<p>[5] Charles Bigelow. &#34;Oh, oh, zero!&#34; TUGboat, Volume 34 (2013), No. 2.
+https://tug.org/TUGboat/tb34-2/tb107bigelow-zero.pdf
+https://tug.org/TUGboat/tb34-2/tb107bigelow-wang.pdf</p>
+<p>[6] &#34;Lucida Basic Font Weights&#34; Bigelow &amp; Holmes.
+http://lucidafonts.com/pages/facts</p>
+<p>[7] WGL4 language coverage: Afrikaans, Albanian, Asu, Basque,
+Belarusian, Bemba, Bena, Bosnian, Bulgarian, Catalan, Chiga,
+Colognian, Cornish, Croatian, Czech, Danish, Embu, English, Esperanto,
+Estonian, Faroese, Filipino, Finnish, French, Friulian, Galician,
+Ganda, German, Greek, Gusii, Hungarian, Icelandic, Inari Sami,
+Indonesian, Irish, Italian, Jola-Fonyi, Kabuverdianu, Kalaallisut,
+Kalenjin, Kamba, Kikuyu, Kinyarwanda, Latvian, Lithuanian, Lower
+Sorbian, Luo, Luxembourgish, Luyia, Macedonian, Machame, Makhuwa-Meetto,
+Makonde, Malagasy, Malay, Maltese, Manx, Meru, Morisyen, North
+Ndebele, Northern Sami, Norwegian Bokmål, Norwegian Nynorsk, Nyankole,
+Oromo, Polish, Portuguese, Romanian, Romansh, Rombo, Rundi, Russian,
+Rwa, Samburu, Sango, Sangu, Scottish Gaelic, Sena, Serbian, Shambala,
+Shona, Slovak, Slovenian, Soga, Somali, Spanish, Swahili, Swedish,
+Swiss German, Taita, Teso, Turkish, Turkmen, Upper Sorbian, Vunjo,
+Walser, Welsh, Zulu</p>
+
+
+    
+      
+  <h4 id="TOC_7.">Jabberwocky in Go Regular</h4>
+  <p>From <a href="https://en.wikipedia.org/wiki/Jabberwocky" target="_blank" rel="noopener">en.wikipedia.org/wiki/Jabberwocky</a>:</p>
+
+<div class="image">
+  <img src="go-fonts/go-font-jabberwocky.png" width="500" alt=""/>
+</div>
+<p>There is no Greek version listed. Instead, a pangram from <a href="http://clagnut.com/blog/2380/#Greek" target="_blank" rel="noopener">clagnut.com/blog/2380/#Greek</a>:</p>
+
+<div class="image">
+  <img src="go-fonts/go-font-greek.png" width="530" alt=""/>
+</div>
+
+
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

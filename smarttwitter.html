@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/smarttwitter" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>Real Go Projects: SmartTwitter and web.go | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>Real Go Projects: SmartTwitter and web.go</h2>
+    <p class="author">
+    Michael Hoisie<br/>
+    19 October 2010
+    </p>
+    
+  
+  
+    
+      
+        <p><em>This week&#39;s article is written by</em> <a href="http://www.hoisie.com/" target="_blank" rel="noopener"><em>Michael Hoisie</em></a>.
+<em>A programmer based in San Francisco, he is one of Go&#39;s early adopters and the author of several popular Go libraries. He describes his experiences using Go:</em></p>
+<p>I was introduced to Go by a post on <a href="http://news.ycombinator.com/" target="_blank" rel="noopener">Hacker News</a>.
+About an hour later I was hooked. At the time I was working at a web start-up,
+and had been developing internal testing apps in Python.
+Go offered speed, better concurrency support,
+and sane Unicode handling, so I was keen to port my programs to the language.
+At that time there wasn&#39;t an easy way to write web apps in Go,
+so I decided to build a simple web framework,
+<a href="http://github.com/hoisie/web.go" target="_blank" rel="noopener">web.go</a>.
+It was modeled after a popular Python framework,
+<a href="http://webpy.org/" target="_blank" rel="noopener">web.py</a>, which I had worked with previously.
+While working on web.go I got involved in the Go community,
+submitted a bunch of bug reports, and hacked on some standard library packages
+(mainly <a href="https://golang.google.cn/pkg/http/" target="_blank" rel="noopener">http</a> and <a href="https://golang.google.cn/pkg/json/" target="_blank" rel="noopener">json</a>).</p>
+<p>After a few weeks I noticed that web.go was getting attention at Github.
+This was surprising because I&#39;d never really promoted the project.
+I think there&#39;s a niche for simple, fast web applications,
+and I think Go can fill it.</p>
+<p>One weekend I decided to write a simple Facebook application:
+it would re-post your Twitter status updates to your Facebook profile.
+There is an official Twitter application to do this,
+but it re-posts everything, creating noise in your Facebook feed.
+My application allowed you to filter retweets,
+mentions, hashtags, replies, and more.
+This turned into <a href="http://www.facebook.com/apps/application.php?id=135488932982" target="_blank" rel="noopener">Smart Twitter</a>,
+which currently has nearly 90,000 users.</p>
+<p>The entire program is written in Go, and uses <a href="https://redis.io/" target="_blank" rel="noopener">Redis</a>
+as its storage back-end.
+It is very fast and robust. It currently processes about two dozen tweets per second,
+and makes heavy use of Go&#39;s channels.
+It runs on a single Virtual Private Server instance with 2GB of RAM,
+which has no problem handling the load.
+Smart Twitter uses very little CPU time, and is almost entirely memory-bound
+as the entire database is kept in memory.
+At any given time there are around 10 goroutines running concurrently:
+one accepting HTTP connections, another reading from the Twitter Streaming API,
+a couple for error handling, and the rest either processing web requests
+or re-posting incoming tweets.</p>
+<p>Smart Twitter also spawned other open-source Go projects:
+<a href="http://github.com/hoisie/mustache.go" target="_blank" rel="noopener">mustache.go</a>,
+<a href="http://github.com/hoisie/redis.go" target="_blank" rel="noopener">redis.go</a>,
+and <a href="http://github.com/hoisie/twitterstream" target="_blank" rel="noopener">twitterstream</a>.</p>
+<p>I see a lot of work left to do on web.go.
+For instance, I&#39;d like to add better support for streaming connections,
+websockets, route filters, better support in shared hosts,
+and improving the documentation.
+I recently left the start-up to do software freelancing,
+and I&#39;m planning to use Go where possible.
+This means I&#39;ll probably use it as a back end for personal apps,
+as well as for clients that like working with cutting edge technology.</p>
+<p>Finally, I&#39;d like to thank the Go team for all their effort.
+Go is a wonderful platform and I think it has a bright future.
+I hope to see the language grow around the needs of the community.
+There&#39;s a lot of interesting stuff happening in the community,
+and I look forward to seeing what people can hack together with the language.</p>
+
+      
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

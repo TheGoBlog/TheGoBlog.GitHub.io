@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/wire" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>Compile-time Dependency Injection With Go Cloud's Wire | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>Compile-time Dependency Injection With Go Cloud's Wire</h2>
+    <p class="author">
+    Robert van Gent<br/>
+    9 October 2018
+    </p>
+    
+  
+  
+    
+      
+  <h4 id="TOC_1.">Overview</h4>
+  <p>The Go team recently <a href="https://TheGoBlog.GitHub.io/go-cloud" target="_blank" rel="noopener">announced</a> the
+open source project <a href="https://github.com/google/go-cloud" target="_blank" rel="noopener">Go Cloud</a>,
+with portable Cloud APIs and tools for <a href="https://cloud.google.com/open-cloud/" target="_blank" rel="noopener">open cloud</a> development.
+This post goes into more detail about Wire,
+a dependency injection tool used in Go Cloud.</p>
+
+
+    
+      
+  <h4 id="TOC_2.">What problem does Wire solve?</h4>
+  <p><a href="https://en.wikipedia.org/wiki/Dependency_injection" target="_blank" rel="noopener">Dependency injection</a>
+is a standard technique for producing flexible and loosely coupled code,
+by explicitly providing components with all of the dependencies they need to work.
+In Go, this often takes the form of passing dependencies to constructors:</p>
+<pre><code>// NewUserStore returns a UserStore that uses cfg and db as dependencies.
+func NewUserStore(cfg *Config, db *mysql.DB) (*UserStore, error) {...}
+</code></pre>
+<p>This technique works great at small scale,
+but larger applications can have a complex graph of dependencies,
+resulting in a big block of initialization code that&#39;s order-dependent but
+otherwise not very interesting.
+It&#39;s often hard to break up this code cleanly,
+especially because some dependencies are used multiple times.
+Replacing one implementation of a service with another can be painful because
+it involves modifying the dependency graph by adding a whole new set of
+dependencies (and their dependencies...),
+and removing unused old ones.
+In practice, making changes to initialization code in applications with
+large dependency graphs is tedious and slow.</p>
+<p>Dependency injection tools like Wire aim to simplify the management of initialization code.
+You describe your services and their dependencies,
+either as code or as configuration, then Wire processes the resulting graph
+to figure out ordering and how to pass each service what it needs.
+Make changes to an application&#39;s dependencies by changing a function signature
+or adding or removing an initializer,
+and then let Wire do the tedious work of generating initialization code
+for the entire dependency graph.</p>
+
+
+    
+      
+  <h4 id="TOC_3.">Why is this part of Go Cloud?</h4>
+  <p>Go Cloud&#39;s goal is to make it easier to write portable Cloud applications
+by providing idiomatic Go APIs for useful Cloud services.
+For example, <a href="https://godoc.org/github.com/google/go-cloud/blob" target="_blank" rel="noopener">blob.Bucket</a>
+provides a storage API with implementations for Amazon&#39;s S3 and Google Cloud Storage (GCS);
+applications written using <code>blob.Bucket</code> can swap implementations without
+changing their application logic.
+However, the initialization code is inherently provider-specific,
+and each provider has a different set of dependencies.</p>
+<p>For example, <a href="https://godoc.org/github.com/google/go-cloud/blob/gcsblob#OpenBucket" target="_blank" rel="noopener">constructing a GCS <code>blob.Bucket</code></a>
+requires a <code>gcp.HTTPClient</code>,
+which eventually requires <code>google.Credentials</code>,
+while <a href="https://godoc.org/github.com/google/go-cloud/blob/s3blob" target="_blank" rel="noopener">constructing one for S3</a>
+requires an <code>aws.Config</code>,
+which eventually requires AWS credentials.
+Thus, updating an application to use a different <code>blob.Bucket</code> implementation
+involves exactly the kind of tedious update to the dependency graph that we described above.
+The driving use case for Wire is to make it easy to swap implementations
+of Go Cloud portable APIs,
+but it&#39;s also a general-purpose tool for dependency injection.</p>
+
+
+    
+      
+  <h4 id="TOC_4.">Hasn&#39;t this been done already?</h4>
+  <p>There are a number of dependency injection frameworks out there.
+For Go, <a href="https://github.com/uber-go/dig" target="_blank" rel="noopener">Uber&#39;s dig</a> and <a href="https://github.com/facebookgo/inject" target="_blank" rel="noopener">Facebook&#39;s inject</a>
+both use reflection to do runtime dependency injection.
+Wire was primarily inspired by Java&#39;s <a href="https://google.github.io/dagger/" target="_blank" rel="noopener">Dagger 2</a>,
+and uses code generation rather than reflection or <a href="https://en.wikipedia.org/wiki/Service_locator_pattern" target="_blank" rel="noopener">service locators</a>.</p>
+<p>We think this approach has several advantages:</p>
+<ul>
+<li>Runtime dependency injection can be hard to follow and debug when the
+dependency graph gets complex.
+Using code generation means that the initialization code that&#39;s executed
+at runtime is regular,
+idiomatic Go code that&#39;s easy to understand and debug.
+Nothing is obfuscated by an intervening framework doing &#34;magic&#34;.
+In particular, problems like forgetting a dependency become compile-time errors,
+not run-time errors.</li>
+<li>Unlike <a href="https://en.wikipedia.org/wiki/Service_locator_pattern" target="_blank" rel="noopener">service locators</a>,
+there&#39;s no need to make up arbitrary names or keys to register services.
+Wire uses Go types to connect components with their dependencies.</li>
+<li>It&#39;s easier to avoid dependency bloat. Wire&#39;s generated code will only
+import the dependencies you need,
+so your binary won&#39;t have unused imports.
+Runtime dependency injectors can&#39;t identify unused dependencies until runtime.</li>
+<li>Wire&#39;s dependency graph is knowable statically, which provides opportunities for tooling and visualization.</li>
+</ul>
+
+
+    
+      
+  <h4 id="TOC_5.">How does it work?</h4>
+  <p>Wire has two basic concepts: providers and injectors.</p>
+<p><em>Providers</em> are ordinary Go functions that &#34;provide&#34; values given their dependencies,
+which are described simply as parameters to the function.
+Here&#39;s some sample code that defines three providers:</p>
+<pre><code>// NewUserStore is the same function we saw above; it is a provider for UserStore,
+// with dependencies on *Config and *mysql.DB.
+func NewUserStore(cfg *Config, db *mysql.DB) (*UserStore, error) {...}
+
+// NewDefaultConfig is a provider for *Config, with no dependencies.
+func NewDefaultConfig() *Config {...}
+
+// NewDB is a provider for *mysql.DB based on some connection info.
+func NewDB(info *ConnectionInfo) (*mysql.DB, error) {...}
+</code></pre>
+<p>Providers that are commonly used together can be grouped into <code>ProviderSets</code>.
+For example, it&#39;s common to use a default <code>*Config</code> when creating a <code>*UserStore</code>,
+so we can group <code>NewUserStore</code> and <code>NewDefaultConfig</code> in a <code>ProviderSet</code>:</p>
+<pre><code>var UserStoreSet = wire.ProviderSet(NewUserStore, NewDefaultConfig)
+</code></pre>
+<p><em>Injectors</em> are generated functions that call providers in dependency order.
+You write the injector&#39;s signature, including any needed inputs as arguments,
+and insert a call to <code>wire.Build</code> with the list of providers or provider
+sets that are needed to construct the end result:</p>
+<pre><code>func initUserStore() (*UserStore, error) {
+    // We&#39;re going to get an error, because NewDB requires a *ConnectionInfo
+    // and we didn&#39;t provide one.
+    wire.Build(UserStoreSet, NewDB)
+    return nil, nil  // These return values are ignored.
+}
+</code></pre>
+<p>Now we run go generate to execute wire:</p>
+<pre><code>$ go generate
+wire.go:2:10: inject initUserStore: no provider found for ConnectionInfo (required by provider of *mysql.DB)
+wire: generate failed
+</code></pre>
+<p>Oops! We didn&#39;t include a <code>ConnectionInfo</code> or tell Wire how to build one.
+Wire helpfully tells us the line number and types involved.
+We can either add a provider for it to <code>wire.Build</code>,
+or add it as an argument:</p>
+<pre><code>func initUserStore(info ConnectionInfo) (*UserStore, error) {
+    wire.Build(UserStoreSet, NewDB)
+    return nil, nil  // These return values are ignored.
+}
+</code></pre>
+<p>Now <code>go generate</code> will create a new file with the generated code:</p>
+<pre><code>// File: wire_gen.go
+// Code generated by Wire. DO NOT EDIT.
+//go:generate wire
+//+build !wireinject
+
+func initUserStore(info ConnectionInfo) (*UserStore, error) {
+    defaultConfig := NewDefaultConfig()
+    db, err := NewDB(info)
+    if err != nil {
+        return nil, err
+    }
+    userStore, err := NewUserStore(defaultConfig, db)
+    if err != nil {
+        return nil, err
+    }
+    return userStore, nil
+}
+</code></pre>
+<p>Any non-injector declarations are copied into the generated file.
+There is no dependency on Wire at runtime:
+all of the written code is just normal Go code.</p>
+<p>As you can see, the output is very close to what a developer would write themselves.
+This was a trivial example with just three components,
+so writing the initializer by hand wouldn&#39;t be too painful,
+but Wire saves a lot of manual toil for components and applications with
+more complex dependency graphs.</p>
+
+
+    
+      
+  <h4 id="TOC_6.">How can I get involved and learn more?</h4>
+  <p>The <a href="https://github.com/google/wire/blob/master/README.md" target="_blank" rel="noopener">Wire README</a>
+goes into more detail about how to use Wire and its more advanced features.
+There&#39;s also a <a href="https://github.com/google/wire/tree/master/_tutorial" target="_blank" rel="noopener">tutorial</a>
+that walks through using Wire in a simple application.</p>
+<p>We appreciate any input you have about your experience with Wire!
+<a href="https://github.com/google/wire" target="_blank" rel="noopener">Wire&#39;s</a> development is conducted on GitHub,
+so you can <a href="https://github.com/google/wire/issues/new/choose" target="_blank" rel="noopener">file an issue</a>
+to tell us what could be better.
+For updates and discussion about the project,
+join <a href="https://groups.google.com/forum/#!forum/go-cloud" target="_blank" rel="noopener">the Go Cloud mailing list</a>.</p>
+<p>Thank you for taking the time to learn about Go Cloud&#39;s Wire.
+We’re excited to work with you to make Go the language of choice for developers
+building portable cloud applications.</p>
+
+
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

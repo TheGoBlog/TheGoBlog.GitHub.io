@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/first-go-program" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>The first Go program | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>The first Go program</h2>
+    <p class="author">
+    Andrew Gerrand<br/>
+    18 July 2013
+    </p>
+    
+  
+  
+    
+      
+        <p>Brad Fitzpatrick and I (Andrew Gerrand) recently started restructuring
+<a href="https://golang.google.cn/cmd/godoc/" target="_blank" rel="noopener">godoc</a>, and it occurred to me that it is one
+of the oldest Go programs.
+Robert Griesemer started writing it back in early 2009,
+and we&#39;re still using it today.</p>
+<p>When I <a href="https://twitter.com/enneff/status/357403054632484865" target="_blank" rel="noopener">tweeted</a> about
+this, Dave Cheney replied with an <a href="https://twitter.com/davecheney/status/357406479415914497" target="_blank" rel="noopener">interesting question</a>:
+what is the oldest Go program? Rob Pike dug into his mail and found it
+in an old message to Robert and Ken Thompson.</p>
+<p>What follows is the first Go program. It was written by Rob in February 2008,
+when the team was just Rob, Robert, and Ken. They had a solid feature list
+(mentioned in <a href="https://commandcenter.blogspot.com.au/2012/06/less-is-exponentially-more.html" target="_blank" rel="noopener">this blog post</a>)
+and a rough language specfication. Ken had just finished the first working version of
+a Go compiler (it didn&#39;t produce native code, but rather transliterated Go code
+to C for fast prototyping) and it was time to try writing a program with it.</p>
+<p>Rob sent mail to the &#34;Go team&#34;:</p>
+<pre><code>From: Rob &#39;Commander&#39; Pike
+Date: Wed, Feb 6, 2008 at 3:42 PM
+To: Ken Thompson, Robert Griesemer
+Subject: slist
+
+it works now.
+
+roro=% a.out
+(defn foo (add 12 34))
+return: icounter = 4440
+roro=%
+
+here&#39;s the code.
+some ugly hackery to get around the lack of strings.
+</code></pre>
+<p>(The <code>icounter</code> line in the program output is the number of executed
+statements, printed for debugging.)</p>
+
+      
+        
+  
+	<div class="code">
+<pre><span num="3">package main</span>
+<span num="4"></span>
+<span num="5">// fake stuff</span>
+<span num="6">type char uint8;</span>
+<span num="7"></span>
+<span num="8">// const char TESTSTRING[] = &#34;(defn foo (add &#39;a &#39;b))\n&#34;;</span>
+<span num="9"></span>
+<span num="10">type Atom struct {</span>
+<span num="11">        string  *[100]char;</span>
+<span num="12">        integer int;</span>
+<span num="13">        next    *Slist;  /* in hash bucket */</span>
+<span num="14">}</span>
+<span num="15"></span>
+<span num="16">type List struct {</span>
+<span num="17">        car     *Slist;</span>
+<span num="18">        cdr     *Slist;</span>
+<span num="19">}</span>
+<span num="20"></span>
+<span num="21">type Slist struct {</span>
+<span num="22">        isatom          bool;</span>
+<span num="23">        isstring        bool;</span>
+<span num="24">        //union {</span>
+<span num="25">        atom    Atom;</span>
+<span num="26">        list    List;</span>
+<span num="27">        //} u;</span>
+<span num="28"></span>
+<span num="29">        Free method();</span>
+<span num="30">        Print method();</span>
+<span num="31">        PrintOne method(doparen bool);</span>
+<span num="32">        String method(*char &lt;-);</span>
+<span num="33">        Integer method(int &lt;-);</span>
+<span num="34">        Car method(*Slist &lt;-);</span>
+<span num="35">        Cdr method(*Slist &lt;-);</span>
+<span num="36">}</span>
+<span num="37"></span>
+<span num="38">method (this *Slist) Car(*Slist &lt;-) {</span>
+<span num="39">        return this.list.car;</span>
+<span num="40">}</span>
+<span num="41"></span>
+<span num="42">method (this *Slist) Cdr(*Slist &lt;-) {</span>
+<span num="43">        return this.list.cdr;</span>
+<span num="44">}</span>
+<span num="45"></span>
+<span num="46">method (this *Slist) String(*[100]char &lt;-) {</span>
+<span num="47">        return this.atom.string;</span>
+<span num="48">}</span>
+<span num="49"></span>
+<span num="50">method (this *Slist) Integer(int &lt;-) {</span>
+<span num="51">        return this.atom.integer;</span>
+<span num="52">}</span>
+<span num="53"></span>
+<span num="54">function OpenFile();</span>
+<span num="55">function Parse(*Slist &lt;-);</span>
+<span num="56"></span>
+<span num="57">//Slist* atom(char *s, int i);</span>
+<span num="58"></span>
+<span num="59">var token int;</span>
+<span num="60">var peekc int = -1;</span>
+<span num="61">var lineno int32 = 1;</span>
+<span num="62"></span>
+<span num="63">var input [100*1000]char;</span>
+<span num="64">var inputindex int = 0;</span>
+<span num="65">var tokenbuf [100]char;</span>
+<span num="66"></span>
+<span num="67">var EOF int = -1;  // BUG should be const</span>
+<span num="68"></span>
+<span num="69">function main(int32 &lt;-) {</span>
+<span num="70">        var list *Slist;</span>
+<span num="71"></span>
+<span num="72">        OpenFile();</span>
+<span num="73">        for ;; {</span>
+<span num="74">                list = Parse();</span>
+<span num="75">                if list == nil {</span>
+<span num="76">                        break;</span>
+<span num="77">                }</span>
+<span num="78">                list.Print();</span>
+<span num="79">                list.Free();</span>
+<span num="80">                break;</span>
+<span num="81">        }</span>
+<span num="82"></span>
+<span num="83">        return 0;</span>
+<span num="84">}</span>
+<span num="85"></span>
+<span num="86">method (slist *Slist) Free(&lt;-) {</span>
+<span num="87">        if slist == nil {</span>
+<span num="88">                return;</span>
+<span num="89">        }</span>
+<span num="90">        if slist.isatom {</span>
+<span num="91">//              free(slist.String());</span>
+<span num="92">        } else {</span>
+<span num="93">                slist.Car().Free();</span>
+<span num="94">                slist.Cdr().Free();</span>
+<span num="95">        }</span>
+<span num="96">//      free(slist);</span>
+<span num="97">}</span>
+<span num="98"></span>
+<span num="99">method (slist *Slist) PrintOne(&lt;- doparen bool) {</span>
+<span num="100">        if slist == nil {</span>
+<span num="101">                return;</span>
+<span num="102">        }</span>
+<span num="103">        if slist.isatom {</span>
+<span num="104">                if slist.isstring {</span>
+<span num="105">                        print(slist.String());</span>
+<span num="106">                } else {</span>
+<span num="107">                        print(slist.Integer());</span>
+<span num="108">                }</span>
+<span num="109">        } else {</span>
+<span num="110">                if doparen {</span>
+<span num="111">                        print(&#34;(&#34;);</span>
+<span num="112">                }</span>
+<span num="113">                slist.Car().PrintOne(true);</span>
+<span num="114">                if slist.Cdr() != nil {</span>
+<span num="115">                        print(&#34; &#34;);</span>
+<span num="116">                        slist.Cdr().PrintOne(false);</span>
+<span num="117">                }</span>
+<span num="118">                if doparen {</span>
+<span num="119">                        print(&#34;)&#34;);</span>
+<span num="120">                }</span>
+<span num="121">        }</span>
+<span num="122">}</span>
+<span num="123"></span>
+<span num="124">method (slist *Slist) Print() {</span>
+<span num="125">        slist.PrintOne(true);</span>
+<span num="126">        print &#34;\n&#34;;</span>
+<span num="127">}</span>
+<span num="128"></span>
+<span num="129">function Get(int &lt;-) {</span>
+<span num="130">        var c int;</span>
+<span num="131"></span>
+<span num="132">        if peekc &gt;= 0 {</span>
+<span num="133">                c = peekc;</span>
+<span num="134">                peekc = -1;</span>
+<span num="135">        } else {</span>
+<span num="136">                c = convert(int, input[inputindex]);</span>
+<span num="137">                inputindex = inputindex + 1; // BUG should be incr one expr</span>
+<span num="138">                if c == &#39;\n&#39; {</span>
+<span num="139">                        lineno = lineno + 1;</span>
+<span num="140">                }</span>
+<span num="141">                if c == &#39;\0&#39; {</span>
+<span num="142">                        inputindex = inputindex - 1;</span>
+<span num="143">                        c = EOF;</span>
+<span num="144">                }</span>
+<span num="145">        }</span>
+<span num="146">        return c;</span>
+<span num="147">}</span>
+<span num="148"></span>
+<span num="149">function WhiteSpace(bool &lt;- c int) {</span>
+<span num="150">        return c == &#39; &#39; || c == &#39;\t&#39; || c == &#39;\r&#39; || c == &#39;\n&#39;;</span>
+<span num="151">}</span>
+<span num="152"></span>
+<span num="153">function NextToken() {</span>
+<span num="154">        var i, c int;</span>
+<span num="155">        var backslash bool;</span>
+<span num="156"></span>
+<span num="157">        tokenbuf[0] = &#39;\0&#39;;     // clear previous token</span>
+<span num="158">        c = Get();</span>
+<span num="159">        while WhiteSpace(c)  {</span>
+<span num="160">                c = Get();</span>
+<span num="161">        }</span>
+<span num="162">        switch c {</span>
+<span num="163">                case EOF:</span>
+<span num="164">                        token = EOF;</span>
+<span num="165">                case &#39;(&#39;:</span>
+<span num="166">                case &#39;)&#39;:</span>
+<span num="167">                        token = c;</span>
+<span num="168">                        break;</span>
+<span num="169">                case:</span>
+<span num="170">                        for i = 0; i &lt; 100 - 1; {  // sizeof tokenbuf - 1</span>
+<span num="171">                                tokenbuf[i] = convert(char, c);</span>
+<span num="172">                                i = i + 1;</span>
+<span num="173">                                c = Get();</span>
+<span num="174">                                if c == EOF {</span>
+<span num="175">                                        break;</span>
+<span num="176">                                }</span>
+<span num="177">                                if WhiteSpace(c) || c == &#39;)&#39; {</span>
+<span num="178">                                        peekc = c;</span>
+<span num="179">                                        break;</span>
+<span num="180">                                }</span>
+<span num="181">                        }</span>
+<span num="182">                        if i &gt;= 100 - 1 {  // sizeof tokenbuf - 1</span>
+<span num="183">                                panic &#34;atom too long\n&#34;;</span>
+<span num="184">                        }</span>
+<span num="185">                        tokenbuf[i] = &#39;\0&#39;;</span>
+<span num="186">                        if &#39;0&#39; &lt;= tokenbuf[0] &amp;&amp; tokenbuf[0] &lt;= &#39;9&#39; {</span>
+<span num="187">                                token = &#39;0&#39;;</span>
+<span num="188">                        } else {</span>
+<span num="189">                                token = &#39;A&#39;;</span>
+<span num="190">                        }</span>
+<span num="191">        }</span>
+<span num="192">}</span>
+<span num="193"></span>
+<span num="194">function Expect(&lt;- c int) {</span>
+<span num="195">        if token != c {</span>
+<span num="196">                print &#34;parse error: expected &#34;, c, &#34;\n&#34;;</span>
+<span num="197">                panic &#34;parse&#34;;</span>
+<span num="198">        }</span>
+<span num="199">        NextToken();</span>
+<span num="200">}</span>
+<span num="201"></span>
+<span num="202">// Parse a non-parenthesized list up to a closing paren or EOF</span>
+<span num="203">function ParseList(*Slist &lt;-) {</span>
+<span num="204">        var slist, retval *Slist;</span>
+<span num="205"></span>
+<span num="206">        slist = new(Slist);</span>
+<span num="207">        slist.list.car = nil;</span>
+<span num="208">        slist.list.cdr = nil;</span>
+<span num="209">        slist.isatom = false;</span>
+<span num="210">        slist.isstring = false;</span>
+<span num="211"></span>
+<span num="212">        retval = slist;</span>
+<span num="213">        for ;; {</span>
+<span num="214">                slist.list.car = Parse();</span>
+<span num="215">                if token == &#39;)&#39; {       // empty cdr</span>
+<span num="216">                        break;</span>
+<span num="217">                }</span>
+<span num="218">                if token == EOF {       // empty cdr  BUG SHOULD USE ||</span>
+<span num="219">                        break;</span>
+<span num="220">                }</span>
+<span num="221">                slist.list.cdr = new(Slist);</span>
+<span num="222">                slist = slist.list.cdr;</span>
+<span num="223">        }</span>
+<span num="224">        return retval;</span>
+<span num="225">}</span>
+<span num="226"></span>
+<span num="227">function atom(*Slist &lt;- i int) {  // BUG: uses tokenbuf; should take argument</span>
+<span num="228">        var h, length int;</span>
+<span num="229">        var slist, tail *Slist;</span>
+<span num="230">        </span>
+<span num="231">        slist = new(Slist);</span>
+<span num="232">        if token == &#39;0&#39; {</span>
+<span num="233">                slist.atom.integer = i;</span>
+<span num="234">                slist.isstring = false;</span>
+<span num="235">        } else {</span>
+<span num="236">                slist.atom.string = new([100]char);</span>
+<span num="237">                var i int;</span>
+<span num="238">                for i = 0; ; i = i + 1 {</span>
+<span num="239">                        (*slist.atom.string)[i] = tokenbuf[i];</span>
+<span num="240">                        if tokenbuf[i] == &#39;\0&#39; {</span>
+<span num="241">                                break;</span>
+<span num="242">                        }</span>
+<span num="243">                }</span>
+<span num="244">                //slist.atom.string = &#34;hello&#34;; // BUG! s; //= strdup(s);</span>
+<span num="245">                slist.isstring = true;</span>
+<span num="246">        }</span>
+<span num="247">        slist.isatom = true;</span>
+<span num="248">        return slist;</span>
+<span num="249">}</span>
+<span num="250"></span>
+<span num="251">function atoi(int &lt;-) {  // BUG: uses tokenbuf; should take argument</span>
+<span num="252">        var v int = 0;</span>
+<span num="253">        for i := 0; &#39;0&#39; &lt;= tokenbuf[i] &amp;&amp; tokenbuf[i] &lt;= &#39;9&#39;; i = i + 1 {</span>
+<span num="254">                v = 10 * v + convert(int, tokenbuf[i] - &#39;0&#39;);</span>
+<span num="255">        }</span>
+<span num="256">        return v;</span>
+<span num="257">}</span>
+<span num="258"></span>
+<span num="259">function Parse(*Slist &lt;-) {</span>
+<span num="260">        var slist *Slist;</span>
+<span num="261">        </span>
+<span num="262">        if token == EOF || token == &#39;)&#39; {</span>
+<span num="263">                return nil;</span>
+<span num="264">        }</span>
+<span num="265">        if token == &#39;(&#39; {</span>
+<span num="266">                NextToken();</span>
+<span num="267">                slist = ParseList();</span>
+<span num="268">                Expect(&#39;)&#39;);</span>
+<span num="269">                return slist;</span>
+<span num="270">        } else {</span>
+<span num="271">                // Atom</span>
+<span num="272">                switch token {</span>
+<span num="273">                        case EOF:</span>
+<span num="274">                                return nil;</span>
+<span num="275">                        case &#39;0&#39;:</span>
+<span num="276">                                slist = atom(atoi());</span>
+<span num="277">                        case &#39;&#34;&#39;:</span>
+<span num="278">                        case &#39;A&#39;:</span>
+<span num="279">                                slist = atom(0);</span>
+<span num="280">                        case:</span>
+<span num="281">                                slist = nil;</span>
+<span num="282">                                print &#34;unknown token&#34;; //, token, tokenbuf;</span>
+<span num="283">                }</span>
+<span num="284">                NextToken();</span>
+<span num="285">                return slist;</span>
+<span num="286">        }</span>
+<span num="287">        return nil;</span>
+<span num="288">}</span>
+<span num="289"></span>
+<span num="290">function OpenFile() {</span>
+<span num="291">        //strcpy(input, TESTSTRING);</span>
+<span num="292">        //inputindex = 0;</span>
+<span num="293">        // (defn foo (add 12 34))\n</span>
+<span num="294">        inputindex = 0;</span>
+<span num="295">        peekc = -1;  // BUG</span>
+<span num="296">        EOF = -1;  // BUG</span>
+<span num="297">        i := 0;</span>
+<span num="298">        input[i] = &#39;(&#39;; i = i + 1;</span>
+<span num="299">        input[i] = &#39;d&#39;; i = i + 1;</span>
+<span num="300">        input[i] = &#39;e&#39;; i = i + 1;</span>
+<span num="301">        input[i] = &#39;f&#39;; i = i + 1;</span>
+<span num="302">        input[i] = &#39;n&#39;; i = i + 1;</span>
+<span num="303">        input[i] = &#39; &#39;; i = i + 1;</span>
+<span num="304">        input[i] = &#39;f&#39;; i = i + 1;</span>
+<span num="305">        input[i] = &#39;o&#39;; i = i + 1;</span>
+<span num="306">        input[i] = &#39;o&#39;; i = i + 1;</span>
+<span num="307">        input[i] = &#39; &#39;; i = i + 1;</span>
+<span num="308">        input[i] = &#39;(&#39;; i = i + 1;</span>
+<span num="309">        input[i] = &#39;a&#39;; i = i + 1;</span>
+<span num="310">        input[i] = &#39;d&#39;; i = i + 1;</span>
+<span num="311">        input[i] = &#39;d&#39;; i = i + 1;</span>
+<span num="312">        input[i] = &#39; &#39;; i = i + 1;</span>
+<span num="313">        input[i] = &#39;1&#39;; i = i + 1;</span>
+<span num="314">        input[i] = &#39;2&#39;; i = i + 1;</span>
+<span num="315">        input[i] = &#39; &#39;; i = i + 1;</span>
+<span num="316">        input[i] = &#39;3&#39;; i = i + 1;</span>
+<span num="317">        input[i] = &#39;4&#39;; i = i + 1;</span>
+<span num="318">        input[i] = &#39;)&#39;; i = i + 1;</span>
+<span num="319">        input[i] = &#39;)&#39;; i = i + 1;</span>
+<span num="320">        input[i] = &#39;\n&#39;; i = i + 1;</span>
+<span num="321">        NextToken();</span>
+<span num="322">}</span>
+</pre>
+</div>
+  
+
+      
+        <p>The program parses and prints an
+<a href="https://en.wikipedia.org/wiki/S-expression" target="_blank" rel="noopener">S-expression</a>.
+It takes no user input and has no imports, relying only on the built-in
+<code>print</code> facility for output.
+It was written literally the first day there was a
+<a href="https://golang.google.cn/change/8b8615138da3" target="_blank" rel="noopener">working but rudimentary compiler</a>.
+Much of the language wasn&#39;t implemented and some of it wasn&#39;t even specified.</p>
+<p>Still, the basic flavor of the language today is recognizable in this program.
+Type and variable declarations, control flow, and package statements haven&#39;t
+changed much.</p>
+<p>But there are many differences and absences.
+Most significant are the lack of concurrency and interfaces—both
+considered essential since day 1 but not yet designed.</p>
+<p>A <code>func</code> was a <code>function</code>, and its signature specified return values
+<em>before</em> arguments, separating them with <code>&lt;-</code>, which we now use as the channel
+send/receive operator. For example, the <code>WhiteSpace</code> function takes the integer
+<code>c</code> and returns a boolean.</p>
+<pre><code>function WhiteSpace(bool &lt;- c int)
+</code></pre>
+<p>This arrow was a stop-gap measure until a better syntax arose for declaring
+multiple return values.</p>
+<p>Methods were distinct from functions and had their own keyword.</p>
+<pre><code>method (this *Slist) Car(*Slist &lt;-) {
+    return this.list.car;
+}
+</code></pre>
+<p>And methods were pre-declared in the struct definition, although that changed soon.</p>
+<pre><code>type Slist struct {
+    ...
+    Car method(*Slist &lt;-);
+}
+</code></pre>
+<p>There were no strings, although they were in the spec.
+To work around this, Rob had to build the input string as an <code>uint8</code> array with
+a clumsy construction. (Arrays were rudimentary and slices hadn&#39;t been designed
+yet, let alone implemented, although there was the unimplemented concept of an
+&#34;open array&#34;.)</p>
+<pre><code>input[i] = &#39;(&#39;; i = i + 1;
+input[i] = &#39;d&#39;; i = i + 1;
+input[i] = &#39;e&#39;; i = i + 1;
+input[i] = &#39;f&#39;; i = i + 1;
+input[i] = &#39;n&#39;; i = i + 1;
+input[i] = &#39; &#39;; i = i + 1;
+...
+</code></pre>
+<p>Both <code>panic</code> and <code>print</code> were built-in keywords, not pre-declared functions.</p>
+<pre><code>print &#34;parse error: expected &#34;, c, &#34;\n&#34;;
+panic &#34;parse&#34;;
+</code></pre>
+<p>And there are many other little differences; see if you can identify some others.</p>
+<p>Less than two years after this program was written, Go was released as an
+open source project. Looking back, it is striking how much the language has
+grown and matured. (The last thing to change between this proto-Go and the Go
+we know today was the elimination of semicolons.)</p>
+<p>But even more striking is how much we have learned about <em>writing</em> Go code.
+For instance, Rob called his method receivers <code>this</code>, but now we use shorter
+context-specific names. There are hundreds of more significant examples
+and to this day we&#39;re still discovering better ways to write Go code.
+(Check out the <a href="https://github.com/golang/glog" target="_blank" rel="noopener">glog package</a>&#39;s clever trick for
+<a href="https://github.com/golang/glog/blob/c6f9652c7179652e2fd8ed7002330db089f4c9db/glog.go#L893" target="_blank" rel="noopener">handling verbosity levels</a>.)</p>
+<p>I wonder what we&#39;ll learn tomorrow.</p>
+
+      
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

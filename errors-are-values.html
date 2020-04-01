@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/errors-are-values" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>Errors are values | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>Errors are values</h2>
+    <p class="author">
+    Rob Pike<br/>
+    12 January 2015
+    </p>
+    
+  
+  
+    
+      
+        <p>A common point of discussion among Go programmers,
+especially those new to the language, is how to handle errors.
+The conversation often turns into a lament at the number of times the sequence</p>
+<pre><code>if err != nil {
+    return err
+}
+</code></pre>
+<p>shows up.
+We recently scanned all the open source projects we could find and
+discovered that this snippet occurs only once per page or two,
+less often than some would have you believe.
+Still, if the perception persists that one must type</p>
+<pre><code>if err != nil
+</code></pre>
+<p>all the time, something must be wrong, and the obvious target is Go itself.</p>
+<p>This is unfortunate, misleading, and easily corrected.
+Perhaps what is happening is that programmers new to Go ask,
+&#34;How does one handle errors?&#34;, learn this pattern, and stop there.
+In other languages, one might use a try-catch block or other such mechanism to handle errors.
+Therefore, the programmer thinks, when I would have used a try-catch
+in my old language, I will just type <code>if</code> <code>err</code> <code>!=</code> <code>nil</code> in Go.
+Over time the Go code collects many such snippets, and the result feels clumsy.</p>
+<p>Regardless of whether this explanation fits,
+it is clear that these Go programmers miss a fundamental point about errors:
+<em>Errors are values.</em></p>
+<p>Values can be programmed, and since errors are values, errors can be programmed.</p>
+<p>Of course a common statement involving an error value is to test whether it is nil,
+but there are countless other things one can do with an error value,
+and application of some of those other things can make your program better,
+eliminating much of the boilerplate that arises if every error is checked with a rote if statement.</p>
+<p>Here&#39;s a simple example from the <code>bufio</code> package&#39;s
+<a href="https://golang.google.cn/pkg/bufio/#Scanner" target="_blank" rel="noopener"><code>Scanner</code></a> type.
+Its <a href="https://golang.google.cn/pkg/bufio/#Scanner.Scan" target="_blank" rel="noopener"><code>Scan</code></a> method performs the underlying I/O,
+which can of course lead to an error.
+Yet the <code>Scan</code> method does not expose an error at all.
+Instead, it returns a boolean, and a separate method, to be run at the end of the scan,
+reports whether an error occurred.
+Client code looks like this:</p>
+<pre><code>scanner := bufio.NewScanner(input)
+for scanner.Scan() {
+    token := scanner.Text()
+    // process token
+}
+if err := scanner.Err(); err != nil {
+    // process the error
+}
+</code></pre>
+<p>Sure, there is a nil check for an error, but it appears and executes only once.
+The <code>Scan</code> method could instead have been defined as</p>
+<pre><code>func (s *Scanner) Scan() (token []byte, error)
+</code></pre>
+<p>and then the example user code might be (depending on how the token is retrieved),</p>
+<pre><code>scanner := bufio.NewScanner(input)
+for {
+    token, err := scanner.Scan()
+    if err != nil {
+        return err // or maybe break
+    }
+    // process token
+}
+</code></pre>
+<p>This isn&#39;t very different, but there is one important distinction.
+In this code, the client must check for an error on every iteration,
+but in the real <code>Scanner</code> API, the error handling is abstracted away from the key API element,
+which is iterating over tokens.
+With the real API, the client&#39;s code therefore feels more natural:
+loop until done, then worry about errors.
+Error handling does not obscure the flow of control.</p>
+<p>Under the covers what&#39;s happening, of course,
+is that as soon as <code>Scan</code> encounters an I/O error, it records it and returns <code>false</code>.
+A separate method, <a href="https://golang.google.cn/pkg/bufio/#Scanner.Err" target="_blank" rel="noopener"><code>Err</code></a>,
+reports the error value when the client asks.
+Trivial though this is, it&#39;s not the same as putting</p>
+<pre><code>if err != nil
+</code></pre>
+<p>everywhere or asking the client to check for an error after every token.
+It&#39;s programming with error values.
+Simple programming, yes, but programming nonetheless.</p>
+<p>It&#39;s worth stressing that whatever the design,
+it&#39;s critical that the program check the errors however they are exposed.
+The discussion here is not about how to avoid checking errors,
+it&#39;s about using the language to handle errors with grace.</p>
+<p>The topic of repetitive error-checking code arose when I attended the autumn 2014 GoCon in Tokyo.
+An enthusiastic gopher, who goes by <a href="https://twitter.com/jxck_" target="_blank" rel="noopener"><code>@jxck_</code></a> on Twitter,
+echoed the familiar lament about error checking.
+He had some code that looked schematically like this:</p>
+<pre><code>_, err = fd.Write(p0[a:b])
+if err != nil {
+    return err
+}
+_, err = fd.Write(p1[c:d])
+if err != nil {
+    return err
+}
+_, err = fd.Write(p2[e:f])
+if err != nil {
+    return err
+}
+// and so on
+</code></pre>
+<p>It is very repetitive.
+In the real code, which was longer,
+there is more going on so it&#39;s not easy to just refactor this using a helper function,
+but in this idealized form, a function literal closing over the error variable would help:</p>
+<pre><code>var err error
+write := func(buf []byte) {
+    if err != nil {
+        return
+    }
+    _, err = w.Write(buf)
+}
+write(p0[a:b])
+write(p1[c:d])
+write(p2[e:f])
+// and so on
+if err != nil {
+    return err
+}
+</code></pre>
+<p>This pattern works well, but requires a closure in each function doing the writes;
+a separate helper function is clumsier to use because the <code>err</code> variable
+needs to be maintained across calls (try it).</p>
+<p>We can make this cleaner, more general, and reusable by borrowing the idea from the
+<code>Scan</code> method above.
+I mentioned this technique in our discussion but <code>@jxck_</code> didn&#39;t see how to apply it.
+After a long exchange, hampered somewhat by a language barrier,
+I asked if I could just borrow his laptop and show him by typing some code.</p>
+<p>I defined an object called an <code>errWriter</code>, something like this:</p>
+<pre><code>type errWriter struct {
+    w   io.Writer
+    err error
+}
+</code></pre>
+<p>and gave it one method, <code>write.</code>
+It doesn&#39;t need to have the standard <code>Write</code> signature,
+and it&#39;s lower-cased in part to highlight the distinction.
+The <code>write</code> method calls the <code>Write</code> method of the underlying <code>Writer</code>
+and records the first error for future reference:</p>
+<pre><code>func (ew *errWriter) write(buf []byte) {
+    if ew.err != nil {
+        return
+    }
+    _, ew.err = ew.w.Write(buf)
+}
+</code></pre>
+<p>As soon as an error occurs, the <code>write</code> method becomes a no-op but the error value is saved.</p>
+<p>Given the <code>errWriter</code> type and its <code>write</code> method, the code above can be refactored:</p>
+<pre><code>ew := &amp;errWriter{w: fd}
+ew.write(p0[a:b])
+ew.write(p1[c:d])
+ew.write(p2[e:f])
+// and so on
+if ew.err != nil {
+    return ew.err
+}
+</code></pre>
+<p>This is cleaner, even compared to the use of a closure,
+and also makes the actual sequence of writes being done easier to see on the page.
+There is no clutter any more.
+Programming with error values (and interfaces) has made the code nicer.</p>
+<p>It&#39;s likely that some other piece of code in the same package can build on this idea,
+or even use <code>errWriter</code> directly.</p>
+<p>Also, once <code>errWriter</code> exists, there&#39;s more it could do to help,
+especially in less artificial examples.
+It could accumulate the byte count.
+It could coalesce writes into a single buffer that can then be transmitted atomically.
+And much more.</p>
+<p>In fact, this pattern appears often in the standard library.
+The <a href="https://golang.google.cn/pkg/archive/zip/" target="_blank" rel="noopener"><code>archive/zip</code></a> and
+<a href="https://golang.google.cn/pkg/net/http/" target="_blank" rel="noopener"><code>net/http</code></a> packages use it.
+More salient to this discussion, the <a href="https://golang.google.cn/pkg/bufio/" target="_blank" rel="noopener"><code>bufio</code> package&#39;s <code>Writer</code></a>
+is actually an implementation of the <code>errWriter</code> idea.
+Although <code>bufio.Writer.Write</code> returns an error,
+that is mostly about honoring the <a href="https://golang.google.cn/pkg/io/#Writer" target="_blank" rel="noopener"><code>io.Writer</code></a> interface.
+The <code>Write</code> method of <code>bufio.Writer</code> behaves just like our <code>errWriter.write</code>
+method above, with <code>Flush</code> reporting the error, so our example could be written like this:</p>
+<pre><code>b := bufio.NewWriter(fd)
+b.Write(p0[a:b])
+b.Write(p1[c:d])
+b.Write(p2[e:f])
+// and so on
+if b.Flush() != nil {
+    return b.Flush()
+}
+</code></pre>
+<p>There is one significant drawback to this approach, at least for some applications:
+there is no way to know how much of the processing completed before the error occurred.
+If that information is important, a more fine-grained approach is necessary.
+Often, though, an all-or-nothing check at the end is sufficient.</p>
+<p>We&#39;ve looked at just one technique for avoiding repetitive error handling code.
+Keep in mind that the use of <code>errWriter</code> or <code>bufio.Writer</code> isn&#39;t the only way to simplify error handling,
+and this approach is not suitable for all situations.
+The key lesson, however, is that errors are values and the full power of
+the Go programming language is available for processing them.</p>
+<p>Use the language to simplify your error handling.</p>
+<p>But remember: Whatever you do, always check your errors!</p>
+<p>Finally, for the full story of my interaction with @jxck_, including a little video he recorded,
+visit <a href="http://jxck.hatenablog.com/entry/golang-error-handling-lesson-by-rob-pike" target="_blank" rel="noopener">his blog</a>.</p>
+
+      
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

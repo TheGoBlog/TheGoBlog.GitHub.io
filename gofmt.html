@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/gofmt" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>go fmt your code | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>go fmt your code</h2>
+    <p class="author">
+    Andrew Gerrand<br/>
+    23 January 2013
+    </p>
+    
+  
+  
+    
+      
+  <h4 id="TOC_1.">Introduction</h4>
+  <p><a href="https://golang.google.cn/cmd/gofmt/" target="_blank" rel="noopener">Gofmt</a> is a tool that automatically formats Go source code.</p>
+<p>Gofmt&#39;d code is:</p>
+<ul>
+<li>
+<p>easier to <strong>write</strong>: never worry about minor formatting concerns while hacking away,</p>
+</li>
+<li>
+<p>easier to <strong>read</strong>: when all code looks the same you need not mentally convert
+others&#39; formatting style into something you can understand.</p>
+</li>
+<li>
+<p>easier to <strong>maintain</strong>: mechanical changes to the source don&#39;t cause unrelated
+changes to the file&#39;s formatting;
+diffs show only the real changes.</p>
+</li>
+<li>
+<p><strong>uncontroversial</strong>: never have a debate about spacing or brace position ever again!</p>
+</li>
+</ul>
+
+
+    
+      
+  <h4 id="TOC_2.">Format your code</h4>
+  <p>We recently conducted a survey of Go packages in the wild and found that
+about 70% of them are formatted according to gofmt&#39;s rules.
+This was more than expected - and thanks to everyone who uses gofmt - but
+it would be great to close the gap.</p>
+<p>To format your code, you can use the gofmt tool directly:</p>
+<pre><code>gofmt -w yourcode.go
+</code></pre>
+<p>Or you can use the &#34;<a href="https://golang.google.cn/cmd/go/#hdr-Run_gofmt_on_package_sources" target="_blank" rel="noopener">go fmt</a>&#34; command:</p>
+<pre><code>go fmt path/to/your/package
+</code></pre>
+<p>To help keep your code in the canonical style,
+the Go repository contains hooks for editors and version control systems
+that make it easy to run gofmt on your code.</p>
+<p>For Vim users, the <a href="https://github.com/fatih/vim-go" target="_blank" rel="noopener">Vim plugin for Go</a>
+includes the :Fmt command that runs gofmt on the current buffer.</p>
+<p>For emacs users, <a href="https://github.com/dominikh/go-mode.el" target="_blank" rel="noopener">go-mode.el</a>
+provides a gofmt-before-save hook that can be installed by adding this line
+to your .emacs file:</p>
+<pre><code>(add-hook &#39;before-save-hook #&#39;gofmt-before-save)
+</code></pre>
+<p>For Eclipse or Sublime Text users, the <a href="https://github.com/GoClipse/goclipse" target="_blank" rel="noopener">GoClipse</a>
+and <a href="https://github.com/DisposaBoy/GoSublime" target="_blank" rel="noopener">GoSublime</a> projects add
+a gofmt facility to those editors.</p>
+<p>And for Git aficionados, the <a href="https://github.com/golang/go/blob/release-branch.go1.1/misc/git/pre-commit" target="_blank" rel="noopener">misc/git/pre-commit script</a>
+is a pre-commit hook that prevents incorrectly-formatted Go code from being committed.
+If you use Mercurial, the <a href="https://bitbucket.org/fhs/hgstyle/overview" target="_blank" rel="noopener">hgstyle plugin</a>
+provides a gofmt pre-commit hook.</p>
+
+
+    
+      
+  <h4 id="TOC_3.">Mechanical source transformation</h4>
+  <p>One of the greatest virtues of machine-formatted code is that it can be
+transformed mechanically without generating unrelated formatting noise in the diffs.
+Mechanical transformation is invaluable when working with large code bases,
+as it is both more comprehensive and less error prone than making wide-sweeping changes by hand.
+Indeed, when working at scale (like we do at Google) it often isn&#39;t practical
+to make these kinds of changes manually.</p>
+<p>The easiest way to mechanically manipulate Go code is with gofmt&#39;s -r flag.
+The flag specifies a rewrite rule of the form</p>
+<pre><code>pattern -&gt; replacement
+</code></pre>
+<p>where both pattern and replacement are valid Go expressions.
+In the pattern, single-character lowercase identifiers serve as wildcards
+matching arbitrary sub-expressions,
+and those expressions are substituted for the same identifiers in the replacement.</p>
+<p>For example, this<a href="https://golang.google.cn/cl/7038051" target="_blank" rel="noopener"> recent change</a> to the
+Go core rewrote some uses of <a href="https://golang.google.cn/pkg/bytes/#Compare" target="_blank" rel="noopener">bytes.Compare</a>
+to use the more efficient <a href="https://golang.google.cn/pkg/bytes/#Equal" target="_blank" rel="noopener">bytes.Equal</a>.
+The contributor made the change using just two gofmt invocations:</p>
+<pre><code>gofmt -r &#39;bytes.Compare(a, b) == 0 -&gt; bytes.Equal(a, b)&#39;
+gofmt -r &#39;bytes.Compare(a, b) != 0 -&gt; !bytes.Equal(a, b)&#39;
+</code></pre>
+<p>Gofmt also enables <a href="https://golang.google.cn/cmd/fix/" target="_blank" rel="noopener">gofix</a>,
+which can make arbitrarily complex source transformations.
+Gofix was an invaluable tool during the early days when we regularly made
+breaking changes to the language and libraries.
+For example, before Go 1 the built-in error interface didn&#39;t exist and the
+convention was to use the os.Error type.
+When we <a href="https://golang.google.cn/doc/go1.html#errors" target="_blank" rel="noopener">introduced error</a>,
+we provided a gofix module that rewrote all references to os.Error and its
+associated helper functions to use error and the new <a href="https://golang.google.cn/pkg/errors/" target="_blank" rel="noopener">errors package</a>.
+It would have been daunting to attempt by hand,
+but with the code in a standard format it was relatively easy to prepare,
+execute, and review this change which touched almost all Go code in existence.</p>
+<p>For more about gofix, see <a href="https://TheGoBlog.GitHub.io/introducing-gofix" target="_blank" rel="noopener">this article</a>.</p>
+
+
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

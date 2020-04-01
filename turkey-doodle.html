@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/turkey-doodle" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>From zero to Go: launching on the Google homepage in 24 hours | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>From zero to Go: launching on the Google homepage in 24 hours</h2>
+    <p class="author">
+    Reinaldo Aguiar<br/>
+    13 December 2011
+    </p>
+    
+  
+  
+    
+      
+  <h4 id="TOC_1.">Introduction</h4>
+  <p><em>This article was written by Reinaldo Aguiar, a software engineer from the Search team at Google. He shares his experience developing his first Go program and launching it to an audience of millions - all in one day!</em></p>
+<p>I was recently given the opportunity to collaborate on a small but highly
+visible &#34;20% project&#34;:
+the <a href="http://www.google.com/logos/2011/thanksgiving.html" target="_blank" rel="noopener">Thanksgiving 2011 Google Doodle</a>.
+The doodle features a turkey produced by randomly combining different styles of head,
+wings, feathers and legs.
+The user can customize it by clicking on the different parts of the turkey.
+This interactivity is implemented in the browser by a combination of JavaScript,
+CSS and of course HTML, creating turkeys on the fly.</p>
+
+<div class="image">
+  <img src="turkey-doodle/image00.png" alt=""/>
+</div>
+<p>Once the user has created a personalized turkey it can be shared with friends
+and family by posting to Google+.
+Clicking a &#34;Share&#34; button (not pictured here) creates in the user&#39;s Google+
+stream a post containing a snapshot of the turkey.
+The snapshot is a single image that matches the turkey the user created.</p>
+<p>With 13 alternatives for each of 8 parts of the turkey (heads,
+pairs of legs, distinct feathers, etc.) there are more than than 800 million
+possible snapshot images that could be generated.
+To pre-compute them all is clearly infeasible.
+Instead, we must generate the snapshots on the fly.
+Combining that problem with a need for immediate scalability and high availability,
+the choice of platform is obvious: Google App Engine!</p>
+<p>The next thing we needed to decide was which App Engine runtime to use.
+Image manipulation tasks are CPU-bound, so performance is the deciding factor in this case.</p>
+<p>To make an informed decision we ran a test.
+We quickly prepared a couple of equivalent demo apps for the new <a href="http://code.google.com/appengine/docs/python/python27/newin27.html" target="_blank" rel="noopener">Python 2.7 runtime</a>
+(which provides <a href="http://www.pythonware.com/products/pil/" target="_blank" rel="noopener">PIL</a>,
+a C-based imaging library) and the Go runtime.
+Each app generates an image composed of several small images,
+encodes the image as a JPEG, and sends the JPEG data as the HTTP response.
+The Python 2.7 app served requests with a median latency of 65 milliseconds,
+while the Go app ran with a median latency of just 32 milliseconds.</p>
+<p>This problem therefore seemed the perfect opportunity to try the experimental Go runtime.</p>
+<p>I had no previous experience with Go and the timeline was tight:
+two days to be production ready.
+This was intimidating, but I saw it as an opportunity to test Go from a different,
+often overlooked angle:
+development velocity.
+How fast can a person with no Go experience pick it up and build something
+that performs and scales?</p>
+
+
+    
+      
+  <h4 id="TOC_2.">Design</h4>
+  <p>The approach was to encode the state of the turkey in the URL, drawing and encoding the snapshot on the fly.</p>
+<p>The base for every doodle is the background:</p>
+
+<div class="image">
+  <img src="turkey-doodle/image01.jpg" alt=""/>
+</div>
+<p>A valid request URL might look like this:
+<code>http://google-turkey.appspot.com/thumb/20332620][http://google-turkey.appspot.com/thumb/20332620</code></p>
+<p>The alphanumeric string that follows &#34;/thumb/&#34; indicates (in hexadecimal)
+which choice to draw for each layout element,
+as illustrated by this image:</p>
+
+<div class="image">
+  <img src="turkey-doodle/image03.png" alt=""/>
+</div>
+<p>The program&#39;s request handler parses the URL to determine which element
+is selected for each component,
+draws the appropriate images on top of the background image,
+and serves the result as a JPEG.</p>
+<p>If an error occurs, a default image is served.
+There&#39;s no point serving an error page because the user will never see it -
+the browser is almost certainly loading this URL into an image tag.</p>
+
+
+    
+      
+  <h4 id="TOC_3.">Implementation</h4>
+  <p>In the package scope we declare some data structures to describe the elements of the turkey,
+the location of the corresponding images,
+and where they should be drawn on the background image.</p>
+<pre><code>var (
+    // dirs maps each layout element to its location on disk.
+    dirs = map[string]string{
+        &#34;h&#34;: &#34;img/heads&#34;,
+        &#34;b&#34;: &#34;img/eyes_beak&#34;,
+        &#34;i&#34;: &#34;img/index_feathers&#34;,
+        &#34;m&#34;: &#34;img/middle_feathers&#34;,
+        &#34;r&#34;: &#34;img/ring_feathers&#34;,
+        &#34;p&#34;: &#34;img/pinky_feathers&#34;,
+        &#34;f&#34;: &#34;img/feet&#34;,
+        &#34;w&#34;: &#34;img/wing&#34;,
+    }
+
+    // urlMap maps each URL character position to
+    // its corresponding layout element.
+    urlMap = [...]string{&#34;b&#34;, &#34;h&#34;, &#34;i&#34;, &#34;m&#34;, &#34;r&#34;, &#34;p&#34;, &#34;f&#34;, &#34;w&#34;}
+
+    // layoutMap maps each layout element to its position
+    // on the background image.
+    layoutMap = map[string]image.Rectangle{
+        &#34;h&#34;: {image.Pt(109, 50), image.Pt(166, 152)},
+        &#34;i&#34;: {image.Pt(136, 21), image.Pt(180, 131)},
+        &#34;m&#34;: {image.Pt(159, 7), image.Pt(201, 126)},
+        &#34;r&#34;: {image.Pt(188, 20), image.Pt(230, 125)},
+        &#34;p&#34;: {image.Pt(216, 48), image.Pt(258, 134)},
+        &#34;f&#34;: {image.Pt(155, 176), image.Pt(243, 213)},
+        &#34;w&#34;: {image.Pt(169, 118), image.Pt(250, 197)},
+        &#34;b&#34;: {image.Pt(105, 104), image.Pt(145, 148)},
+    }
+)
+</code></pre>
+<p>The geometry of the points above was calculated by measuring the actual
+location and size of each layout element within the image.</p>
+<p>Loading the images from disk on each request would be wasteful repetition,
+so we load all 106 images (13 * 8 elements + 1 background + 1 default) into
+global variables upon receipt of the first request.</p>
+<pre><code>var (
+    // elements maps each layout element to its images.
+    elements = make(map[string][]*image.RGBA)
+
+    // backgroundImage contains the background image data.
+    backgroundImage *image.RGBA
+
+    // defaultImage is the image that is served if an error occurs.
+    defaultImage *image.RGBA
+
+    // loadOnce is used to call the load function only on the first request.
+    loadOnce sync.Once
+)
+
+// load reads the various PNG images from disk and stores them in their
+// corresponding global variables.
+func load() {
+    defaultImage = loadPNG(defaultImageFile)
+    backgroundImage = loadPNG(backgroundImageFile)
+    for dirKey, dir := range dirs {
+        paths, err := filepath.Glob(dir + &#34;/*.png&#34;)
+        if err != nil {
+            panic(err)
+        }
+        for _, p := range paths {
+            elements[dirKey] = append(elements[dirKey], loadPNG(p))
+        }
+    }
+}
+</code></pre>
+<p>Requests are handled in a straightforward sequence:</p>
+<ul>
+<li>
+<p>Parse the request URL, decoding the decimal value of each character in the path.</p>
+</li>
+<li>
+<p>Make a copy of the background image as the base for the final image.</p>
+</li>
+<li>
+<p>Draw each image element onto the background image using the layoutMap to determine where they should be drawn.</p>
+</li>
+<li>
+<p>Encode the image as a JPEG</p>
+</li>
+<li>
+<p>Return the image to user by writing the JPEG directly to the HTTP response writer.</p>
+</li>
+</ul>
+<p>Should any error occur, we serve the defaultImage to the user and log the
+error to the App Engine dashboard for later analysis.</p>
+<p>Here&#39;s the code for the request handler with explanatory comments:</p>
+<pre><code>func handler(w http.ResponseWriter, r *http.Request) {
+    // [[https://TheGoBlog.GitHub.io/2010/08/defer-panic-and-recover.html][Defer]] a function to recover from any panics.
+    // When recovering from a panic, log the error condition to
+    // the App Engine dashboard and send the default image to the user.
+    defer func() {
+        if err := recover(); err != nil {
+            c := appengine.NewContext(r)
+            c.Errorf(&#34;%s&#34;, err)
+            c.Errorf(&#34;%s&#34;, &#34;Traceback: %s&#34;, r.RawURL)
+            if defaultImage != nil {
+                w.Header().Set(&#34;Content-type&#34;, &#34;image/jpeg&#34;)
+                jpeg.Encode(w, defaultImage, &amp;imageQuality)
+            }
+        }
+    }()
+
+    // Load images from disk on the first request.
+    loadOnce.Do(load)
+
+    // Make a copy of the background to draw into.
+    bgRect := backgroundImage.Bounds()
+    m := image.NewRGBA(bgRect.Dx(), bgRect.Dy())
+    draw.Draw(m, m.Bounds(), backgroundImage, image.ZP, draw.Over)
+
+    // Process each character of the request string.
+    code := strings.ToLower(r.URL.Path[len(prefix):])
+    for i, p := range code {
+        // Decode hex character p in place.
+        if p &lt; &#39;a&#39; {
+            // it&#39;s a digit
+            p = p - &#39;0&#39;
+        } else {
+            // it&#39;s a letter
+            p = p - &#39;a&#39; + 10
+        }
+
+        t := urlMap[i]    // element type by index
+        em := elements[t] // element images by type
+        if p &gt;= len(em) {
+            panic(fmt.Sprintf(&#34;element index out of range %s: &#34;+
+                &#34;%d &gt;= %d&#34;, t, p, len(em)))
+        }
+
+        // Draw the element to m,
+        // using the layoutMap to specify its position.
+        draw.Draw(m, layoutMap[t], em[p], image.ZP, draw.Over)
+    }
+
+    // Encode JPEG image and write it as the response.
+    w.Header().Set(&#34;Content-type&#34;, &#34;image/jpeg&#34;)
+    w.Header().Set(&#34;Cache-control&#34;, &#34;public, max-age=259200&#34;)
+    jpeg.Encode(w, m, &amp;imageQuality)
+}
+</code></pre>
+<p>For brevity, I&#39;ve omitted several helper functions from these code listings.
+See the <a href="http://code.google.com/p/go-thanksgiving/source/browse/" target="_blank" rel="noopener">source code</a> for the full scoop.</p>
+
+
+    
+      
+  <h4 id="TOC_4.">Performance</h4>
+  
+<div class="image">
+  <img src="turkey-doodle/image02.png" alt=""/>
+</div>
+<p>This chart - taken directly from the App Engine dashboard - shows average
+request latency during launch.
+As you can see, even under load it never exceeds 60 ms,
+with a median latency of 32 milliseconds.
+This is wicked fast, considering that our request handler is doing image
+manipulation and encoding on the fly.</p>
+
+
+    
+      
+  <h4 id="TOC_5.">Conclusions</h4>
+  <p>I found Go&#39;s syntax to be intuitive, simple and clean.
+I have worked a lot with interpreted languages in the past,
+and although Go is instead a statically typed and compiled language,
+writing this app felt more like working with a dynamic,
+interpreted language.</p>
+<p>The development server provided with the <a href="http://code.google.com/appengine/downloads.html#Google_App_Engine_SDK_for_Go" target="_blank" rel="noopener">SDK</a>
+quickly recompiles the program after any change,
+so I could iterate as fast as I would with an interpreted language.
+It&#39;s dead simple, too - it took less than a minute to set up my development environment.</p>
+<p>Go&#39;s great documentation also helped me put this together fast.
+The docs are generated from the source code,
+so each function&#39;s documentation links directly to the associated source code.
+This not only allows the developer to understand very quickly what a particular
+function does but also encourages the developer to dig into the package implementation,
+making it easier to learn good style and conventions.</p>
+<p>In writing this application I used just three resources:
+App Engine&#39;s <a href="http://code.google.com/appengine/docs/go/gettingstarted/helloworld.html" target="_blank" rel="noopener">Hello World Go example</a>,
+<a href="https://golang.google.cn/pkg/" target="_blank" rel="noopener">the Go packages documentation</a>,
+and <a href="https://TheGoBlog.GitHub.io/2011/09/go-imagedraw-package.html" target="_blank" rel="noopener">a blog post showcasing the Draw package</a>.
+Thanks to the rapid iteration made possible by the development server and
+the language itself,
+I was able to pick up the language and build a super fast,
+production ready, doodle generator in less than 24 hours.</p>
+<p>Download the full app source code (including images) at <a href="http://code.google.com/p/go-thanksgiving/source/browse/" target="_blank" rel="noopener">the Google Code project</a>.</p>
+<p>Special thanks go to Guillermo Real and Ryan Germick who designed the doodle.</p>
+
+
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

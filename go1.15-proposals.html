@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/go1.15-proposals" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>Proposals for Go 1.15 | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>Proposals for Go 1.15</h2>
+    <p class="author">
+    Robert Griesemer, for the Go team<br/>
+    28 January 2020
+    </p>
+    
+  
+  
+    
+      
+  <h4 id="TOC_1.">Status</h4>
+  <p>We are close to the Go 1.14 release, planned for February assuming all goes
+well, with an RC1 candidate almost ready. Per the process outlined in the
+<a href="https://TheGoBlog.GitHub.io/go2-here-we-come" target="_blank" rel="noopener">Go 2, here we come!</a> blog post,
+it is again the time in our development and release cycle to consider if and
+what language or library changes we might want to include for our next release,
+Go 1.15, scheduled for August of this year.</p>
+<p>The primary goals for Go remain package and version management, better error
+handling support, and generics. Module support is in good shape and getting
+better with each day, and we are also making progress on the generics front
+(more on that later this year). Our attempt seven months ago at providing a
+better error handling mechanism, the
+<a href="https://github.com/golang/go/issues/32437" target="_blank" rel="noopener"><code>try</code> proposal</a>, met good support
+but also strong opposition and we decided to abandon it. In its aftermath there
+were many follow-up proposals, but none of them seemed convincing enough,
+clearly superior to the <code>try</code> proposal, or less likely to cause similar
+controversy. Thus, we have not further pursued changes to error handling
+for now. Perhaps some future insight will help us to improve upon the status
+quo.</p>
+
+
+    
+      
+  <h4 id="TOC_2.">Proposals</h4>
+  <p>Given that modules and generics are actively being worked on, and with error
+handling changes out of the way for the time being, what other changes should
+we pursue, if any? There are some perennial favorites such as requests for
+enums and immutable types, but none of those ideas are sufficiently developed
+yet, nor are they urgent enough to warrant a lot of attention by the Go team,
+especially when also considering the cost of making a language change.</p>
+<p>After reviewing all potentially viable proposals, and more importantly, because
+we don’t want to incrementally add new features without a long-term plan, we
+concluded that it is better to hold off with major changes this time. Instead
+we concentrate on a couple of new <code>vet</code> checks and a minor adjustment to the
+language. We have selected the following three proposals:</p>
+<p><a href="https://github.com/golang/go/issues/32479" target="_blank" rel="noopener">#32479</a>.
+Diagnose <code>string(int)</code> conversion in <code>go vet</code>.</p>
+<p>We were planning to get this done for the upcoming Go 1.14 release but we didn’t
+get around to it, so here it is again. The <code>string(int)</code> conversion was introduced
+early in Go for convenience, but it is confusing to newcomers (<code>string(10)</code> is
+<code>&#34;\n&#34;</code> not <code>&#34;10&#34;</code>) and not justified anymore now that the conversion is available
+in the <code>unicode/utf8</code> package.
+Since <a href="https://github.com/golang/go/issues/3939" target="_blank" rel="noopener">removing this conversion</a> is
+not a backwards-compatible change, we propose to start with a <code>vet</code> error instead.</p>
+<p><a href="https://github.com/golang/go/issues/4483" target="_blank" rel="noopener">#4483</a>.
+Diagnose impossible interface-interface type assertions in <code>go vet</code>.</p>
+<p>Currently, Go permits any type assertion <code>x.(T)</code> (and corresponding type switch case)
+where the type of <code>x</code> and <code>T</code> are interfaces. Yet, if both <code>x</code> and <code>T</code> have a method
+with the same name but different signatures it is impossible for any value assigned
+to <code>x</code> to also implement <code>T</code>; such type assertions will always fail at runtime
+(panic or evaluate to <code>false</code>). Since we know this at compile time, the compiler
+might as well report an error. Reporting a compiler error in this case is not a
+backwards-compatible change, thus we also propose to start with a <code>vet</code> error
+instead.</p>
+<p><a href="https://github.com/golang/go/issues/28591" target="_blank" rel="noopener">#28591</a>.
+Constant-evaluate index and slice expressions with constant strings and indices.</p>
+<p>Currently, indexing or slicing a constant string with a constant index, or indices,
+produces a non-constant <code>byte</code> or <code>string</code> value, respectively. But if all operands
+are constant, the compiler can constant-evaluate such expressions and produce a
+constant (possibly untyped) result. This is a fully backward-compatible change
+and we propose to make the necessary adjustments to the spec and compilers.</p>
+<p>(Correction: We found out after posting that this change is not backward-compatible;
+see <a href="https://github.com/golang/go/issues/28591#issuecomment-579993684" target="_blank" rel="noopener">comment</a> for details.)</p>
+
+
+    
+      
+  <h4 id="TOC_3.">Timeline</h4>
+  <p>We believe that none of these three proposals are controversial but there’s
+always a chance that we missed something important. For that reason we plan
+to have the proposals implemented at the beginning of the Go 1.15 release cycle
+(at or shortly after the Go 1.14 release) so that there is plenty of time to
+gather experience and provide feedback. Per the
+<a href="https://TheGoBlog.GitHub.io/go2-here-we-come" target="_blank" rel="noopener">proposal evaluation process</a>,
+the final decision will be made at the end of the development cycle, at the
+beginning of May, 2020.</p>
+
+
+    
+      
+  <h4 id="TOC_4.">And one more thing...</h4>
+  <p>We receive many more language change proposals
+(<a href="https://github.com/golang/go/labels/LanguageChange" target="_blank" rel="noopener">issues labeled LanguageChange</a>)
+than we can review thoroughly. For instance, just for error handling alone,
+there are 57 issues, of which five are currently still open. Since the cost
+of making a language change, no matter how small, is high and the benefits
+are often unclear, we must err on the side of caution. Consequently, most
+language change proposals get rejected sooner or later, sometimes with minimal
+feedback. This is unsatisfactory for all parties involved. If you have spent a
+lot of time and effort outlining your idea in detail, it would be nice to not
+have it immediately rejected. On the flip side, because the general
+<a href="https://github.com/golang/proposal/blob/master/README.md" target="_blank" rel="noopener">proposal process</a>
+is deliberately simple, it is very easy to create language change proposals
+that are only marginally explored, causing the review committee significant
+amounts of work. To improve this experience for everybody we are adding a new
+<a href="https://github.com/golang/proposal/blob/master/go2-language-changes.md" target="_blank" rel="noopener">questionnaire</a>
+for language changes: filling out that template will help reviewers evaluate
+proposals more efficiently because they don’t need to try to answer those
+questions themselves. And hopefully it will also provide better guidance for
+proposers by setting expectations right from the start. This is an experiment
+that we will refine over time as needed.</p>
+<p>Thank you for helping us improve the Go experience!</p>
+
+
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

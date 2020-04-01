@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/appengine-ga" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>Go for App Engine is now generally available | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>Go for App Engine is now generally available</h2>
+    <p class="author">
+    Andrew Gerrand<br/>
+    21 July 2011
+    </p>
+    
+  
+  
+    
+      
+        <p>The Go and App Engine teams are excited to announce that the Go runtime
+for App Engine is now generally available.
+This means you can take that Go app you&#39;ve been working on (or meaning to
+work on) and deploy it to App Engine right now with the new <a href="http://code.google.com/appengine/downloads.html" target="_blank" rel="noopener">1.5.2 SDK</a>.</p>
+<p>Since we announced the Go runtime at Google I/O we have continued to <a href="http://code.google.com/p/googleappengine/wiki/SdkForGoReleaseNotes" target="_blank" rel="noopener">improve and extend</a>
+Go support for the App Engine APIs and have added the Channels API.
+The Go Datastore API now supports transactions and ancestor queries, too.
+See the <a href="https://code.google.com/appengine/docs/go/" target="_blank" rel="noopener">Go App Engine documentation</a>
+for all the details.</p>
+<p>For those who have been using the Go SDK already,
+please note that the 1.5.2 release introduces <code>api_version</code> 2.
+This is because the new SDK is based on Go <code>release.r58.1</code> (the current
+stable version of Go) and is not backwards compatible with the previous release.
+Existing apps may require changes as per the <a href="https://golang.google.cn/doc/devel/release.html#r58" target="_blank" rel="noopener">r58 release notes</a>.
+Once you&#39;ve updated your code, you should redeploy your app with the line
+<code>api_version: 2</code> in its <code>app.yaml</code> file.
+Apps written against <code>api_version</code> 1 will stop working after the 18th of August.</p>
+<p>Finally, we owe a huge thanks to our trusted testers and their many bug reports.
+Their help was invaluable in reaching this important milestone.</p>
+<p><em>The fastest way to get started with Go on App Engine is with the</em> <a href="http://code.google.com/appengine/docs/go/gettingstarted/" target="_blank" rel="noopener"><em>Getting Started guide</em></a>.</p>
+<p><em>Note that the Go runtime is still considered experimental; it is not as well-supported as the Python and Java runtimes.</em></p>
+
+      
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

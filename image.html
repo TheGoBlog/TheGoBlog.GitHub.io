@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/image" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>The Go image package | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>The Go image package</h2>
+    <p class="author">
+    Nigel Tao<br/>
+    21 September 2011
+    </p>
+    
+  
+  
+    
+      
+  <h4 id="TOC_1.">Introduction</h4>
+  <p>The <a href="https://golang.google.cn/pkg/image/" target="_blank" rel="noopener">image</a> and <a href="https://golang.google.cn/pkg/image/color/" target="_blank" rel="noopener">image/color</a>
+packages define a number of types:
+<code>color.Color</code> and <code>color.Model</code> describe colors,
+<code>image.Point</code> and <code>image.Rectangle</code> describe basic 2-D geometry,
+and <code>image.Image</code> brings the two concepts together to represent a rectangular grid of colors.
+A <a href="https://TheGoBlog.GitHub.io/image_draw.html" target="_blank" rel="noopener">separate article</a>
+covers image composition with the <a href="https://golang.google.cn/pkg/image/draw/" target="_blank" rel="noopener">image/draw</a> package.</p>
+
+
+    
+      
+  <h4 id="TOC_2.">Colors and Color Models</h4>
+  <p><a href="https://golang.google.cn/pkg/image/color/#Color" target="_blank" rel="noopener">Color</a> is an interface that
+defines the minimal method set of any type that can be considered a color:
+one that can be converted to red, green, blue and alpha values.
+The conversion may be lossy, such as converting from CMYK or YCbCr color spaces.</p>
+<pre><code>type Color interface {
+    // RGBA returns the alpha-premultiplied red, green, blue and alpha values
+    // for the color. Each value ranges within [0, 0xFFFF], but is represented
+    // by a uint32 so that multiplying by a blend factor up to 0xFFFF will not
+    // overflow.
+    RGBA() (r, g, b, a uint32)
+}
+</code></pre>
+<p>There are three important subtleties about the return values.
+First, the red, green and blue are alpha-premultiplied:
+a fully saturated red that is also 25% transparent is represented by RGBA returning a 75% r.
+Second, the channels have a 16-bit effective range:
+100% red is represented by RGBA returning an r of 65535,
+not 255, so that converting from CMYK or YCbCr is not as lossy.
+Third, the type returned is <code>uint32</code>, even though the maximum value is 65535,
+to guarantee that multiplying two values together won&#39;t overflow.
+Such multiplications occur when blending two colors according to an alpha
+mask from a third color,
+in the style of <a href="https://en.wikipedia.org/wiki/Alpha_compositing" target="_blank" rel="noopener">Porter and Duff&#39;s</a> classic algebra:</p>
+<pre><code>dstr, dstg, dstb, dsta := dst.RGBA()
+srcr, srcg, srcb, srca := src.RGBA()
+_, _, _, m := mask.RGBA()
+const M = 1&lt;&lt;16 - 1
+// The resultant red value is a blend of dstr and srcr, and ranges in [0, M].
+// The calculation for green, blue and alpha is similar.
+dstr = (dstr*(M-m) + srcr*m) / M
+</code></pre>
+<p>The last line of that code snippet would have been more complicated if we
+worked with non-alpha-premultiplied colors,
+which is why <code>Color</code> uses alpha-premultiplied values.</p>
+<p>The image/color package also defines a number of concrete types that implement
+the <code>Color</code> interface.
+For example, <a href="https://golang.google.cn/pkg/image/color/#RGBA" target="_blank" rel="noopener"><code>RGBA</code></a> is a struct
+that represents the classic &#34;8 bits per channel&#34; color.</p>
+<pre><code>type RGBA struct {
+    R, G, B, A uint8
+}
+</code></pre>
+<p>Note that the <code>R</code> field of an <code>RGBA</code> is an 8-bit alpha-premultiplied color
+in the range [0, 255].
+<code>RGBA</code> satisfies the <code>Color</code> interface by multiplying that value by 0x101
+to generate a 16-bit alpha-premultiplied color in the range [0, 65535].
+Similarly, the <a href="https://golang.google.cn/pkg/image/color/#NRGBA" target="_blank" rel="noopener"><code>NRGBA</code></a> struct
+type represents an 8-bit non-alpha-premultiplied color,
+as used by the PNG image format.
+When manipulating an <code>NRGBA</code>&#39;s fields directly,
+the values are non-alpha-premultiplied, but when calling the <code>RGBA</code> method,
+the return values are alpha-premultiplied.</p>
+<p>A <a href="https://golang.google.cn/pkg/image/color/#Model" target="_blank" rel="noopener"><code>Model</code></a> is simply something
+that can convert <code>Color</code>s to other <code>Color</code>s, possibly lossily.
+For example, the <code>GrayModel</code> can convert any <code>Color</code> to a desaturated <a href="https://golang.google.cn/pkg/image/color/#Gray" target="_blank" rel="noopener"><code>Gray</code></a>.
+A <code>Palette</code> can convert any <code>Color</code> to one from a limited palette.</p>
+<pre><code>type Model interface {
+    Convert(c Color) Color
+}
+
+type Palette []Color</code></pre>
+
+
+    
+      
+  <h4 id="TOC_3.">Points and Rectangles</h4>
+  <p>A <a href="https://golang.google.cn/pkg/image/#Point" target="_blank" rel="noopener"><code>Point</code></a> is an (x,
+y) co-ordinate on the integer grid, with axes increasing right and down.
+It is neither a pixel nor a grid square. A <code>Point</code> has no intrinsic width,
+height or color, but the visualizations below use a small colored square.</p>
+<pre><code>type Point struct {
+    X, Y int
+}</code></pre>
+
+<div class="image">
+  <img src="image/image-package-01.png" alt=""/>
+</div>
+<pre><code>p := image.Point{2, 1}
+</code></pre>
+<p>A <a href="https://golang.google.cn/pkg/image/#Rectangle" target="_blank" rel="noopener"><code>Rectangle</code></a> is an axis-aligned
+rectangle on the integer grid,
+defined by its top-left and bottom-right <code>Point</code>.
+A <code>Rectangle</code> also has no intrinsic color,
+but the visualizations below outline rectangles with a thin colored line,
+and call out their <code>Min</code> and <code>Max</code> <code>Point</code>s.</p>
+<pre><code>type Rectangle struct {
+    Min, Max Point
+}
+</code></pre>
+<p>For convenience, <code>image.Rect(x0, y0, x1, y1)</code> is equivalent to <code>image.Rectangle{image.Point{x0, y0}, image.Point{x1, y1}}</code>,
+but is much easier to type.</p>
+<p>A <code>Rectangle</code> is inclusive at the top-left and exclusive at the bottom-right.
+For a <code>Point p</code> and a <code>Rectangle r</code>, <code>p.In(r)</code> if and only if <code>r.Min.X &lt;= p.X &amp;&amp; p.X &lt; r.Max.X</code>,
+and similarly for <code>Y</code>.
+This is analogous to how a slice <code>s[i0:i1]</code> is inclusive at the low end
+and exclusive at the high end.
+(Unlike arrays and slices, a <code>Rectangle</code> often has a non-zero origin.)</p>
+
+<div class="image">
+  <img src="image/image-package-02.png" alt=""/>
+</div>
+<pre><code>r := image.Rect(2, 1, 5, 5)
+// Dx and Dy return a rectangle&#39;s width and height.
+fmt.Println(r.Dx(), r.Dy(), image.Pt(0, 0).In(r)) // prints 3 4 false
+</code></pre>
+<p>Adding a <code>Point</code> to a <code>Rectangle</code> translates the <code>Rectangle</code>.
+Points and Rectangles are not restricted to be in the bottom-right quadrant.</p>
+
+<div class="image">
+  <img src="image/image-package-03.png" alt=""/>
+</div>
+<pre><code>r := image.Rect(2, 1, 5, 5).Add(image.Pt(-4, -2))
+fmt.Println(r.Dx(), r.Dy(), image.Pt(0, 0).In(r)) // prints 3 4 true
+</code></pre>
+<p>Intersecting two Rectangles yields another Rectangle, which may be empty.</p>
+
+<div class="image">
+  <img src="image/image-package-04.png" alt=""/>
+</div>
+<pre><code>r := image.Rect(0, 0, 4, 3).Intersect(image.Rect(2, 2, 5, 5))
+// Size returns a rectangle&#39;s width and height, as a Point.
+fmt.Printf(&#34;%#v\n&#34;, r.Size()) // prints image.Point{X:2, Y:1}
+</code></pre>
+<p>Points and Rectangles are passed and returned by value.
+A function that takes a <code>Rectangle</code> argument will be as efficient as a function
+that takes two <code>Point</code> arguments,
+or four <code>int</code> arguments.</p>
+
+
+    
+      
+  <h4 id="TOC_4.">Images</h4>
+  <p>An <a href="https://golang.google.cn/pkg/image/#Image" target="_blank" rel="noopener">Image</a> maps every grid square
+in a <code>Rectangle</code> to a <code>Color</code> from a <code>Model</code>.
+&#34;The pixel at (x, y)&#34; refers to the color of the grid square defined by the points (x,
+y), (x+1, y), (x+1, y+1) and (x, y+1).</p>
+<pre><code>type Image interface {
+    // ColorModel returns the Image&#39;s color model.
+    ColorModel() color.Model
+    // Bounds returns the domain for which At can return non-zero color.
+    // The bounds do not necessarily contain the point (0, 0).
+    Bounds() Rectangle
+    // At returns the color of the pixel at (x, y).
+    // At(Bounds().Min.X, Bounds().Min.Y) returns the upper-left pixel of the grid.
+    // At(Bounds().Max.X-1, Bounds().Max.Y-1) returns the lower-right one.
+    At(x, y int) color.Color
+}
+</code></pre>
+<p>A common mistake is assuming that an <code>Image</code>&#39;s bounds start at (0, 0).
+For example, an animated GIF contains a sequence of Images,
+and each <code>Image</code> after the first typically only holds pixel data for the area that changed,
+and that area doesn&#39;t necessarily start at (0, 0).
+The correct way to iterate over an <code>Image</code> m&#39;s pixels looks like:</p>
+<pre><code>b := m.Bounds()
+for y := b.Min.Y; y &lt; b.Max.Y; y++ {
+ for x := b.Min.X; x &lt; b.Max.X; x++ {
+  doStuffWith(m.At(x, y))
+ }
+}
+</code></pre>
+<p><code>Image</code> implementations do not have to be based on an in-memory slice of pixel data.
+For example, a <a href="https://golang.google.cn/pkg/image/#Uniform" target="_blank" rel="noopener"><code>Uniform</code></a> is an
+<code>Image</code> of enormous bounds and uniform color,
+whose in-memory representation is simply that color.</p>
+<pre><code>type Uniform struct {
+    C color.Color
+}
+</code></pre>
+<p>Typically, though, programs will want an image based on a slice.
+Struct types like <a href="https://golang.google.cn/pkg/image/#RGBA" target="_blank" rel="noopener"><code>RGBA</code></a> and <a href="https://golang.google.cn/pkg/image/#Gray" target="_blank" rel="noopener"><code>Gray</code></a>
+(which other packages refer to as <code>image.RGBA</code> and <code>image.Gray</code>) hold slices
+of pixel data and implement the <code>Image</code> interface.</p>
+<pre><code>type RGBA struct {
+    // Pix holds the image&#39;s pixels, in R, G, B, A order. The pixel at
+    // (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*4].
+    Pix []uint8
+    // Stride is the Pix stride (in bytes) between vertically adjacent pixels.
+    Stride int
+    // Rect is the image&#39;s bounds.
+    Rect Rectangle
+}
+</code></pre>
+<p>These types also provide a <code>Set(x, y int, c color.Color)</code> method that allows modifying the image one pixel at a time.</p>
+<pre><code>m := image.NewRGBA(image.Rect(0, 0, 640, 480))
+m.Set(5, 5, color.RGBA{255, 0, 0, 255})
+</code></pre>
+<p>If you&#39;re reading or writing a lot of pixel data,
+it can be more efficient, but more complicated,
+to access these struct type&#39;s <code>Pix</code> field directly.</p>
+<p>The slice-based <code>Image</code> implementations also provide a <code>SubImage</code> method,
+which returns an <code>Image</code> backed by the same array.
+Modifying the pixels of a sub-image will affect the pixels of the original image,
+analogous to how modifying the contents of a sub-slice <code>s[i0:i1]</code> will affect
+the contents of the original slice <code>s</code>.</p>
+
+<div class="image">
+  <img src="image/image-package-05.png" alt=""/>
+</div>
+<pre><code>m0 := image.NewRGBA(image.Rect(0, 0, 8, 5))
+m1 := m0.SubImage(image.Rect(1, 2, 5, 5)).(*image.RGBA)
+fmt.Println(m0.Bounds().Dx(), m1.Bounds().Dx()) // prints 8, 4
+fmt.Println(m0.Stride == m1.Stride)             // prints true
+</code></pre>
+<p>For low-level code that works on an image&#39;s <code>Pix</code> field,
+be aware that ranging over <code>Pix</code> can affect pixels outside an image&#39;s bounds.
+In the example above, the pixels covered by <code>m1.Pix</code> are shaded in blue.
+Higher-level code, such as the <code>At</code> and <code>Set</code> methods or the <a href="https://golang.google.cn/pkg/image/draw/" target="_blank" rel="noopener">image/draw package</a>,
+will clip their operations to the image&#39;s bounds.</p>
+
+
+    
+      
+  <h4 id="TOC_5.">Image Formats</h4>
+  <p>The standard package library supports a number of common image formats,
+such as GIF, JPEG and PNG.
+If you know the format of a source image file,
+you can decode from an <a href="https://golang.google.cn/pkg/io/#Reader" target="_blank" rel="noopener"><code>io.Reader</code></a> directly.</p>
+<pre><code>import (
+ &#34;image/jpeg&#34;
+ &#34;image/png&#34;
+ &#34;io&#34;
+)
+
+// convertJPEGToPNG converts from JPEG to PNG.
+func convertJPEGToPNG(w io.Writer, r io.Reader) error {
+ img, err := jpeg.Decode(r)
+ if err != nil {
+  return err
+ }
+ return png.Encode(w, img)
+}
+</code></pre>
+<p>If you have image data of unknown format,
+the <a href="https://golang.google.cn/pkg/image/#Decode" target="_blank" rel="noopener"><code>image.Decode</code></a> function can detect the format.
+The set of recognized formats is constructed at run time and is not limited
+to those in the standard package library.
+An image format package typically registers its format in an init function,
+and the main package will &#34;underscore import&#34; such a package solely for
+the side effect of format registration.</p>
+<pre><code>import (
+ &#34;image&#34;
+ &#34;image/png&#34;
+ &#34;io&#34;
+
+ _ &#34;code.google.com/p/vp8-go/webp&#34;
+ _ &#34;image/jpeg&#34;
+)
+
+// convertToPNG converts from any recognized format to PNG.
+func convertToPNG(w io.Writer, r io.Reader) error {
+ img, _, err := image.Decode(r)
+ if err != nil {
+  return err
+ }
+ return png.Encode(w, img)
+}</code></pre>
+
+
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

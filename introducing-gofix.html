@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/introducing-gofix" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>Introducing Gofix | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>Introducing Gofix</h2>
+    <p class="author">
+    Russ Cox<br/>
+    15 April 2011
+    </p>
+    
+  
+  
+    
+      
+        <p>The next Go release will include significant API changes in several fundamental Go packages.
+Code that <a href="http://codereview.appspot.com/4239076" target="_blank" rel="noopener">implements an HTTP server handler</a>,
+<a href="http://codereview.appspot.com/4244055" target="_blank" rel="noopener">calls <code>net.Dial</code></a>,
+<a href="http://codereview.appspot.com/4357052" target="_blank" rel="noopener">calls <code>os.Open</code></a>,
+or <a href="http://codereview.appspot.com/4281055" target="_blank" rel="noopener">uses the reflect package</a> will
+not build unless it is updated to use the new APIs.
+Now that our releases are <a href="/stable-releases" target="_blank" rel="noopener">more stable and less frequent</a>,
+this will be a common situation.
+Each of these API changes happened in a different weekly snapshot and might
+have been manageable on its own;
+together, however, they represent a significant amount of manual effort
+to update existing code.</p>
+<p><a href="https://golang.google.cn/cmd/fix/" target="_blank" rel="noopener">Gofix</a> is a new tool that reduces the amount
+of effort it takes to update existing code.
+It reads a program from a source file, looks for uses of old APIs,
+rewrites them to use the current API, and writes the program back to the file.
+Not all API changes preserve all the functionality of an old API,
+so gofix cannot always do a perfect job.
+When gofix cannot rewrite a use of an old API,
+it prints a warning giving the file name and line number of the use,
+so that a developer can examine and rewrite the code.
+Gofix takes care of the easy, repetitive,
+tedious changes, so that a developer can focus on the ones that truly merit attention.</p>
+<p>Each time we make a significant API change we’ll add code to gofix to
+take care of the conversion,
+as much as mechanically possible.
+When you update to a new Go release and your code no longer builds,
+just run gofix on your source directory.</p>
+<p>You can extend gofix to support changes to your own APIs.
+The gofix program is a simple driver around plugins called fixes that each
+handle a particular API change.
+Right now, writing a new fix requires doing some scanning and rewriting
+of the go/ast syntax tree,
+usually in proportion to how complex the API changes are.
+If you want to explore, the <a href="https://go.googlesource.com/go/+/go1/src/cmd/fix/netdial.go" target="_blank" rel="noopener"><code>netdialFix</code></a>,
+<a href="https://go.googlesource.com/go/+/go1/src/cmd/fix/osopen.go" target="_blank" rel="noopener"><code>osopenFix</code></a>,
+<a href="https://go.googlesource.com/go/+/go1/src/cmd/fix/httpserver.go" target="_blank" rel="noopener"><code>httpserverFix</code></a>,
+and <a href="https://go.googlesource.com/go/+/go1/src/cmd/fix/reflect.go" target="_blank" rel="noopener"><code>reflectFix</code></a>
+are all illustrative examples,
+in increasing order of complexity.</p>
+<p>We write Go code too, of course, and our code is just as affected by these
+API changes as yours.
+Typically, we write the gofix support at the same time as the API change
+and then use gofix to rewrite the uses in the main source tree.
+We use gofix to update other Go code bases and our personal projects.
+We even use gofix to update Google’s internal source tree when it is time
+to build against a new Go release.</p>
+<p>As an example, gofix can rewrite code like <a href="http://codereview.appspot.com/4353043/diff/10001/src/pkg/fmt/print.go#newcode657" target="_blank" rel="noopener">this snippet from <code>fmt/print.go</code></a>:</p>
+<pre><code>switch f := value.(type) {
+case *reflect.BoolValue:
+    p.fmtBool(f.Get(), verb, field)
+case *reflect.IntValue:
+    p.fmtInt64(f.Get(), verb, field)
+// ...
+case reflect.ArrayOrSliceValue:
+    // Byte slices are special.
+    if f.Type().(reflect.ArrayOrSliceType).Elem().Kind() == reflect.Uint8 {
+        // ...
+    }
+// ...
+}
+</code></pre>
+<p>to adapt it to the new reflect API:</p>
+<pre><code>switch f := value; f.Kind() {
+case reflect.Bool:
+    p.fmtBool(f.Bool(), verb, field)
+case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+    p.fmtInt64(f.Int(), verb, field)
+// ...
+case reflect.Array, reflect.Slice:
+    // Byte slices are special.
+    if f.Type().Elem().Kind() == reflect.Uint8 {
+        // ...
+    }
+// ...
+}
+</code></pre>
+<p>Nearly every line above changed in some small way.
+The changes involved in the rewrite are extensive but nearly entirely mechanical,
+just the kind of thing that computers are great at doing.</p>
+<p>Gofix is possible because Go has support in its standard libraries for <a href="https://golang.google.cn/pkg/go/parser" target="_blank" rel="noopener">parsing Go source files into syntax trees</a>
+and also for <a href="https://golang.google.cn/pkg/go/printer" target="_blank" rel="noopener">printing those syntax trees back to Go source code</a>.
+Importantly, the Go printing library prints a program in the official format
+(typically enforced via the gofmt tool),
+allowing gofix to make mechanical changes to Go programs without causing
+spurious formatting changes.
+In fact, one of the key motivations for creating gofmt—perhaps second
+only to avoiding debates about where a particular brace belongs—was to
+simplify the creation of tools that rewrite Go programs, as gofix does.</p>
+<p>Gofix has already made itself indispensable.
+In particular, the recent reflect changes would have been unpalatable without
+automated conversion,
+and the reflect API badly needed to be redone.
+Gofix gives us the ability to fix mistakes or completely rethink package
+APIs without worrying about the cost of converting existing code.
+We hope you find gofix as useful and convenient as we have.</p>
+
+      
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

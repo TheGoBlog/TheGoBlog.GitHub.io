@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/http-tracing" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>Introducing HTTP Tracing | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>Introducing HTTP Tracing</h2>
+    <p class="author">
+    Jaana Burcu Dogan<br/>
+    4 October 2016
+    </p>
+    
+  
+  
+    
+      
+  <h4 id="TOC_1.">Introduction</h4>
+  <p>In Go 1.7 we introduced HTTP tracing, a facility to gather fine-grained
+information throughout the lifecycle of an HTTP client request.
+Support for HTTP tracing is provided by the <a href="https://golang.google.cn/pkg/net/http/httptrace/" target="_blank" rel="noopener"><code>net/http/httptrace</code></a>
+package. The collected information can be used for debugging latency issues,
+service monitoring, writing adaptive systems, and more.</p>
+
+
+    
+      
+  <h4 id="TOC_2.">HTTP events</h4>
+  <p>The <code>httptrace</code> package provides a number of hooks to gather information
+during an HTTP round trip about a variety of events. These events include:</p>
+<ul>
+<li>Connection creation</li>
+<li>Connection reuse</li>
+<li>DNS lookups</li>
+<li>Writing the request to the wire</li>
+<li>Reading the response</li>
+</ul>
+
+
+    
+      
+  <h4 id="TOC_3.">Tracing events</h4>
+  <p>You can enable HTTP tracing by putting an
+<a href="https://golang.google.cn/pkg/net/http/httptrace/#ClientTrace" target="_blank" rel="noopener"><code>*httptrace.ClientTrace</code></a>
+containing hook functions into a request&#39;s <a href="https://golang.google.cn/pkg/context/#Context" target="_blank" rel="noopener"><code>context.Context</code></a>.
+Various <a href="https://golang.google.cn/pkg/net/http/#RoundTripper" target="_blank" rel="noopener"><code>http.RoundTripper</code></a>
+implementations report the internal events by
+looking for context&#39;s <code>*httptrace.ClientTrace</code> and calling the relevant hook functions.</p>
+<p>The tracing is scoped to the request&#39;s context and users should
+put a <code>*httptrace.ClientTrace</code> to the request context before they start a request.</p>
+
+  
+	<div class="code">
+<pre><span num="14">    req, _ := http.NewRequest(&#34;GET&#34;, &#34;http://example.com&#34;, nil)</span>
+<span num="15">    trace := &amp;httptrace.ClientTrace{</span>
+<span num="16">        DNSDone: func(dnsInfo httptrace.DNSDoneInfo) {</span>
+<span num="17">            fmt.Printf(&#34;DNS Info: %+v\n&#34;, dnsInfo)</span>
+<span num="18">        },</span>
+<span num="19">        GotConn: func(connInfo httptrace.GotConnInfo) {</span>
+<span num="20">            fmt.Printf(&#34;Got Conn: %+v\n&#34;, connInfo)</span>
+<span num="21">        },</span>
+<span num="22">    }</span>
+<span num="23">    req = req.WithContext(httptrace.WithClientTrace(req.Context(), trace))</span>
+<span num="24">    if _, err := http.DefaultTransport.RoundTrip(req); err != nil {</span>
+<span num="25">        log.Fatal(err)</span>
+<span num="26">    }</span>
+</pre>
+</div>
+  
+<p>During a round trip, <code>http.DefaultTransport</code> will invoke each hook
+as an event happens. The program above will print the DNS
+information as soon as the DNS lookup is complete. It will similarly print
+connection information when a connection is established to the request&#39;s host.</p>
+
+
+    
+      
+  <h4 id="TOC_4.">Tracing with http.Client</h4>
+  <p>The tracing mechanism is designed to trace the events in the lifecycle
+of a single <code>http.Transport.RoundTrip</code>. However, a client may
+make multiple round trips to complete an HTTP request. For example, in the case
+of a URL redirection, the registered hooks will be called as many times as the
+client follows HTTP redirects, making multiple requests.
+Users are responsible for recognizing such events at the <code>http.Client</code> level.
+The program below identifies the current request by using an
+<code>http.RoundTripper</code> wrapper.</p>
+
+  
+	<div class="code">
+<pre><span num="3">package main</span>
+<span num="4"></span>
+<span num="5">import (</span>
+<span num="6">    &#34;fmt&#34;</span>
+<span num="7">    &#34;log&#34;</span>
+<span num="8">    &#34;net/http&#34;</span>
+<span num="9">    &#34;net/http/httptrace&#34;</span>
+<span num="10">)</span>
+<span num="11"></span>
+<span num="12">// transport is an http.RoundTripper that keeps track of the in-flight</span>
+<span num="13">// request and implements hooks to report HTTP tracing events.</span>
+<span num="14">type transport struct {</span>
+<span num="15">    current *http.Request</span>
+<span num="16">}</span>
+<span num="17"></span>
+<span num="18">// RoundTrip wraps http.DefaultTransport.RoundTrip to keep track</span>
+<span num="19">// of the current request.</span>
+<span num="20">func (t *transport) RoundTrip(req *http.Request) (*http.Response, error) {</span>
+<span num="21">    t.current = req</span>
+<span num="22">    return http.DefaultTransport.RoundTrip(req)</span>
+<span num="23">}</span>
+<span num="24"></span>
+<span num="25">// GotConn prints whether the connection has been used previously</span>
+<span num="26">// for the current request.</span>
+<span num="27">func (t *transport) GotConn(info httptrace.GotConnInfo) {</span>
+<span num="28">    fmt.Printf(&#34;Connection reused for %v? %v\n&#34;, t.current.URL, info.Reused)</span>
+<span num="29">}</span>
+<span num="30"></span>
+<span num="31">func main() {</span>
+<span num="32">    t := &amp;transport{}</span>
+<span num="33"></span>
+<span num="34">    req, _ := http.NewRequest(&#34;GET&#34;, &#34;https://google.com&#34;, nil)</span>
+<span num="35">    trace := &amp;httptrace.ClientTrace{</span>
+<span num="36">        GotConn: t.GotConn,</span>
+<span num="37">    }</span>
+<span num="38">    req = req.WithContext(httptrace.WithClientTrace(req.Context(), trace))</span>
+<span num="39"></span>
+<span num="40">    client := &amp;http.Client{Transport: t}</span>
+<span num="41">    if _, err := client.Do(req); err != nil {</span>
+<span num="42">        log.Fatal(err)</span>
+<span num="43">    }</span>
+<span num="44">}</span>
+</pre>
+</div>
+  
+<p>The program will follow the redirect of google.com to www.google.com and will output:</p>
+<pre><code>Connection reused for https://google.com? false
+Connection reused for https://www.google.com/? false
+</code></pre>
+<p>The Transport in the <code>net/http</code> package supports tracing of both HTTP/1
+and HTTP/2 requests.</p>
+<p>If you are an author of a custom <code>http.RoundTripper</code> implementation,
+you can support tracing by checking the request context for an
+<code>*httptest.ClientTrace</code> and invoking the relevant hooks as the events occur.</p>
+
+
+    
+      
+  <h4 id="TOC_5.">Conclusion</h4>
+  <p>HTTP tracing is a valuable addition to Go for those who are interested
+in debugging HTTP request latency and writing tools for network debugging
+for outbound traffic.
+By enabling this new facility, we hope to see HTTP debugging, benchmarking
+and visualization tools from the community — such as
+<a href="https://github.com/davecheney/httpstat" target="_blank" rel="noopener">httpstat</a>.</p>
+
+
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

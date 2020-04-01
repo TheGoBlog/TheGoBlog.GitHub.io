@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/concurrency-timeouts" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>Go Concurrency Patterns: Timing out, moving on | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>Go Concurrency Patterns: Timing out, moving on</h2>
+    <p class="author">
+    Andrew Gerrand<br/>
+    23 September 2010
+    </p>
+    
+  
+  
+    
+      
+        <p>Concurrent programming has its own idioms.
+A good example is timeouts. Although Go&#39;s channels do not support them directly,
+they are easy to implement.
+Say we want to receive from the channel <code>ch</code>,
+but want to wait at most one second for the value to arrive.
+We would start by creating a signalling channel and launching a goroutine
+that sleeps before sending on the channel:</p>
+<pre><code>timeout := make(chan bool, 1)
+go func() {
+    time.Sleep(1 * time.Second)
+    timeout &lt;- true
+}()
+</code></pre>
+<p>We can then use a <code>select</code> statement to receive from either <code>ch</code> or <code>timeout</code>.
+If nothing arrives on <code>ch</code> after one second,
+the timeout case is selected and the attempt to read from ch is abandoned.</p>
+<pre><code>select {
+case &lt;-ch:
+    // a read from ch has occurred
+case &lt;-timeout:
+    // the read from ch has timed out
+}
+</code></pre>
+<p>The <code>timeout</code> channel is buffered with space for 1 value,
+allowing the timeout goroutine to send to the channel and then exit.
+The goroutine doesn&#39;t know (or care) whether the value is received.
+This means the goroutine won&#39;t hang around forever if the <code>ch</code> receive happens
+before the timeout is reached.
+The <code>timeout</code> channel will eventually be deallocated by the garbage collector.</p>
+<p>(In this example we used <code>time.Sleep</code> to demonstrate the mechanics of goroutines and channels.
+In real programs you should use <code> [time.After](https://golang.google.cn/pkg/time/#After)</code>,
+a function that returns a channel and sends on that channel after the specified duration.)</p>
+<p>Let&#39;s look at another variation of this pattern.
+In this example we have a program that reads from multiple replicated databases simultaneously.
+The program needs only one of the answers,
+and it should accept the answer that arrives first.</p>
+<p>The function <code>Query</code> takes a slice of database connections and a <code>query</code> string.
+It queries each of the databases in parallel and returns the first response it receives:</p>
+<pre><code>func Query(conns []Conn, query string) Result {
+    ch := make(chan Result)
+    for _, conn := range conns {
+        go func(c Conn) {
+            select {
+            case ch &lt;- c.DoQuery(query):
+            default:
+            }
+        }(conn)
+    }
+    return &lt;-ch
+}
+</code></pre>
+<p>In this example, the closure does a non-blocking send,
+which it achieves by using the send operation in <code>select</code> statement with a <code>default</code> case.
+If the send cannot go through immediately the default case will be selected.
+Making the send non-blocking guarantees that none of the goroutines launched
+in the loop will hang around.
+However, if the result arrives before the main function has made it to the receive,
+the send could fail since no one is ready.</p>
+<p>This problem is a textbook example of what is known as a <a href="https://en.wikipedia.org/wiki/Race_condition" target="_blank" rel="noopener">race condition</a>,
+but the fix is trivial.
+We just make sure to buffer the channel <code>ch</code> (by adding the buffer length
+as the second argument to <a href="https://golang.google.cn/pkg/builtin/#make" target="_blank" rel="noopener">make</a>),
+guaranteeing that the first send has a place to put the value.
+This ensures the send will always succeed,
+and the first value to arrive will be retrieved regardless of the order of execution.</p>
+<p>These two examples demonstrate the simplicity with which Go can express complex interactions between goroutines.</p>
+
+      
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

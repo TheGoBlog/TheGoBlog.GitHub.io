@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/io2013-chat" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>A conversation with the Go team | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>A conversation with the Go team</h2>
+    <p class="author">
+    
+    6 June 2013
+    </p>
+    
+  
+  
+    
+      
+        <p>At Google I/O 2013, several members of the Go team hosted a &#34;Fireside chat.&#34;
+Robert Griesemer, Rob Pike, David Symonds, Andrew Gerrand, Ian Lance Taylor,
+Sameer Ajmani, Brad Fitzpatrick, and Nigel Tao took questions from the audience
+and people around the world about various aspects of the Go project.</p>
+
+      
+        
+<div class="iframe">
+  <iframe src="//www.youtube.com/embed/p9VUCp98ay4" height="309" width="549" frameborder="0" allowfullscreen="" mozallowfullscreen="" webkitallowfullscreen=""></iframe>
+</div>
+
+      
+        <p>We also hosted a similar session at I/O last year:
+<a href="http://www.youtube.com/watch?v=sln-gJaURzk" target="_blank" rel="noopener"><em>Meet the Go team</em></a>.</p>
+<p>There were many more questions from Google Moderator than we were able to
+answer in the short 40 minute session.
+Here we answer some of those we missed in the live session.</p>
+<p><em>Linking speed (and memory usage) for the gc toolchain are a known problem.</em>
+<em>Are there any plans to address this during the 1.2 cycle?</em></p>
+<p><strong>Rob:</strong> Yes. We are always thinking about ways to improve performance of the
+tools as well as the language and libraries.</p>
+<p><em>I have been very pleased to see how quickly Go appears to be gaining traction.</em>
+<em>Can you talk about the reactions you have experienced working with other</em>
+<em>developers inside and outside Google? Are there any major sticking points remaining?</em></p>
+<p><strong>Robert:</strong> A lot of developers that seriously tried Go are very happy with it.
+Many of them report a much smaller, more readable and thus maintainable code
+base: A 50% code size reduction or more when coming from C++ seems common.
+Developers that switched to Go from Python are invariably pleased with the
+performance gain. The typical complaints are about small inconsistencies in the
+language (some of which we might iron out at some point). What surprises me is
+that almost nobody complains about the lack of generics.</p>
+<p><em>When will Go be a first-class language for Android development?</em></p>
+<p><strong>Andrew:</strong> This would be great, but we don&#39;t have anything to announce.</p>
+<p><em>Is there a roadmap for the next version of Go?</em></p>
+<p><strong>Andrew:</strong> We have no feature roadmap as such. The contributors tend to work on
+what interests them. Active areas of development include the gc and gccgo
+compilers, the garbage collector and runtime, and many others. We expect the
+majority of exciting new additions will be in the form of improvements to our
+tools. You can find design discussions and code reviews on the
+<a href="http://groups.google.com/group/golang-dev" target="_blank" rel="noopener">golang-dev mailing list</a>.</p>
+<p>As for the timeline, we do have
+<a href="https://docs.google.com/document/d/106hMEZj58L9nq9N9p7Zll_WKfo-oyZHFyI6MttuZmBU/edit?usp=sharing" target="_blank" rel="noopener">concrete plans</a>:
+we expect to release Go 1.2 on December 1, 2013.</p>
+<p><em>Where do you guys want to see Go used externally?</em>
+<em>What would you consider a big win for Go adoption outside Google?</em>
+<em>Where do you think Go has the potential to make a significant impact?</em></p>
+<p><strong>Rob:</strong> Where Go is deployed is up to its users, not to us. We&#39;re happy to see
+it gain traction anywhere it helps. It was designed with server-side software
+in mind, and is showing promise there, but has also shown strengths in many
+other areas and the story is really just beginning. There are many surprises to
+come.</p>
+<p><strong>Ian:</strong> It’s easier for startups to use Go, because they don’t have an
+entrenched code base that they need to work with. So I see two future big wins
+for Go. One would be a significant use of Go by an existing large software
+company other than Google. Another would be a significant IPO or acquisition
+of a startup that primarily uses Go. These are both indirect: clearly choice
+of programming language is a very small factor in the success of a company.
+But it would be another way to show that Go can be part of a successful
+software system.</p>
+<p><em>Have you thought any (more) about the potential of dynamically loading</em>
+<em>Go packages or objects and how it could work in Go?</em>
+<em>I think this could enable some really interesting and expressive constructs,</em>
+<em>especially coupled with interfaces.</em></p>
+<p><strong>Rob:</strong> This is an active topic of discussion. We appreciate how powerful the
+concept can be and hope we can find a way to implement it before too long.
+There are serious challenges in the design approach to take and the need to
+make it work portably.</p>
+<p><em>There was a discussion a while ago about collecting some best-of-breed</em>
+<code>database/sql</code> <em>drivers in a more central place.</em>
+<em>Some people had strong opinions to the contrary though.</em>
+<em>Where is</em> <code>database/sql</code> <em>and its drivers going in the next year?</em></p>
+<p><strong>Brad:</strong> While we could create an official subrepo (“go.db”) for database
+drivers, we fear that would unduly bless certain drivers. At this point we’d
+still rather see healthy competition between different drivers. The
+<a href="https://github.com/golang/go/wiki/SQLDrivers" target="_blank" rel="noopener">SQLDrivers wiki page</a>
+lists some good ones.</p>
+<p>The <code>database/sql</code> package didn’t get much attention for a while, due to lack of
+drivers. Now that drivers exist, usage of the package is increasing and
+correctness and performance bugs are now being reported (and fixed). Fixes will
+continue, but no major changes to the interface of <code>database/sql</code> are planned.
+ There might be small extensions here and there as needed for performance or to
+assist some drivers.</p>
+<p><em>What is the status of versioning?</em>
+<em>Is importing some code from github a best practice recommended by the Go team?</em>
+<em>What happens when we publish our code that is dependent on a github repo and</em>
+<em>the API of the dependee changes?</em></p>
+<p><strong>Ian:</strong> This is frequently discussed on the mailing list. What we do internally
+is take a snapshot of the imported code, and update that snapshot from time to
+time. That way, our code base won&#39;t break unexpectedly if the API changes.
+But we understand that that approach doesn’t work very well for people who are
+themselves providing a library. We’re open to good suggestions in this area.
+Remember that this is an aspect of the tools that surround the language rather
+than the language itself; the place to fix this is in the tools, not the
+language.</p>
+<p><em>What about Go and Graphical User Interfaces?</em></p>
+<p><strong>Rob:</strong> This is a subject close to my heart. Newsqueak, a very early precursor
+language, was designed specifically for writing graphics programs (that&#39;s what
+we used to call apps). The landscape has changed a lot but I think Go&#39;s
+concurrency model has much to offer in the field of interactive graphics.</p>
+<p><strong>Andrew:</strong> There are many
+<a href="https://github.com/golang/go/wiki/Projects#Graphics_and_Audio" target="_blank" rel="noopener">bindings for existing graphics libraries</a>
+out there, and a few Go-specific projects. One of the more promising ones is
+<a href="https://github.com/skelterjohn/go.uik" target="_blank" rel="noopener">go.uik</a>, but it&#39;s still in its early
+days. I think there&#39;s a lot of potential for a great Go-specific UI toolkit for
+writing native applications (consider handling user events by receiving from a
+channel), but developing a production-quality package is a significant
+undertaking. I have no doubt one will come in time.</p>
+<p>In the meantime, the web is the most broadly available platform for user
+interfaces. Go provides great support for building web apps, albeit only on the
+back end.</p>
+<p><em>In the mailing lists Adam Langley has stated that the TLS code has not been</em>
+<em>reviewed by outside groups, and thus should not be used in production.</em>
+<em>Are there plans to have the code reviewed?</em>
+<em>A good secure implementation of concurrent TLS would be very nice.</em></p>
+<p><strong>Adam</strong>: Cryptography is notoriously easy to botch in subtle and surprising ways
+and I’m only human. I don’t feel that I can warrant that Go’s TLS code is
+flawless and I wouldn’t want to misrepresent it.</p>
+<p>There are a couple of places where the code is known to have side-channel
+issues: the RSA code is blinded but not constant time, elliptic curves other
+than P-224 are not constant time and the Lucky13 attack might work. I hope to
+address the latter two in the Go 1.2 timeframe with a constant-time P-256
+implementation and AES-GCM.</p>
+<p>Nobody has stepped forward to do a review of the TLS stack however and I’ve not
+investigated whether we could get Matasano or the like to do it. That depends
+on whether Google wishes to fund it.</p>
+<p><em>What do you think about</em> <a href="http://www.gophercon.com/" target="_blank" rel="noopener"><em>GopherCon 2014</em></a><em>?</em>
+<em>Does anyone from the team plan to attend?</em></p>
+<p><strong>Andrew:</strong> It&#39;s very exciting. I&#39;m sure some of us will be there.</p>
+
+      
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

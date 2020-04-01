@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/maps" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>Go maps in action | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>Go maps in action</h2>
+    <p class="author">
+    Andrew Gerrand<br/>
+    6 February 2013
+    </p>
+    
+  
+  
+    
+      
+  <h4 id="TOC_1.">Introduction</h4>
+  <p>One of the most useful data structures in computer science is the hash table.
+Many hash table implementations exist with varying properties,
+but in general they offer fast lookups, adds, and deletes.
+Go provides a built-in map type that implements a hash table.</p>
+
+
+    
+      
+  <h4 id="TOC_2.">Declaration and initialization</h4>
+  <p>A Go map type looks like this:</p>
+<pre><code>map[KeyType]ValueType
+</code></pre>
+<p>where <code>KeyType</code> may be any type that is <a href="https://golang.google.cn/ref/spec#Comparison_operators" target="_blank" rel="noopener">comparable</a>
+(more on this later),
+and <code>ValueType</code> may be any type at all, including another map!</p>
+<p>This variable <code>m</code> is a map of string keys to int values:</p>
+<pre><code>var m map[string]int
+</code></pre>
+<p>Map types are reference types, like pointers or slices,
+and so the value of <code>m</code> above is <code>nil</code>;
+it doesn&#39;t point to an initialized map.
+A nil map behaves like an empty map when reading,
+but attempts to write to a nil map will cause a runtime panic; don&#39;t do that.
+To initialize a map, use the built in <code>make</code> function:</p>
+<pre><code>m = make(map[string]int)
+</code></pre>
+<p>The <code>make</code> function allocates and initializes a hash map data structure
+and returns a map value that points to it.
+The specifics of that data structure are an implementation detail of the
+runtime and are not specified by the language itself.
+In this article we will focus on the <em>use</em> of maps,
+not their implementation.</p>
+
+
+    
+      
+  <h4 id="TOC_3.">Working with maps</h4>
+  <p>Go provides a familiar syntax for working with maps. This statement sets the key <code>&#34;route&#34;</code> to the value <code>66</code>:</p>
+<pre><code>m[&#34;route&#34;] = 66
+</code></pre>
+<p>This statement retrieves the value stored under the key <code>&#34;route&#34;</code> and assigns it to a new variable i:</p>
+<pre><code>i := m[&#34;route&#34;]
+</code></pre>
+<p>If the requested key doesn&#39;t exist, we get the value type&#39;s <em>zero value</em>.
+In this case the value type is <code>int</code>, so the zero value is <code>0</code>:</p>
+<pre><code>j := m[&#34;root&#34;]
+// j == 0
+</code></pre>
+<p>The built in <code>len</code> function returns on the number of items in a map:</p>
+<pre><code>n := len(m)
+</code></pre>
+<p>The built in <code>delete</code> function removes an entry from the map:</p>
+<pre><code>delete(m, &#34;route&#34;)
+</code></pre>
+<p>The <code>delete</code> function doesn&#39;t return anything, and will do nothing if the specified key doesn&#39;t exist.</p>
+<p>A two-value assignment tests for the existence of a key:</p>
+<pre><code>i, ok := m[&#34;route&#34;]
+</code></pre>
+<p>In this statement, the first value (<code>i</code>) is assigned the value stored under the key <code>&#34;route&#34;</code>.
+If that key doesn&#39;t exist, <code>i</code> is the value type&#39;s zero value (<code>0</code>).
+The second value (<code>ok</code>) is a <code>bool</code> that is <code>true</code> if the key exists in
+the map, and <code>false</code> if not.</p>
+<p>To test for a key without retrieving the value, use an underscore in place of the first value:</p>
+<pre><code>_, ok := m[&#34;route&#34;]
+</code></pre>
+<p>To iterate over the contents of a map, use the <code>range</code> keyword:</p>
+<pre><code>for key, value := range m {
+    fmt.Println(&#34;Key:&#34;, key, &#34;Value:&#34;, value)
+}
+</code></pre>
+<p>To initialize a map with some data, use a map literal:</p>
+<pre><code>commits := map[string]int{
+    &#34;rsc&#34;: 3711,
+    &#34;r&#34;:   2138,
+    &#34;gri&#34;: 1908,
+    &#34;adg&#34;: 912,
+}
+</code></pre>
+<p>The same syntax may be used to initialize an empty map, which is functionally identical to using the <code>make</code> function:</p>
+<pre><code>m = map[string]int{}</code></pre>
+
+
+    
+      
+  <h4 id="TOC_4.">Exploiting zero values</h4>
+  <p>It can be convenient that a map retrieval yields a zero value when the key is not present.</p>
+<p>For instance, a map of boolean values can be used as a set-like data structure
+(recall that the zero value for the boolean type is false).
+This example traverses a linked list of <code>Nodes</code> and prints their values.
+It uses a map of <code>Node</code> pointers to detect cycles in the list.</p>
+
+  
+	<div class="code">
+<pre><span num="13">    type Node struct {</span>
+<span num="14">        Next  *Node</span>
+<span num="15">        Value interface{}</span>
+<span num="16">    }</span>
+<span num="17">    var first *Node</span>
+<span num="18"></span>
+<span num="19">    <b>visited := make(map[*Node]bool)</b></span>
+<span num="20">    for n := first; n != nil; n = n.Next {</span>
+<span num="21">        <b>if visited[n] {</b></span>
+<span num="22">            fmt.Println(&#34;cycle detected&#34;)</span>
+<span num="23">            break</span>
+<span num="24">        }</span>
+<span num="25">        <b>visited[n] = true</b></span>
+<span num="26">        fmt.Println(n.Value)</span>
+<span num="27">    }</span>
+</pre>
+</div>
+  
+<p>The expression <code>visited[n]</code> is <code>true</code> if <code>n</code> has been visited,
+or <code>false</code> if <code>n</code> is not present.
+There&#39;s no need to use the two-value form to test for the presence of <code>n</code> in the map;
+the zero value default does it for us.</p>
+<p>Another instance of helpful zero values is a map of slices.
+Appending to a nil slice just allocates a new slice,
+so it&#39;s a one-liner to append a value to a map of slices;
+there&#39;s no need to check if the key exists.
+In the following example, the slice people is populated with <code>Person</code> values.
+Each <code>Person</code> has a <code>Name</code> and a slice of Likes.
+The example creates a map to associate each like with a slice of people that like it.</p>
+
+  
+	<div class="code">
+<pre><span num="13">    type Person struct {</span>
+<span num="14">        Name  string</span>
+<span num="15">        Likes []string</span>
+<span num="16">    }</span>
+<span num="17">    var people []*Person</span>
+<span num="18"></span>
+<span num="19">    <b>likes := make(map[string][]*Person)</b></span>
+<span num="20">    for _, p := range people {</span>
+<span num="21">        for _, l := range p.Likes {</span>
+<span num="22">            <b>likes[l] = append(likes[l], p)</b></span>
+<span num="23">        }</span>
+<span num="24">    }</span>
+</pre>
+</div>
+  
+<p>To print a list of people who like cheese:</p>
+
+  
+	<div class="code">
+<pre><span num="28">    for _, p := range likes[&#34;cheese&#34;] {</span>
+<span num="29">        fmt.Println(p.Name, &#34;likes cheese.&#34;)</span>
+<span num="30">    }</span>
+</pre>
+</div>
+  
+<p>To print the number of people who like bacon:</p>
+
+  
+	<div class="code">
+<pre><span num="33">    fmt.Println(len(likes[&#34;bacon&#34;]), &#34;people like bacon.&#34;)</span>
+</pre>
+</div>
+  
+<p>Note that since both range and len treat a nil slice as a zero-length slice,
+these last two examples will work even if nobody likes cheese or bacon (however
+unlikely that may be).</p>
+
+
+    
+      
+  <h4 id="TOC_5.">Key types</h4>
+  <p>As mentioned earlier, map keys may be of any type that is comparable.
+The <a href="https://golang.google.cn/ref/spec#Comparison_operators" target="_blank" rel="noopener">language spec</a>
+defines this precisely,
+but in short, comparable types are boolean,
+numeric, string, pointer, channel, and interface types,
+and structs or arrays that contain only those types.
+Notably absent from the list are slices, maps, and functions;
+these types cannot be compared using <code>==</code>,
+and may not be used as map keys.</p>
+<p>It&#39;s obvious that strings, ints, and other basic types should be available as map keys,
+but perhaps unexpected are struct keys.
+Struct can be used to key data by multiple dimensions.
+For example, this map of maps could be used to tally web page hits by country:</p>
+<pre><code>hits := make(map[string]map[string]int)
+</code></pre>
+<p>This is map of string to (map of <code>string</code> to <code>int</code>).
+Each key of the outer map is the path to a web page with its own inner map.
+Each inner map key is a two-letter country code.
+This expression retrieves the number of times an Australian has loaded the documentation page:</p>
+<pre><code>n := hits[&#34;/doc/&#34;][&#34;au&#34;]
+</code></pre>
+<p>Unfortunately, this approach becomes unwieldy when adding data,
+as for any given outer key you must check if the inner map exists,
+and create it if needed:</p>
+<pre><code>func add(m map[string]map[string]int, path, country string) {
+    mm, ok := m[path]
+    if !ok {
+        mm = make(map[string]int)
+        m[path] = mm
+    }
+    mm[country]++
+}
+add(hits, &#34;/doc/&#34;, &#34;au&#34;)
+</code></pre>
+<p>On the other hand, a design that uses a single map with a struct key does away with all that complexity:</p>
+<pre><code>type Key struct {
+    Path, Country string
+}
+hits := make(map[Key]int)
+</code></pre>
+<p>When an Vietnamese person visits the home page,
+incrementing (and possibly creating) the appropriate counter is a one-liner:</p>
+<pre><code>hits[Key{&#34;/&#34;, &#34;vn&#34;}]++
+</code></pre>
+<p>And it&#39;s similarly straightforward to see how many Swiss people have read the spec:</p>
+<pre><code>n := hits[Key{&#34;/ref/spec&#34;, &#34;ch&#34;}]</code></pre>
+
+
+    
+      
+  <h4 id="TOC_6.">Concurrency</h4>
+  <p><a href="https://golang.google.cn/doc/faq#atomic_maps" target="_blank" rel="noopener">Maps are not safe for concurrent use</a>:
+it&#39;s not defined what happens when you read and write to them simultaneously.
+If you need to read from and write to a map from concurrently executing goroutines,
+the accesses must be mediated by some kind of synchronization mechanism.
+One common way to protect maps is with <a href="https://golang.google.cn/pkg/sync/#RWMutex" target="_blank" rel="noopener">sync.RWMutex</a>.</p>
+<p>This statement declares a <code>counter</code> variable that is an anonymous struct
+containing a map and an embedded <code>sync.RWMutex</code>.</p>
+<pre><code>var counter = struct{
+    sync.RWMutex
+    m map[string]int
+}{m: make(map[string]int)}
+</code></pre>
+<p>To read from the counter, take the read lock:</p>
+<pre><code>counter.RLock()
+n := counter.m[&#34;some_key&#34;]
+counter.RUnlock()
+fmt.Println(&#34;some_key:&#34;, n)
+</code></pre>
+<p>To write to the counter, take the write lock:</p>
+<pre><code>counter.Lock()
+counter.m[&#34;some_key&#34;]++
+counter.Unlock()</code></pre>
+
+
+    
+      
+  <h4 id="TOC_7.">Iteration order</h4>
+  <p>When iterating over a map with a range loop,
+the iteration order is not specified and is not guaranteed to be the same
+from one iteration to the next.
+If you require a stable iteration order you must maintain a separate data structure that specifies that order.
+This example uses a separate sorted slice of keys to print a <code>map[int]string</code> in key order:</p>
+<pre><code>import &#34;sort&#34;
+
+var m map[int]string
+var keys []int
+for k := range m {
+    keys = append(keys, k)
+}
+sort.Ints(keys)
+for _, k := range keys {
+    fmt.Println(&#34;Key:&#34;, k, &#34;Value:&#34;, m[k])
+}</code></pre>
+
+
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

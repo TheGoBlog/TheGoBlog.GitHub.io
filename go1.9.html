@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/go1.9" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>Go 1.9 is released | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>Go 1.9 is released</h2>
+    <p class="author">
+    Francesc Campoy<br/>
+    24 August 2017
+    </p>
+    
+  
+  
+    
+      
+        <p>Today the Go team is happy to announce the release of Go 1.9.
+You can get it from the <a href="https://golang.google.cn/dl/" target="_blank" rel="noopener">download page</a>.
+There are many changes to the language, standard library, runtime, and tooling.
+This post covers the most significant visible ones.
+Most of the engineering effort put into this release went to improvements of the runtime and tooling,
+which makes for a less exciting announcement, but nonetheless a great release.</p>
+<p>The most important change to the language is the introduction of type aliases: a feature
+created to support gradual code repair. A type alias declaration has the form:</p>
+<pre><code>type T1 = T2
+</code></pre>
+<p>This declaration introduces an alias name <code>T1</code> for the type <code>T2</code>, in the same way that <code>byte</code> has
+always been an alias for <code>uint8</code>.
+The <a href="https://golang.google.cn/design/18130-type-alias" target="_blank" rel="noopener">type alias design document</a> and
+<a href="https://talks.golang.org/2016/refactor.article" target="_blank" rel="noopener">an article on refactoring</a> cover this addition in more detail.</p>
+<p>The new <a href="https://golang.google.cn/pkg/math/bits" target="_blank" rel="noopener">math/bits</a> package provides bit counting and manipulation functions
+for unsigned integers, implemented by special CPU instructions when possible.
+For example, on x86-64 systems, <code>bits.TrailingZeros(x)</code> uses the
+<a href="https://pdos.csail.mit.edu/6.828/2010/readings/i386/BSF.htm" target="_blank" rel="noopener">BSF</a> instruction.</p>
+<p>The <code>sync</code> package has added a new <a href="https://golang.google.cn/pkg/sync#Map" target="_blank" rel="noopener">Map</a> type, safe for concurrent access.
+You can read more about it from its documentation and learn more about why it was created from this
+<a href="https://www.youtube.com/watch?v=C1EtfDnsdDs" target="_blank" rel="noopener">GopherCon 2017 lightning talk</a>
+(<a href="https://github.com/gophercon/2017-talks/blob/master/lightningtalks/BryanCMills-AnOverviewOfSyncMap/An%20Overview%20of%20sync.Map.pdf" target="_blank" rel="noopener">slides</a>).
+It is not a general replacement for Go&#39;s map type; please see the documentation to learn when it should be used.</p>
+<p>The <code>testing</code> package also has an addition. The new <code>Helper</code> method, added to both
+<a href="https://golang.google.cn/pkg/testing#T.Helper" target="_blank" rel="noopener">testing.T</a> and <a href="https://golang.google.cn/pkg/testing#B.Helper" target="_blank" rel="noopener">testing.B</a>,
+marks the calling function as a test helper function.
+When the testing package prints file and line information, it shows the location of the call to a helper function
+instead of a line in the helper function itself.</p>
+<p>For example, consider this test:</p>
+
+      
+        
+  
+	<div class="code">
+<pre><span num="7">package p</span>
+<span num="8"></span>
+<span num="9">import &#34;testing&#34;</span>
+<span num="10"></span>
+<span num="11">func failure(t *testing.T) {</span>
+<span num="12">    t.Helper() // This call silences this function in error reports.</span>
+<span num="13">    t.Fatal(&#34;failure&#34;)</span>
+<span num="14">}</span>
+<span num="15"></span>
+<span num="16">func Test(t *testing.T) {</span>
+<span num="17">    failure(t)</span>
+<span num="18">}</span>
+</pre>
+</div>
+  
+
+      
+        <p>Because <code>failure</code> identifies itself as a test helper, the error message printed during <code>Test</code> will indicate line 11,
+where <code>failure</code> is called, instead of line 7, where <code>failure</code> calls <code>t.Fatal</code>.</p>
+<p>The <code>time</code> package now transparently tracks monotonic time in each <code>Time</code> value,
+making computing durations between two <code>Time</code> values a safe operation in the presence of wall clock adjustments.
+For example, this code now computes the right elapsed time even across a leap second clock reset:</p>
+<pre><code>start := time.Now()
+f()
+elapsed := time.Since(start)
+</code></pre>
+<p>See the <a href="http://beta.golang.org/pkg/time/#hdr-Monotonic_Clocks" target="_blank" rel="noopener">package docs</a> and
+<a href="https://github.com/golang/proposal/blob/master/design/12914-monotonic.md" target="_blank" rel="noopener">design document</a> for details.</p>
+<p>Finally, as part of the efforts to make the Go compiler faster, Go 1.9 compiles functions in a package concurrently.</p>
+<p>Go 1.9 includes many more additions, improvements, and fixes. Find the complete set of changes,
+and more information about the improvements listed above, in the
+<a href="https://golang.google.cn/doc/go1.9" target="_blank" rel="noopener">Go 1.9 release notes</a>.</p>
+<p>To celebrate the release, Go User Groups around the world are holding
+<a href="https://github.com/golang/cowg/blob/master/events/2017-08-go1.9-release-party.md" target="_blank" rel="noopener">release parties</a>.</p>
+
+      
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

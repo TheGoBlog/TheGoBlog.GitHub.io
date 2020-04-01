@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/slices" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>Arrays, slices (and strings): The mechanics of 'append' | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>Arrays, slices (and strings): The mechanics of 'append'</h2>
+    <p class="author">
+    Rob Pike<br/>
+    26 September 2013
+    </p>
+    
+  
+  
+    
+      
+  <h4 id="TOC_1.">Introduction</h4>
+  <p>One of the most common features of procedural programming languages is
+the concept of an array.
+Arrays seem like simple things but there are many questions that must be
+answered when adding them to a language, such as:</p>
+<ul>
+<li>fixed-size or variable-size?</li>
+<li>is the size part of the type?</li>
+<li>what do multidimensional arrays look like?</li>
+<li>does the empty array have meaning?</li>
+</ul>
+<p>The answers to these questions affect whether arrays are just
+a feature of the language or a core part of its design.</p>
+<p>In the early development of Go, it took about a year to decide the answers
+to these questions before the design felt right.
+The key step was the introduction of <em>slices</em>, which built on fixed-size
+<em>arrays</em> to give a flexible, extensible data structure.
+To this day, however, programmers new to Go often stumble over the way slices
+work, perhaps because experience from other languages has colored their thinking.</p>
+<p>In this post we&#39;ll attempt to clear up the confusion.
+We&#39;ll do so by building up the pieces to explain how the <code>append</code> built-in function
+works, and why it works the way it does.</p>
+
+
+    
+      
+  <h4 id="TOC_2.">Arrays</h4>
+  <p>Arrays are an important building block in Go, but like the foundation of a building
+they are often hidden below more visible components.
+We must talk about them briefly before we move on to the more interesting,
+powerful, and prominent idea of slices.</p>
+<p>Arrays are not often seen in Go programs because
+the size of an array is part of its type, which limits its expressive power.</p>
+<p>The declaration</p>
+
+  
+	<div class="code">
+<pre><span num="13">var buffer [256]byte</span>
+</pre>
+</div>
+  
+<p>declares the variable <code>buffer</code>, which holds 256 bytes.
+The type of <code>buffer</code> includes its size, <code>[256]byte</code>.
+An array with 512 bytes would be of the distinct type <code>[512]byte</code>.</p>
+<p>The data associated with an array is just that: an array of elements.
+Schematically, our buffer looks like this in memory,</p>
+<pre><code>buffer: byte byte byte ... 256 times ... byte byte byte
+</code></pre>
+<p>That is, the variable holds 256 bytes of data and nothing else. We can
+access its elements with the familiar indexing syntax, <code>buffer[0]</code>, <code>buffer[1]</code>,
+and so on through <code>buffer[255]</code>. (The index range 0 through 255 covers
+256 elements.) Attempting to index <code>buffer</code> with a value outside this
+range will crash the program.</p>
+<p>There is a built-in function called <code>len</code> that returns the number of elements
+of an array or slice and also of a few other data types.
+For arrays, it&#39;s obvious what <code>len</code> returns.
+In our example, <code>len(buffer)</code> returns the fixed value 256.</p>
+<p>Arrays have their place—they are a good representation of a transformation
+matrix for instance—but their most common purpose in Go is to hold storage
+for a slice.</p>
+
+
+    
+      
+  <h4 id="TOC_3.">Slices: The slice header</h4>
+  <p>Slices are where the action is, but to use them well one must understand
+exactly what they are and what they do.</p>
+<p>A slice is a data structure describing a contiguous section of an array
+stored separately from the slice variable itself.
+<em>A slice is not an array</em>.
+A slice <em>describes</em> a piece of an array.</p>
+<p>Given our <code>buffer</code> array variable from the previous section, we could create
+a slice that describes elements 100 through 150 (to be precise, 100 through 149,
+inclusive) by <em>slicing</em> the array:</p>
+
+  
+	<div class="code">
+<pre><span num="14">var slice []byte = buffer[100:150]</span>
+</pre>
+</div>
+  
+<p>In that snippet we used the full variable declaration to be explicit.
+The variable <code>slice</code> has type <code>[]byte</code>, pronounced &#34;slice of bytes&#34;,
+and is initialized from the array, called
+<code>buffer</code>, by slicing elements 100 (inclusive) through 150 (exclusive).
+The more idiomatic syntax would drop the type, which is set by the initializing expression:</p>
+<pre><code>var slice = buffer[100:150]
+</code></pre>
+<p>Inside a function we could use the short declaration form,</p>
+<pre><code>slice := buffer[100:150]
+</code></pre>
+<p>What exactly is this slice variable?
+It&#39;s not quite the full story, but for now think of a
+slice as a little data structure with two elements: a length and a pointer to an element
+of an array.
+You can think of it as being built like this behind the scenes:</p>
+<pre><code>type sliceHeader struct {
+    Length        int
+    ZerothElement *byte
+}
+
+slice := sliceHeader{
+    Length:        50,
+    ZerothElement: &amp;buffer[100],
+}
+</code></pre>
+<p>Of course, this is just an illustration.
+Despite what this snippet says that <code>sliceHeader</code> struct is not visible
+to the programmer, and the type
+of the element pointer depends on the type of the elements,
+but this gives the general idea of the mechanics.</p>
+<p>So far we&#39;ve used a slice operation on an array, but we can also slice a slice, like this:</p>
+<pre><code>slice2 := slice[5:10]
+</code></pre>
+<p>Just as before, this operation creates a new slice, in this case with elements
+5 through 9 (inclusive) of the original slice, which means elements
+105 through 109 of the original array.
+The underlying <code>sliceHeader</code> struct for the <code>slice2</code> variable looks like
+this:</p>
+<pre><code>slice2 := sliceHeader{
+    Length:        5,
+    ZerothElement: &amp;buffer[105],
+}
+</code></pre>
+<p>Notice that this header still points to the same underlying array, stored in
+the <code>buffer</code> variable.</p>
+<p>We can also <em>reslice</em>, which is to say slice a slice and store the result back in
+the original slice structure. After</p>
+<pre><code>slice = slice[5:10]
+</code></pre>
+<p>the <code>sliceHeader</code> structure for the <code>slice</code> variable looks just like it did for the <code>slice2</code>
+variable.
+You&#39;ll see reslicing used often, for example to truncate a slice. This statement drops
+the first and last elements of our slice:</p>
+<pre><code>slice = slice[1:len(slice)-1]
+</code></pre>
+<p>[Exercise: Write out what the <code>sliceHeader</code> struct looks like after this assignment.]</p>
+<p>You&#39;ll often hear experienced Go programmers talk about the &#34;slice header&#34;
+because that really is what&#39;s stored in a slice variable.
+For instance, when you call a function that takes a slice as an argument, such as
+<a href="https://golang.google.cn/pkg/bytes/#IndexRune" target="_blank" rel="noopener">bytes.IndexRune</a>, that header is
+what gets passed to the function.
+In this call,</p>
+<pre><code>slashPos := bytes.IndexRune(slice, &#39;/&#39;)
+</code></pre>
+<p>the <code>slice</code> argument that is passed to the <code>IndexRune</code> function is, in fact,
+a &#34;slice header&#34;.</p>
+<p>There&#39;s one more data item in the slice header, which we talk about below,
+but first let&#39;s see what the existence of the slice header means when you
+program with slices.</p>
+
+
+    
+      
+  <h4 id="TOC_4.">Passing slices to functions</h4>
+  <p>It&#39;s important to understand that even though a slice contains a pointer,
+it is itself a value.
+Under the covers, it is a struct value holding a pointer and a length.
+It is <em>not</em> a pointer to a struct.</p>
+<p>This matters.</p>
+<p>When we called <code>IndexRune</code> in the previous example,
+it was passed a <em>copy</em> of the slice header.
+That behavior has important ramifications.</p>
+<p>Consider this simple function:</p>
+
+  
+	<div class="code">
+<pre><span num="16">func AddOneToEachElement(slice []byte) {</span>
+<span num="17">    for i := range slice {</span>
+<span num="18">        slice[i]++</span>
+<span num="19">    }</span>
+<span num="20">}</span>
+</pre>
+</div>
+  
+<p>It does just what its name implies, iterating over the indices of a slice
+(using a <code>for</code> <code>range</code> loop), incrementing its elements.</p>
+<p>Try it:</p>
+
+  
+	<div class="playground">
+<pre style="display: none"><span>// +build OMIT
+
+// Copyright 2013 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package main
+
+import (
+	&#34;fmt&#34;
+)
+
+var buffer [256]byte
+var slice []byte = buffer[100:150]
+
+func AddOneToEachElement(slice []byte) {
+	for i := range slice {
+		slice[i]++
+	}
+}
+
+</span></pre><pre contenteditable="true" spellcheck="false"><span num="22">func main() {</span>
+<span num="23">    slice := buffer[10:20]</span>
+<span num="24">    for i := 0; i &lt; len(slice); i++ {</span>
+<span num="25">        slice[i] = byte(i)</span>
+<span num="26">    }</span>
+<span num="27">    fmt.Println(&#34;before&#34;, slice)</span>
+<span num="28">    AddOneToEachElement(slice)</span>
+<span num="29">    fmt.Println(&#34;after&#34;, slice)</span>
+<span num="30">}</span>
+</pre>
+</div>
+  
+<p>(You can edit and re-execute these runnable snippets if you want to explore.)</p>
+<p>Even though the slice <em>header</em> is passed by value, the header includes
+a pointer to elements of an array, so both the original slice header
+and the copy of the header passed to the function describe the same
+array.
+Therefore, when the function returns, the modified elements can
+be seen through the original slice variable.</p>
+<p>The argument to the function really is a copy, as this example shows:</p>
+
+  
+	<div class="playground">
+<pre style="display: none"><span>// +build OMIT
+
+// Copyright 2013 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package main
+
+import (
+	&#34;fmt&#34;
+)
+
+var buffer [256]byte
+var slice []byte = buffer[100:150]
+
+</span></pre><pre contenteditable="true" spellcheck="false"><span num="16">func SubtractOneFromLength(slice []byte) []byte {</span>
+<span num="17">    slice = slice[0 : len(slice)-1]</span>
+<span num="18">    return slice</span>
+<span num="19">}</span>
+<span num="20"></span>
+<span num="21">func main() {</span>
+<span num="22">    fmt.Println(&#34;Before: len(slice) =&#34;, len(slice))</span>
+<span num="23">    newSlice := SubtractOneFromLength(slice)</span>
+<span num="24">    fmt.Println(&#34;After:  len(slice) =&#34;, len(slice))</span>
+<span num="25">    fmt.Println(&#34;After:  len(newSlice) =&#34;, len(newSlice))</span>
+<span num="26">}</span>
+</pre>
+</div>
+  
+<p>Here we see that the <em>contents</em> of a slice argument can be modified by a function,
+but its <em>header</em> cannot.
+The length stored in the <code>slice</code> variable is not modified by the call to the function,
+since the function is passed a copy of the slice header, not the original.
+Thus if we want to write a function that modifies the header, we must return it as a result
+parameter, just as we have done here.
+The <code>slice</code> variable is unchanged but the returned value has the new length,
+which is then stored in <code>newSlice</code>,</p>
+
+
+    
+      
+  <h4 id="TOC_5.">Pointers to slices: Method receivers</h4>
+  <p>Another way to have a function modify the slice header is to pass a pointer to it.
+Here&#39;s a variant of our previous example that does this:</p>
+
+  
+	<div class="playground">
+<pre style="display: none"><span>// +build OMIT
+
+// Copyright 2013 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package main
+
+import (
+	&#34;fmt&#34;
+)
+
+var buffer [256]byte
+var slice []byte = buffer[100:150]
+
+</span></pre><pre contenteditable="true" spellcheck="false"><span num="16">func PtrSubtractOneFromLength(slicePtr *[]byte) {</span>
+<span num="17">    slice := *slicePtr</span>
+<span num="18">    *slicePtr = slice[0 : len(slice)-1]</span>
+<span num="19">}</span>
+<span num="20"></span>
+<span num="21">func main() {</span>
+<span num="22">    fmt.Println(&#34;Before: len(slice) =&#34;, len(slice))</span>
+<span num="23">    PtrSubtractOneFromLength(&amp;slice)</span>
+<span num="24">    fmt.Println(&#34;After:  len(slice) =&#34;, len(slice))</span>
+<span num="25">}</span>
+</pre>
+</div>
+  
+<p>It seems clumsy in that example, especially dealing with the extra level of indirection
+(a temporary variable helps),
+but there is one common case where you see pointers to slices.
+It is idiomatic to use a pointer receiver for a method that modifies a slice.</p>
+<p>Let&#39;s say we wanted to have a method on a slice that truncates it at the final slash.
+We could write it like this:</p>
+
+  
+	<div class="playground">
+<pre style="display: none"><span>// +build OMIT
+
+// Copyright 2013 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package main
+
+import (
+	&#34;bytes&#34;
+	&#34;fmt&#34;
+)
+
+</span></pre><pre contenteditable="true" spellcheck="false"><span num="14">type path []byte</span>
+<span num="15"></span>
+<span num="16">func (p *path) TruncateAtFinalSlash() {</span>
+<span num="17">    i := bytes.LastIndex(*p, []byte(&#34;/&#34;))</span>
+<span num="18">    if i &gt;= 0 {</span>
+<span num="19">        *p = (*p)[0:i]</span>
+<span num="20">    }</span>
+<span num="21">}</span>
+<span num="22"></span>
+<span num="23">func main() {</span>
+<span num="24">    pathName := path(&#34;/usr/bin/tso&#34;) // Conversion from string to path.</span>
+<span num="25">    pathName.TruncateAtFinalSlash()</span>
+<span num="26">    fmt.Printf(&#34;%s\n&#34;, pathName)</span>
+<span num="27">}</span>
+</pre>
+</div>
+  
+<p>If you run this example you&#39;ll see that it works properly, updating the slice in the caller.</p>
+<p>[Exercise: Change the type of the receiver to be a value rather
+than a pointer and run it again. Explain what happens.]</p>
+<p>On the other hand, if we wanted to write a method for <code>path</code> that upper-cases
+the ASCII letters in the path (parochially ignoring non-English names), the method could
+be a value because the value receiver will still point to the same underlying array.</p>
+
+  
+	<div class="playground">
+<pre style="display: none"><span>// +build OMIT
+
+// Copyright 2013 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package main
+
+import (
+	&#34;fmt&#34;
+)
+
+</span></pre><pre contenteditable="true" spellcheck="false"><span num="13">type path []byte</span>
+<span num="14"></span>
+<span num="15">func (p path) ToUpper() {</span>
+<span num="16">    for i, b := range p {</span>
+<span num="17">        if &#39;a&#39; &lt;= b &amp;&amp; b &lt;= &#39;z&#39; {</span>
+<span num="18">            p[i] = b + &#39;A&#39; - &#39;a&#39;</span>
+<span num="19">        }</span>
+<span num="20">    }</span>
+<span num="21">}</span>
+<span num="22"></span>
+<span num="23">func main() {</span>
+<span num="24">    pathName := path(&#34;/usr/bin/tso&#34;)</span>
+<span num="25">    pathName.ToUpper()</span>
+<span num="26">    fmt.Printf(&#34;%s\n&#34;, pathName)</span>
+<span num="27">}</span>
+</pre>
+</div>
+  
+<p>Here the <code>ToUpper</code> method uses two variables in the <code>for</code> <code>range</code> construct
+to capture the index and slice element.
+This form of loop avoids writing <code>p[i]</code> multiple times in the body.</p>
+<p>[Exercise: Convert the <code>ToUpper</code> method to use a pointer receiver and see if its behavior changes.]</p>
+<p>[Advanced exercise: Convert the <code>ToUpper</code> method to handle Unicode letters, not just ASCII.]</p>
+
+
+    
+      
+  <h4 id="TOC_6.">Capacity</h4>
+  <p>Look at the following function that extends its argument slice of <code>ints</code> by one element:</p>
+
+  
+	<div class="code">
+<pre><span num="13">func Extend(slice []int, element int) []int {</span>
+<span num="14">    n := len(slice)</span>
+<span num="15">    slice = slice[0 : n+1]</span>
+<span num="16">    slice[n] = element</span>
+<span num="17">    return slice</span>
+<span num="18">}</span>
+</pre>
+</div>
+  
+<p>(Why does it need to return the modified slice?) Now run it:</p>
+
+  
+	<div class="playground">
+<pre style="display: none"><span>// +build OMIT
+
+// Copyright 2013 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package main
+
+import (
+	&#34;fmt&#34;
+)
+
+func Extend(slice []int, element int) []int {
+	n := len(slice)
+	slice = slice[0 : n+1]
+	slice[n] = element
+	return slice
+}
+
+</span></pre><pre contenteditable="true" spellcheck="false"><span num="20">func main() {</span>
+<span num="21">    var iBuffer [10]int</span>
+<span num="22">    slice := iBuffer[0:0]</span>
+<span num="23">    for i := 0; i &lt; 20; i++ {</span>
+<span num="24">        slice = Extend(slice, i)</span>
+<span num="25">        fmt.Println(slice)</span>
+<span num="26">    }</span>
+<span num="27">}</span>
+</pre>
+</div>
+  
+<p>See how the slice grows until... it doesn&#39;t.</p>
+<p>It&#39;s time to talk about the third component of the slice header: its <em>capacity</em>.
+Besides the array pointer and length, the slice header also stores its capacity:</p>
+<pre><code>type sliceHeader struct {
+    Length        int
+    Capacity      int
+    ZerothElement *byte
+}
+</code></pre>
+<p>The <code>Capacity</code> field records how much space the underlying array actually has; it is the maximum
+value the <code>Length</code> can reach.
+Trying to grow the slice beyond its capacity will step beyond the limits of the array and will trigger a panic.</p>
+<p>After our example slice is created by</p>
+<pre><code>slice := iBuffer[0:0]
+</code></pre>
+<p>its header looks like this:</p>
+<pre><code>slice := sliceHeader{
+    Length:        0,
+    Capacity:      10,
+    ZerothElement: &amp;iBuffer[0],
+}
+</code></pre>
+<p>The <code>Capacity</code> field is equal to the length of the underlying array,
+minus the index in the array of the first element of the slice (zero in this case).
+If you want to inquire what the capacity is for a slice, use the built-in function <code>cap</code>:</p>
+<pre><code>if cap(slice) == len(slice) {
+    fmt.Println(&#34;slice is full!&#34;)
+}</code></pre>
+
+
+    
+      
+  <h4 id="TOC_7.">Make</h4>
+  <p>What if we want to grow the slice beyond its capacity?
+You can&#39;t!
+By definition, the capacity is the limit to growth.
+But you can achieve an equivalent result by allocating a new array, copying the data over, and modifying
+the slice to describe the new array.</p>
+<p>Let&#39;s start with allocation.
+We could use the <code>new</code> built-in function to allocate a bigger array
+and then slice the result,
+but it is simpler to use the <code>make</code> built-in function instead.
+It allocates a new array and
+creates a slice header to describe it, all at once.
+The <code>make</code> function takes three arguments: the type of the slice, its initial length, and its capacity, which is the
+length of the array that <code>make</code> allocates to hold the slice data.
+This call creates a slice of length 10 with room for 5 more (15-10), as you can see by running it:</p>
+
+  
+	<div class="playground">
+<pre style="display: none"><span>// +build OMIT
+
+// Copyright 2013 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package main
+
+import (
+	&#34;fmt&#34;
+)
+
+func main() {
+</span></pre><pre contenteditable="true" spellcheck="false"><span num="14">    slice := make([]int, 10, 15)</span>
+<span num="15">    fmt.Printf(&#34;len: %d, cap: %d\n&#34;, len(slice), cap(slice))</span>
+</pre>
+<pre style="display: none"><span>}
+</span></pre></div>
+  
+<p>This snippet doubles the capacity of our <code>int</code> slice but keeps its length the same:</p>
+
+  
+	<div class="playground">
+<pre style="display: none"><span>// +build OMIT
+
+// Copyright 2013 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package main
+
+import (
+	&#34;fmt&#34;
+)
+
+func main() {
+</span></pre><pre contenteditable="true" spellcheck="false"><span num="14">    slice := make([]int, 10, 15)</span>
+<span num="15">    fmt.Printf(&#34;len: %d, cap: %d\n&#34;, len(slice), cap(slice))</span>
+<span num="16">    newSlice := make([]int, len(slice), 2*cap(slice))</span>
+<span num="17">    for i := range slice {</span>
+<span num="18">        newSlice[i] = slice[i]</span>
+<span num="19">    }</span>
+<span num="20">    slice = newSlice</span>
+<span num="21">    fmt.Printf(&#34;len: %d, cap: %d\n&#34;, len(slice), cap(slice))</span>
+</pre>
+<pre style="display: none"><span>}
+</span></pre></div>
+  
+<p>After running this code the slice has much more room to grow before needing another reallocation.</p>
+<p>When creating slices, it&#39;s often true that the length and capacity will be same.
+The <code>make</code> built-in has a shorthand for this common case.
+The length argument defaults to the capacity, so you can leave it out
+to set them both to the same value.
+After</p>
+<pre><code>gophers := make([]Gopher, 10)
+</code></pre>
+<p>the <code>gophers</code> slice has both its length and capacity set to 10.</p>
+
+
+    
+      
+  <h4 id="TOC_8.">Copy</h4>
+  <p>When we doubled the capacity of our slice in the previous section,
+we wrote a loop to copy the old data to the new slice.
+Go has a built-in function, <code>copy</code>, to make this easier.
+Its arguments are two slices, and it copies the data from the right-hand argument to the left-hand argument.
+Here&#39;s our example rewritten to use <code>copy</code>:</p>
+
+  
+	<div class="playground">
+<pre style="display: none"><span>// +build OMIT
+
+// Copyright 2013 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package main
+
+import (
+	&#34;fmt&#34;
+)
+
+func main() {
+	slice := make([]int, 10, 15)
+	fmt.Printf(&#34;len: %d, cap: %d\n&#34;, len(slice), cap(slice))
+</span></pre><pre contenteditable="true" spellcheck="false"><span num="16">    newSlice := make([]int, len(slice), 2*cap(slice))</span>
+<span num="17">    copy(newSlice, slice)</span>
+</pre>
+<pre style="display: none"><span>	slice = newSlice
+	fmt.Printf(&#34;len: %d, cap: %d\n&#34;, len(slice), cap(slice))
+}
+</span></pre></div>
+  
+<p>The <code>copy</code> function is smart.
+It only copies what it can, paying attention to the lengths of both arguments.
+In other words, the number of elements it copies is the minimum of the lengths of the two slices.
+This can save a little bookkeeping.
+Also, <code>copy</code> returns an integer value, the number of elements it copied, although it&#39;s not always worth checking.</p>
+<p>The <code>copy</code> function also gets things right when source and destination overlap, which means it can be used to shift
+items around in a single slice.
+Here&#39;s how to use <code>copy</code> to insert a value into the middle of a slice.</p>
+
+  
+	<div class="code">
+<pre><span num="13">// Insert inserts the value into the slice at the specified index,</span>
+<span num="14">// which must be in range.</span>
+<span num="15">// The slice must have room for the new element.</span>
+<span num="16">func Insert(slice []int, index, value int) []int {</span>
+<span num="17">    // Grow the slice by one element.</span>
+<span num="18">    slice = slice[0 : len(slice)+1]</span>
+<span num="19">    // Use copy to move the upper part of the slice out of the way and open a hole.</span>
+<span num="20">    copy(slice[index+1:], slice[index:])</span>
+<span num="21">    // Store the new value.</span>
+<span num="22">    slice[index] = value</span>
+<span num="23">    // Return the result.</span>
+<span num="24">    return slice</span>
+<span num="25">}</span>
+</pre>
+</div>
+  
+<p>There are a couple of things to notice in this function.
+First, of course, it must return the updated slice because its length has changed.
+Second, it uses a convenient shorthand.
+The expression</p>
+<pre><code>slice[i:]
+</code></pre>
+<p>means exactly the same as</p>
+<pre><code>slice[i:len(slice)]
+</code></pre>
+<p>Also, although we haven&#39;t used the trick yet, we can leave out the first element of a slice expression too;
+it defaults to zero. Thus</p>
+<pre><code>slice[:]
+</code></pre>
+<p>just means the slice itself, which is useful when slicing an array.
+This expression is the shortest way to say &#34;a slice describing all the elements of the array&#34;:</p>
+<pre><code>array[:]
+</code></pre>
+<p>Now that&#39;s out of the way, let&#39;s run our <code>Insert</code> function.</p>
+
+  
+	<div class="playground">
+<pre style="display: none"><span>// +build OMIT
+
+// Copyright 2013 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package main
+
+import (
+	&#34;fmt&#34;
+)
+
+// Insert inserts the value into the slice at the specified index,
+// which must be in range.
+// The slice must have room for the new element.
+func Insert(slice []int, index, value int) []int {
+	// Grow the slice by one element.
+	slice = slice[0 : len(slice)+1]
+	// Use copy to move the upper part of the slice out of the way and open a hole.
+	copy(slice[index+1:], slice[index:])
+	// Store the new value.
+	slice[index] = value
+	// Return the result.
+	return slice
+}
+
+func main() {
+</span></pre><pre contenteditable="true" spellcheck="false"><span num="28">    slice := make([]int, 10, 20) // Note capacity &gt; length: room to add element.</span>
+<span num="29">    for i := range slice {</span>
+<span num="30">        slice[i] = i</span>
+<span num="31">    }</span>
+<span num="32">    fmt.Println(slice)</span>
+<span num="33">    slice = Insert(slice, 5, 99)</span>
+<span num="34">    fmt.Println(slice)</span>
+</pre>
+<pre style="display: none"><span>}
+</span></pre></div>
+  
+
+
+    
+      
+  <h4 id="TOC_9.">Append: An example</h4>
+  <p>A few sections back, we wrote an <code>Extend</code> function that extends a slice by one element.
+It was buggy, though, because if the slice&#39;s capacity was too small, the function would
+crash.
+(Our <code>Insert</code> example has the same problem.)
+Now we have the pieces in place to fix that, so let&#39;s write a robust implementation of
+<code>Extend</code> for integer slices.</p>
+
+  
+	<div class="code">
+<pre><span num="14">func Extend(slice []int, element int) []int {</span>
+<span num="15">    n := len(slice)</span>
+<span num="16">    if n == cap(slice) {</span>
+<span num="17">        // Slice is full; must grow.</span>
+<span num="18">        // We double its size and add 1, so if the size is zero we still grow.</span>
+<span num="19">        newSlice := make([]int, len(slice), 2*len(slice)+1)</span>
+<span num="20">        copy(newSlice, slice)</span>
+<span num="21">        slice = newSlice</span>
+<span num="22">    }</span>
+<span num="23">    slice = slice[0 : n+1]</span>
+<span num="24">    slice[n] = element</span>
+<span num="25">    return slice</span>
+<span num="26">}</span>
+</pre>
+</div>
+  
+<p>In this case it&#39;s especially important to return the slice, since when it reallocates
+the resulting slice describes a completely different array.
+Here&#39;s a little snippet to demonstrate what happens as the slice fills up:</p>
+
+  
+	<div class="playground">
+<pre style="display: none"><span>// +build OMIT
+
+// Copyright 2013 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package main
+
+import (
+	&#34;fmt&#34;
+)
+
+// Extend extends the slice by adding the element to the end.
+func Extend(slice []int, element int) []int {
+	n := len(slice)
+	if n == cap(slice) {
+		// Slice is full; must grow.
+		// We double its size and add 1, so if the size is zero we still grow.
+		newSlice := make([]int, len(slice), 2*len(slice)+1)
+		copy(newSlice, slice)
+		slice = newSlice
+	}
+	slice = slice[0 : n+1]
+	slice[n] = element
+	return slice
+}
+
+func main() {
+</span></pre><pre contenteditable="true" spellcheck="false"><span num="30">    slice := make([]int, 0, 5)</span>
+<span num="31">    for i := 0; i &lt; 10; i++ {</span>
+<span num="32">        slice = Extend(slice, i)</span>
+<span num="33">        fmt.Printf(&#34;len=%d cap=%d slice=%v\n&#34;, len(slice), cap(slice), slice)</span>
+<span num="34">        fmt.Println(&#34;address of 0th element:&#34;, &amp;slice[0])</span>
+<span num="35">    }</span>
+</pre>
+<pre style="display: none"><span>}
+</span></pre></div>
+  
+<p>Notice the reallocation when the initial array of size 5 is filled up.
+Both the capacity and the address of the zeroth element change when the new array is allocated.</p>
+<p>With the robust <code>Extend</code> function as a guide we can write an even nicer function that lets
+us extend the slice by multiple elements.
+To do this, we use Go&#39;s ability to turn a list of function arguments into a slice when the
+function is called.
+That is, we use Go&#39;s variadic function facility.</p>
+<p>Let&#39;s call the function <code>Append</code>.
+For the first version, we can just call <code>Extend</code> repeatedly so the mechanism of the variadic function is clear.
+The signature of <code>Append</code> is this:</p>
+<pre><code>func Append(slice []int, items ...int) []int
+</code></pre>
+<p>What that says is that <code>Append</code> takes one argument, a slice, followed by zero or more
+<code>int</code> arguments.
+Those arguments are exactly a slice of <code>int</code> as far as the implementation
+of <code>Append</code> is concerned, as you can see:</p>
+
+  
+	<div class="code">
+<pre><span num="28">// Append appends the items to the slice.</span>
+<span num="29">// First version: just loop calling Extend.</span>
+<span num="30">func Append(slice []int, items ...int) []int {</span>
+<span num="31">    for _, item := range items {</span>
+<span num="32">        slice = Extend(slice, item)</span>
+<span num="33">    }</span>
+<span num="34">    return slice</span>
+<span num="35">}</span>
+</pre>
+</div>
+  
+<p>Notice the <code>for</code> <code>range</code> loop iterating over the elements of the <code>items</code> argument, which has implied type <code>[]int</code>.
+Also notice the use of the blank identifier <code>_</code> to discard the index in the loop, which we don&#39;t need in this case.</p>
+<p>Try it:</p>
+
+  
+	<div class="playground">
+<pre style="display: none"><span>// +build OMIT
+
+// Copyright 2013 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package main
+
+import (
+	&#34;fmt&#34;
+)
+
+// Extend extends the slice by adding the element to the end.
+func Extend(slice []int, element int) []int {
+	n := len(slice)
+	if n == cap(slice) {
+		// Slice is full; must grow.
+		// We double its size and add 1, so if the size is zero we still grow.
+		newSlice := make([]int, len(slice), 2*len(slice)+1)
+		copy(newSlice, slice)
+		slice = newSlice
+	}
+	slice = slice[0 : n+1]
+	slice[n] = element
+	return slice
+}
+
+// Append appends the items to the slice.
+// First version: just loop calling Extend.
+func Append(slice []int, items ...int) []int {
+	for _, item := range items {
+		slice = Extend(slice, item)
+	}
+	return slice
+}
+
+func main() {
+</span></pre><pre contenteditable="true" spellcheck="false"><span num="39">    slice := []int{0, 1, 2, 3, 4}</span>
+<span num="40">    fmt.Println(slice)</span>
+<span num="41">    slice = Append(slice, 5, 6, 7, 8)</span>
+<span num="42">    fmt.Println(slice)</span>
+</pre>
+<pre style="display: none"><span>}
+</span></pre></div>
+  
+<p>Another new technique in this example is that we initialize the slice by writing a composite literal,
+which consists of the type of the slice followed by its elements in braces:</p>
+
+  
+	<div class="code">
+<pre><span num="39">    slice := []int{0, 1, 2, 3, 4}</span>
+</pre>
+</div>
+  
+<p>The <code>Append</code> function is interesting for another reason.
+Not only can we append elements, we can append a whole second slice
+by &#34;exploding&#34; the slice into arguments using the <code>...</code> notation at the call site:</p>
+
+  
+	<div class="playground">
+<pre style="display: none"><span>// +build OMIT
+
+// Copyright 2013 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package main
+
+import (
+	&#34;fmt&#34;
+)
+
+// Extend extends the slice by adding the element to the end.
+func Extend(slice []int, element int) []int {
+	n := len(slice)
+	if n == cap(slice) {
+		// Slice is full; must grow.
+		// We double its size and add 1, so if the size is zero we still grow.
+		newSlice := make([]int, len(slice), 2*len(slice)+1)
+		copy(newSlice, slice)
+		slice = newSlice
+	}
+	slice = slice[0 : n+1]
+	slice[n] = element
+	return slice
+}
+
+// Append appends the items to the slice.
+// First version: just loop calling Extend.
+func Append(slice []int, items ...int) []int {
+	for _, item := range items {
+		slice = Extend(slice, item)
+	}
+	return slice
+}
+
+func main() {
+</span></pre><pre contenteditable="true" spellcheck="false"><span num="39">    slice1 := []int{0, 1, 2, 3, 4}</span>
+<span num="40">    slice2 := []int{55, 66, 77}</span>
+<span num="41">    fmt.Println(slice1)</span>
+<span num="42">    slice1 = Append(slice1, slice2...) // The &#39;...&#39; is essential!</span>
+<span num="43">    fmt.Println(slice1)</span>
+</pre>
+<pre style="display: none"><span>}
+</span></pre></div>
+  
+<p>Of course, we can make <code>Append</code> more efficient by allocating no more than once,
+building on the innards of <code>Extend</code>:</p>
+
+  
+	<div class="code">
+<pre><span num="13">// Append appends the elements to the slice.</span>
+<span num="14">// Efficient version.</span>
+<span num="15">func Append(slice []int, elements ...int) []int {</span>
+<span num="16">    n := len(slice)</span>
+<span num="17">    total := len(slice) + len(elements)</span>
+<span num="18">    if total &gt; cap(slice) {</span>
+<span num="19">        // Reallocate. Grow to 1.5 times the new size, so we can still grow.</span>
+<span num="20">        newSize := total*3/2 + 1</span>
+<span num="21">        newSlice := make([]int, total, newSize)</span>
+<span num="22">        copy(newSlice, slice)</span>
+<span num="23">        slice = newSlice</span>
+<span num="24">    }</span>
+<span num="25">    slice = slice[:total]</span>
+<span num="26">    copy(slice[n:], elements)</span>
+<span num="27">    return slice</span>
+<span num="28">}</span>
+</pre>
+</div>
+  
+<p>Here, notice how we use <code>copy</code> twice, once to move the slice data to the newly
+allocated memory, and then to copy the appending items to the end of the old data.</p>
+<p>Try it; the behavior is the same as before:</p>
+
+  
+	<div class="playground">
+<pre style="display: none"><span>// +build OMIT
+
+// Copyright 2013 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package main
+
+import (
+	&#34;fmt&#34;
+)
+
+// Append appends the elements to the slice.
+// Efficient version.
+func Append(slice []int, elements ...int) []int {
+	n := len(slice)
+	total := len(slice) + len(elements)
+	if total &gt; cap(slice) {
+		// Reallocate. Grow to 1.5 times the new size, so we can still grow.
+		newSize := total*3/2 + 1
+		newSlice := make([]int, total, newSize)
+		copy(newSlice, slice)
+		slice = newSlice
+	}
+	slice = slice[:total]
+	copy(slice[n:], elements)
+	return slice
+}
+
+func main() {
+</span></pre><pre contenteditable="true" spellcheck="false"><span num="32">    slice1 := []int{0, 1, 2, 3, 4}</span>
+<span num="33">    slice2 := []int{55, 66, 77}</span>
+<span num="34">    fmt.Println(slice1)</span>
+<span num="35">    slice1 = Append(slice1, slice2...) // The &#39;...&#39; is essential!</span>
+<span num="36">    fmt.Println(slice1)</span>
+</pre>
+<pre style="display: none"><span>}
+</span></pre></div>
+  
+
+
+    
+      
+  <h4 id="TOC_10.">Append: The built-in function</h4>
+  <p>And so we arrive at the motivation for the design of the <code>append</code> built-in function.
+It does exactly what our <code>Append</code> example does, with equivalent efficiency, but it
+works for any slice type.</p>
+<p>A weakness of Go is that any generic-type operations must be provided by the
+run-time. Some day that may change, but for now, to make working with slices
+easier, Go provides a built-in generic <code>append</code> function.
+It works the same as our <code>int</code> slice version, but for <em>any</em> slice type.</p>
+<p>Remember, since the slice header is always updated by a call to <code>append</code>, you need
+to save the returned slice after the call.
+In fact, the compiler won&#39;t let you call append without saving the result.</p>
+<p>Here are some one-liners intermingled with print statements. Try them, edit them and explore:</p>
+
+  
+	<div class="playground">
+<pre style="display: none"><span>// +build OMIT
+
+// Copyright 2013 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package main
+
+import (
+	&#34;fmt&#34;
+)
+
+func main() {
+</span></pre><pre contenteditable="true" spellcheck="false"><span num="15">    // Create a couple of starter slices.</span>
+<span num="16">    slice := []int{1, 2, 3}</span>
+<span num="17">    slice2 := []int{55, 66, 77}</span>
+<span num="18">    fmt.Println(&#34;Start slice: &#34;, slice)</span>
+<span num="19">    fmt.Println(&#34;Start slice2:&#34;, slice2)</span>
+<span num="20"></span>
+<span num="21">    // Add an item to a slice.</span>
+<span num="22">    slice = append(slice, 4)</span>
+<span num="23">    fmt.Println(&#34;Add one item:&#34;, slice)</span>
+<span num="24"></span>
+<span num="25">    // Add one slice to another.</span>
+<span num="26">    slice = append(slice, slice2...)</span>
+<span num="27">    fmt.Println(&#34;Add one slice:&#34;, slice)</span>
+<span num="28"></span>
+<span num="29">    // Make a copy of a slice (of int).</span>
+<span num="30">    slice3 := append([]int(nil), slice...)</span>
+<span num="31">    fmt.Println(&#34;Copy a slice:&#34;, slice3)</span>
+<span num="32"></span>
+<span num="33">    // Copy a slice to the end of itself.</span>
+<span num="34">    fmt.Println(&#34;Before append to self:&#34;, slice)</span>
+<span num="35">    slice = append(slice, slice...)</span>
+<span num="36">    fmt.Println(&#34;After append to self:&#34;, slice)</span>
+</pre>
+<pre style="display: none"><span>}
+</span></pre></div>
+  
+<p>It&#39;s worth taking a moment to think about the final one-liner of that example in detail to understand
+how the design of slices makes it possible for this simple call to work correctly.</p>
+<p>There are lots more examples of <code>append</code>, <code>copy</code>, and other ways to use slices
+on the community-built
+<a href="https://github.com/golang/go/wiki/SliceTricks" target="_blank" rel="noopener">&#34;Slice Tricks&#34; Wiki page</a>.</p>
+
+
+    
+      
+  <h4 id="TOC_11.">Nil</h4>
+  <p>As an aside, with our newfound knowledge we can see what the representation of a <code>nil</code> slice is.
+Naturally, it is the zero value of the slice header:</p>
+<pre><code>sliceHeader{
+    Length:        0,
+    Capacity:      0,
+    ZerothElement: nil,
+}
+</code></pre>
+<p>or just</p>
+<pre><code>sliceHeader{}
+</code></pre>
+<p>The key detail is that the element pointer is <code>nil</code> too. The slice created by</p>
+<pre><code>array[0:0]
+</code></pre>
+<p>has length zero (and maybe even capacity zero) but its pointer is not <code>nil</code>, so
+it is not a nil slice.</p>
+<p>As should be clear, an empty slice can grow (assuming it has non-zero capacity), but a <code>nil</code>
+slice has no array to put values in and can never grow to hold even one element.</p>
+<p>That said, a <code>nil</code> slice is functionally equivalent to a zero-length slice, even though it points
+to nothing.
+It has length zero and can be appended to, with allocation.
+As an example, look at the one-liner above that copies a slice by appending
+to a <code>nil</code> slice.</p>
+
+
+    
+      
+  <h4 id="TOC_12.">Strings</h4>
+  <p>Now a brief section about strings in Go in the context of slices.</p>
+<p>Strings are actually very simple: they are just read-only slices of bytes with a bit
+of extra syntactic support from the language.</p>
+<p>Because they are read-only, there is no need for a capacity (you can&#39;t grow them),
+but otherwise for most purposes you can treat them just like read-only slices
+of bytes.</p>
+<p>For starters, we can index them to access individual bytes:</p>
+<pre><code>slash := &#34;/usr/ken&#34;[0] // yields the byte value &#39;/&#39;.
+</code></pre>
+<p>We can slice a string to grab a substring:</p>
+<pre><code>usr := &#34;/usr/ken&#34;[0:4] // yields the string &#34;/usr&#34;
+</code></pre>
+<p>It should be obvious now what&#39;s going on behind the scenes when we slice a string.</p>
+<p>We can also take a normal slice of bytes and create a string from it with the simple conversion:</p>
+<pre><code>str := string(slice)
+</code></pre>
+<p>and go in the reverse direction as well:</p>
+<pre><code>slice := []byte(usr)
+</code></pre>
+<p>The array underlying a string is hidden from view; there is no way to access its contents
+except through the string. That means that when we do either of these conversions, a
+copy of the array must be made.
+Go takes care of this, of course, so you don&#39;t have to.
+After either of these conversions, modifications to
+the array underlying the byte slice don&#39;t affect the corresponding string.</p>
+<p>An important consequence of this slice-like design for strings is that
+creating a substring is very efficient.
+All that needs to happen
+is the creation of a two-word string header. Since the string is read-only, the original
+string and the string resulting from the slice operation can share the same array safely.</p>
+<p>A historical note: The earliest implementation of strings always allocated, but when slices
+were added to the language, they provided a model for efficient string handling. Some of
+the benchmarks saw huge speedups as a result.</p>
+<p>There&#39;s much more to strings, of course, and a
+<a href="https://TheGoBlog.GitHub.io/strings" target="_blank" rel="noopener">separate blog post</a> covers them in greater depth.</p>
+
+
+    
+      
+  <h4 id="TOC_13.">Conclusion</h4>
+  <p>To understand how slices work, it helps to understand how they are implemented.
+There is a little data structure, the slice header, that is the item associated with the slice
+variable, and that header describes a section of a separately allocated array.
+When we pass slice values around, the header gets copied but the array it points
+to is always shared.</p>
+<p>Once you appreciate how they work, slices become not only easy to use, but
+powerful and expressive, especially with the help of the <code>copy</code> and <code>append</code>
+built-in functions.</p>
+
+
+    
+      
+  <h4 id="TOC_14.">More reading</h4>
+  <p>There&#39;s lots to find around the intertubes about slices in Go.
+As mentioned earlier,
+the <a href="https://github.com/golang/go/wiki/SliceTricks" target="_blank" rel="noopener">&#34;Slice Tricks&#34; Wiki page</a>
+has many examples.
+The <a href="https://TheGoBlog.GitHub.io/go-slices-usage-and-internals" target="_blank" rel="noopener">Go Slices</a> blog post
+describes the memory layout details with clear diagrams.
+Russ Cox&#39;s <a href="https://research.swtch.com/godata" target="_blank" rel="noopener">Go Data Structures</a> article includes
+a discussion of slices along with some of Go&#39;s other internal data structures.</p>
+<p>There is much more material available, but the best way to learn about slices is to use them.</p>
+
+
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

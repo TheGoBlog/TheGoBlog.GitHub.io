@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/publishing-go-modules" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>Publishing Go Modules | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>Publishing Go Modules</h2>
+    <p class="author">
+    Tyler Bui-Palsulich<br/>
+    26 September 2019
+    </p>
+    
+  
+  
+    
+      
+  <h4 id="TOC_1.">Introduction</h4>
+  <p>This post is part 3 in a series.</p>
+<ul>
+<li>Part 1 — <a href="/using-go-modules" target="_blank" rel="noopener">Using Go Modules</a></li>
+<li>Part 2 — <a href="/migrating-to-go-modules" target="_blank" rel="noopener">Migrating To Go Modules</a></li>
+<li><strong>Part 3 — Publishing Go Modules</strong> (this post)</li>
+<li>Part 4 — <a href="/v2-go-modules" target="_blank" rel="noopener">Go Modules: v2 and Beyond</a></li>
+</ul>
+<p>This post discusses how to write and publish modules so other modules can depend
+on them.</p>
+<p>Please note: this post covers development up to and including <code>v1</code>. If you are
+interested in <code>v2</code>, please see <a href="/v2-go-modules" target="_blank" rel="noopener">Go Modules: v2 and Beyond</a>.</p>
+<p>This post uses <a href="https://git-scm.com/" target="_blank" rel="noopener">Git</a> in examples.
+<a href="https://www.mercurial-scm.org/" target="_blank" rel="noopener">Mercurial</a>,
+<a href="http://wiki.bazaar.canonical.com/" target="_blank" rel="noopener">Bazaar</a>, and others are supported as well.</p>
+
+
+    
+      
+  <h4 id="TOC_2.">Project setup</h4>
+  <p>For this post, you&#39;ll need an existing project to use as an example. So, start
+with the files from the end of the
+<a href="https://TheGoBlog.GitHub.io/using-go-modules" target="_blank" rel="noopener">Using Go Modules</a> article:</p>
+<pre><code>$ cat go.mod
+module example.com/hello
+
+go 1.12
+
+require rsc.io/quote/v3 v3.1.0
+
+$ cat go.sum
+golang.org/x/text v0.0.0-20170915032832-14c0d48ead0c h1:qgOY6WgZOaTkIIMiVjBQcw93ERBE4m30iBm00nkL0i8=
+golang.org/x/text v0.0.0-20170915032832-14c0d48ead0c/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
+rsc.io/quote/v3 v3.1.0 h1:9JKUTTIUgS6kzR9mK1YuGKv6Nl+DijDNIc0ghT58FaY=
+rsc.io/quote/v3 v3.1.0/go.mod h1:yEA65RcK8LyAZtP9Kv3t0HmxON59tX3rD+tICJqUlj0=
+rsc.io/sampler v1.3.0 h1:7uVkIFmeBqHfdjD+gZwtXXI+RODJ2Wc4O7MPEh/QiW4=
+rsc.io/sampler v1.3.0/go.mod h1:T1hPZKmBbMNahiBKFy5HrXp6adAjACjK9JXDnKaTXpA=
+
+$ cat hello.go
+package hello
+
+import &#34;rsc.io/quote/v3&#34;
+
+func Hello() string {
+    return quote.HelloV3()
+}
+
+func Proverb() string {
+    return quote.Concurrency()
+}
+
+$ cat hello_test.go
+package hello
+
+import (
+    &#34;testing&#34;
+)
+
+func TestHello(t *testing.T) {
+    want := &#34;Hello, world.&#34;
+    if got := Hello(); got != want {
+        t.Errorf(&#34;Hello() = %q, want %q&#34;, got, want)
+    }
+}
+
+func TestProverb(t *testing.T) {
+    want := &#34;Concurrency is not parallelism.&#34;
+    if got := Proverb(); got != want {
+        t.Errorf(&#34;Proverb() = %q, want %q&#34;, got, want)
+    }
+}
+
+$
+</code></pre>
+<p>Next, create a new <code>git</code> repository and add an initial commit. If you&#39;re
+publishing your own project, be sure to include a <code>LICENSE</code> file. Change to the
+directory containing the <code>go.mod</code> then create the repo:</p>
+<pre><code>$ git init
+$ git add LICENSE go.mod go.sum hello.go hello_test.go
+$ git commit -m &#34;hello: initial commit&#34;
+$</code></pre>
+
+
+    
+      
+  <h4 id="TOC_3.">Semantic versions and modules</h4>
+  <p>Every required module in a <code>go.mod</code> has a
+<a href="https://semver.org" target="_blank" rel="noopener">semantic version</a>, the minimum version of that dependency
+to use to build the module.</p>
+<p>A semantic version has the form <code>vMAJOR.MINOR.PATCH</code>.</p>
+<ul>
+<li>Increment the <code>MAJOR</code> version when you make a <a href="https://golang.google.cn/doc/go1compat" target="_blank" rel="noopener">backwards incompatible</a>
+change to the public API of your module.
+This should only be done when absolutely necessary.</li>
+<li>Increment the <code>MINOR</code> version when you make a backwards compatible change to the API,
+like changing dependencies or adding a new function,
+method, struct field, or type.</li>
+<li>Increment the <code>PATCH</code> version after making minor changes that don&#39;t affect
+your module&#39;s public API or dependencies, like fixing a bug.</li>
+</ul>
+<p>You can specify pre-release versions by appending a hyphen and dot separated
+identifiers (for example, <code>v1.0.1-alpha</code> or <code>v2.2.2-beta.2</code>). Normal releases
+are preferred by the <code>go</code> command over pre-release versions, so users must ask
+for pre-release versions explicitly (for example,
+<code>go get example.com/hello@v1.0.1-alpha</code>) if your module has any normal releases.</p>
+<p><code>v0</code> major versions and pre-release versions do not guarantee backwards
+compatibility. They let you refine your API before making stability commitments
+to your users. However, <code>v1</code> major versions and beyond require backwards
+compatibility within that major version.</p>
+<p>The version referenced in a <code>go.mod</code> may be an explicit release tagged in the
+repository (for example, <code>v1.5.2</code>), or it may be a
+<a href="https://golang.google.cn/cmd/go/#hdr-Pseudo_versions" target="_blank" rel="noopener">pseudo-version</a> based on a
+specific commit (for example, <code>v0.0.0-20170915032832-14c0d48ead0c</code>).
+Pseudo-versions are a special type of pre-release version. Pseudo-versions are
+useful when a user needs to depend on a project that has not published any
+semantic version tags, or develop against a commit that hasn&#39;t been tagged yet,
+but users should not assume that pseudo-versions provide a stable or well-tested
+API. Tagging your modules with explicit versions signals to your users that
+specific versions are fully tested and ready to use.</p>
+<p>Once you start tagging your repo with versions, it&#39;s important to keep tagging
+new releases as you develop your module. When users request a new version of
+your module (with <code>go get -u</code> or <code>go get example.com/hello</code>), the <code>go</code> command
+will choose the greatest semantic release version available, even if that
+version is several years old and many changes behind the primary branch.
+Continuing to tag new releases will make your ongoing improvements available to
+your users.</p>
+<p>Do not delete version tags from your repo. If you find a bug or a security issue
+with a version, release a new version. If people depend on a version that you
+have deleted, their builds may fail. Similarly, once you release a version, do
+not change or overwrite it. The
+<a href="https://TheGoBlog.GitHub.io/module-mirror-launch" target="_blank" rel="noopener">module mirror and checksum database</a>
+store modules, their versions, and signed cryptographic hashes to ensure that
+the build of a given version remains reproducible over time.</p>
+
+
+    
+      
+  <h4 id="TOC_4.">v0: the initial, unstable version</h4>
+  <p>Let&#39;s tag the module with a <code>v0</code> semantic version. A <code>v0</code> version does not make
+any stability guarantees, so nearly all projects should start with <code>v0</code> as they
+refine their public API.</p>
+<p>Tagging a new version has a few steps:</p>
+<ol>
+<li>
+<p>Run <code>go mod tidy</code>, which removes any dependencies the module might have accumulated that are no longer necessary.</p>
+</li>
+<li>
+<p>Run <code>go test ./...</code> a final time to make sure everything is working.</p>
+</li>
+<li>
+<p>Tag the project with a new version using <a href="https://git-scm.com/docs/git-tag" target="_blank" rel="noopener"><code>git tag</code></a>.</p>
+</li>
+<li>
+<p>Push the new tag to the origin repository.</p>
+<p>$ go mod tidy
+$ go test ./...
+ok      example.com/hello       0.015s
+$ git add go.mod go.sum hello.go hello_test.go
+$ git commit -m &#34;hello: changes for v0.1.0&#34;
+$ git tag v0.1.0
+$ git push origin v0.1.0
+$</p>
+</li>
+</ol>
+<p>Now other projects can depend on <code>v0.1.0</code> of <code>example.com/hello</code>. For your own
+module, you can run <code>go list -m example.com/hello@v0.1.0</code> to confirm the latest
+version is available (this example module does not exist, so no versions are
+available). If you don&#39;t see the latest version immediately and you&#39;re using the
+Go module proxy (the default since Go 1.13), try again in a few minutes to give
+the proxy time to load the new version.</p>
+<p>If you add to the public API, make a breaking change to a <code>v0</code> module, or
+upgrade the minor or version of one of your dependencies,  increment the <code>MINOR</code>
+version for your next release. For example, the next release after <code>v0.1.0</code>
+would be <code>v0.2.0</code>.</p>
+<p>If you fix a bug in an existing version, increment the <code>PATCH</code> version. For
+example, the next release after <code>v0.1.0</code> would be <code>v0.1.1</code>.</p>
+
+
+    
+      
+  <h4 id="TOC_5.">v1: the first stable version</h4>
+  <p>Once you are absolutely sure your module&#39;s API is stable, you can release
+<code>v1.0.0</code>. A <code>v1</code> major version communicates to users that no incompatible
+changes will be made to the module&#39;s API. They can upgrade to new <code>v1</code> minor and
+patch releases, and their code should not break. Function and method signatures
+will not change, exported types will not be removed, and so on. If there are
+changes to the API, they will be backwards compatible (for example, adding a new
+field to a struct) and will be included in a new minor release. If there are bug
+fixes (for example, a security fix), they will be included in a patch release
+(or as part of a minor release).</p>
+<p>Sometimes, maintaining backwards compatibility can lead to awkward APIs. That&#39;s
+OK. An imperfect API is better than breaking users&#39; existing code.</p>
+<p>The standard library&#39;s <code>strings</code> package is a prime example of maintaining
+backwards compatibility at the cost of API consistency.</p>
+<ul>
+<li><a href="https://godoc.org/strings#Split" target="_blank" rel="noopener"><code>Split</code></a> slices a string into all
+substrings separated by a separator and returns a slice of the substrings
+between those separators.</li>
+<li><a href="https://godoc.org/strings#SplitN" target="_blank" rel="noopener"><code>SplitN</code></a> can be used to control the number of substrings to return.</li>
+</ul>
+<p>However, <a href="https://godoc.org/strings#Replace" target="_blank" rel="noopener"><code>Replace</code></a> took a count of how
+many instances of the string to replace from the beginning (unlike <code>Split</code>).</p>
+<p>Given <code>Split</code> and <code>SplitN</code>, you would expect functions like <code>Replace</code> and
+<code>ReplaceN</code>. But, we couldn&#39;t change the existing <code>Replace</code> without breaking
+callers, which we promised not to do. So, in Go 1.12, we added a new function,
+<a href="https://godoc.org/strings#ReplaceAll" target="_blank" rel="noopener"><code>ReplaceAll</code></a>. The resulting API is a
+little odd, since <code>Split</code> and <code>Replace</code> behave differently, but that
+inconsistency is better than a breaking change.</p>
+<p>Let&#39;s say you&#39;re happy with the API of <code>example.com/hello</code> and you want to
+release <code>v1</code> as the first stable version.</p>
+<p>Tagging <code>v1</code> uses the same process as tagging a <code>v0</code> version: run <code>go mod tidy</code>
+and <code>go test ./...</code>, tag the version, and push the tag to the origin repository:</p>
+<pre><code>$ go mod tidy
+$ go test ./...
+ok      example.com/hello       0.015s
+$ git add go.mod go.sum hello.go hello_test.go
+$ git commit -m &#34;hello: changes for v1.0.0&#34;
+$ git tag v1.0.0
+$ git push origin v1.0.0
+$
+</code></pre>
+<p>At this point, the <code>v1</code> API of <code>example.com/hello</code> is solidified. This
+communicates to everyone that our API is stable and they should feel comfortable
+using it.</p>
+
+
+    
+      
+  <h4 id="TOC_6.">Conclusion</h4>
+  <p>This post walked through the process of tagging a module with semantic versions
+and when to release <code>v1</code>. A future post will cover how to maintain and publish
+modules at <code>v2</code> and beyond.</p>
+<p>To provide feedback and help shape the future of dependency management in Go,
+please send us <a href="https://github.com/golang/go/issues/new" target="_blank" rel="noopener">bug reports</a> or
+<a href="https://github.com/golang/go/wiki/ExperienceReports" target="_blank" rel="noopener">experience reports</a>.</p>
+<p>Thanks for all your feedback and help improving Go modules.</p>
+
+
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

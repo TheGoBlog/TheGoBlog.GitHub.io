@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/9years" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>Nine years of Go | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>Nine years of Go</h2>
+    <p class="author">
+    Steve Francia<br/>
+    10 November 2018
+    </p>
+    
+  
+  
+    
+      
+  <h4 id="TOC_1.">Introduction</h4>
+  <p>Today marks the ninth anniversary of the day we open-sourced our initial sketch of Go.
+On each anniversary we like to take time to reflect on what has happened over the past year.
+The past 12 months have been a breakout year for the Go language and community.</p>
+
+
+    
+      
+  <h4 id="TOC_2.">Go Love &amp; Adoption</h4>
+  <p>Thanks to all of you, 2018 was an amazing year for Go!
+In multiple industry surveys Gophers expressed how happy they were using Go,
+and many non-Go developers indicated they intended to learn Go before any other language.</p>
+<p>In <a href="https://insights.stackoverflow.com/survey/2018#most-loved-dreaded-and-wanted" target="_blank" rel="noopener">Stack Overflow’s 2018 Developer Survey</a>,
+Go retained its coveted spot in both the top 5 most loved and top 5 most wanted languages.
+People who use Go love it, and people who aren’t using Go want to.</p>
+<p>In <a href="https://www.activestate.com/developer-survey-2018-open-source-runtime-pains" target="_blank" rel="noopener">ActiveState’s 2018 Developer Survey</a>,
+Go topped the charts with 36% of users responding they were “Extremely Satisfied” using Go
+and 61% responding “Very Satisfied” or better.</p>
+<p><a href="https://www.jetbrains.com/research/devecosystem-2018/" target="_blank" rel="noopener">JetBrains’s 2018 Developer Survey</a> awarded Go
+the “Most promising language” with 12% of respondents using Go today and 16% intending to use Go in the future.</p>
+<p>In <a href="https://research.hackerrank.com/developer-skills/2018/" target="_blank" rel="noopener">HackerRank’s 2018 Developer Survey</a>,
+38% of developers responded that they were intending to learn Go next.</p>
+<p>We are excited about all of our new gophers and actively working to improve our educational and community resources.</p>
+
+
+    
+      
+  <h4 id="TOC_3.">Go Community</h4>
+  <p>It’s hard to believe that it’s only been five years since
+the first Go conferences and Go meetups.
+We’ve seen major growth in this area of community leadership over the last year.
+There are now over 20 <a href="https://github.com/golang/go/wiki/Conferences" target="_blank" rel="noopener">Go conferences</a>
+and over 300 <a href="https://www.meetup.com/topics/golang/" target="_blank" rel="noopener">Go-related meetups</a> spanning the globe.</p>
+<p>Thanks to the hard work put into these many conferences and meetups,
+there have been hundreds of great talks this year.
+Here are a few of our favorite talks specifically discussing the growth of our community
+and how we can better support gophers worldwide.</p>
+<ul>
+<li><a href="https://www.youtube.com/watch?v=cVaDY0ChvOQ" target="_blank" rel="noopener">Writing Accessible Go</a>, by Julia Ferraioli at GopherCon</li>
+<li><a href="https://www.youtube.com/watch?v=7yMXs9TRvVI" target="_blank" rel="noopener">The Importance of Beginners</a>, by Natalie Pistunovich at GopherCon</li>
+<li><a href="https://www.youtube.com/watch?v=I_KcpgxcFyU" target="_blank" rel="noopener">The Legacy of Go, Part 2</a>, by Carmen Andoh at GothamGo</li>
+<li><a href="https://www.youtube.com/watch?v=dl1mCGKwlYY" target="_blank" rel="noopener">Growing a Community of Gophers</a>, by Cassandra Salisbury at Gopherpalooza</li>
+</ul>
+<p>On that theme, this year we also <a href="https://TheGoBlog.GitHub.io/conduct-2018" target="_blank" rel="noopener">revised our code of conduct</a>
+to better support inclusivity in the Go community.</p>
+<p>The Go community is truly global.
+At GopherCon Europe in Iceland this past summer, gophers literally spanned the gap between the continents.</p>
+
+<div class="image">
+  <img src="9years/9years-iceland.jpg" width="800" alt=""/>
+</div>
+<p><em>(Photo by Winter Francia.)</em></p>
+
+
+    
+      
+  <h4 id="TOC_4.">Go 2</h4>
+  <p>After five years of experience with Go 1, we’ve started looking at
+what we should change about Go to better support
+<a href="https://talks.golang.org/2012/splash.article" target="_blank" rel="noopener">programming at scale</a>.</p>
+<p>Last spring, we published a <a href="https://TheGoBlog.GitHub.io/versioning-proposal" target="_blank" rel="noopener">draft design for Go modules</a>,
+which provide an integrated mechanism for versioning and package distribution.
+The most recent Go release, Go 1.11, included
+<a href="https://golang.google.cn/doc/go1.11#modules" target="_blank" rel="noopener">preliminary support for modules</a>.</p>
+<p>Last summer we published
+<a href="https://TheGoBlog.GitHub.io/go2draft" target="_blank" rel="noopener">early draft designs</a>
+for how Go 2 might better support error values, error handling, and generic programming.</p>
+<p>We are excited about refining these designs with the community’s help as we work
+<a href="https://TheGoBlog.GitHub.io/toward-go2" target="_blank" rel="noopener">toward Go 2</a>.</p>
+
+
+    
+      
+  <h4 id="TOC_5.">Go Contributors</h4>
+  <p>The Go project has been increasing in the number of contributions from the community for several years.
+The project hit a major milestone in mid-2018 when, for the first time,
+we had more contributions coming from the community than the Go team.</p>
+
+<div class="image">
+  <img src="9years/9years-graph.png" width="600" alt=""/>
+</div>
+
+
+    
+      
+  <h4 id="TOC_6.">Thank You</h4>
+  <p>On a personal note, from the entire Go team,
+we want to sincerely thank all of you.
+We feel privileged to be able to work on the Go project
+and are grateful to the many gophers around the world who have joined us.</p>
+<p>We are especially thankful for the thousands of volunteers
+who help through mentorship, organizing, contributing,
+and supporting your fellow gophers.
+You have made Go what it is today.</p>
+
+
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

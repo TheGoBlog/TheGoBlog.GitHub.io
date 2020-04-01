@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/debug-status" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>Debugging Go code (a status report) | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>Debugging Go code (a status report)</h2>
+    <p class="author">
+    Luuk van Dijk<br/>
+    2 November 2010
+    </p>
+    
+  
+  
+    
+      
+        <p>When it comes to debugging, nothing beats a few strategic print statements
+to inspect variables or a well-placed panic to obtain a stack trace.
+However, sometimes you’re missing either the patience or the source code,
+and in those cases a good debugger can be invaluable.
+That&#39;s why over the past few releases we have been improving the support
+in Go’s gc linker (6l,
+8l) for GDB, the GNU debugger.</p>
+<p>In the latest release (2010-11-02), the 6l and 8l linkers emit DWARF3 debugging
+information when writing ELF (Linux,
+FreeBSD) or Mach-O (Mac OS X) binaries.
+The DWARF code is rich enough to let you do the following:</p>
+<ul>
+<li>load a Go program in GDB version 7.x,</li>
+<li>list all Go, C, and assembly source files by line (parts of the Go runtime are written in C and assembly),</li>
+<li>set breakpoints by line and step through the code,</li>
+<li>print stack traces and inspect stack frames, and</li>
+<li>find the addresses and print the contents of most variables.</li>
+</ul>
+<p>There are still some inconveniences:</p>
+<ul>
+<li>The emitted DWARF code is unreadable by the GDB version 6.x that ships with Mac OS X.
+We would gladly accept patches to make the DWARF output compatible with
+the standard OS X GDB,
+but until that’s fixed you’ll need to download,
+build, and install GDB 7.x to use it under OS X.
+The source can be found at <a href="http://sourceware.org/gdb/download/" target="_blank" rel="noopener">http://sourceware.org/gdb/download/</a>.
+Due to the particulars of OS X you’ll need to install the binary on a
+local file system with <code>chgrp procmod</code> and <code>chmod g+s</code>.</li>
+<li>Names are qualified with a package name and,
+as GDB doesn&#39;t understand Go packages, you must reference each item by its full name.
+For example, the variable named <code>v</code> in package <code>main</code> must be referred to
+as <code>&#39;main.v&#39;</code>, in single quotes.
+A consequence of this is that tab completion of variable and function names does not work.</li>
+<li>Lexical scoping information is somewhat obfuscated.
+If there are multiple variables of the same name,
+the nth instance will have a suffix of the form ‘#n’.
+We plan to fix this, but it will require some changes to the data exchanged
+between the compiler and linker.</li>
+<li>Slice and string variables are represented as their underlying structure
+in the runtime library.
+They will look something like <code>{data = 0x2aaaaab3e320, len = 1, cap = 1}.</code> For slices,
+you must dereference the data pointer to inspect the elements.</li>
+</ul>
+<p>Some things don&#39;t work yet:</p>
+<ul>
+<li>Channel, function, interface, and map variables cannot be inspected.</li>
+<li>Only Go variables are annotated with type information; the runtime&#39;s C variables are not.</li>
+<li>Windows and ARM binaries do not contain DWARF debugging information and, as such, cannot be inspected with GDB.</li>
+</ul>
+<p>Over the coming months we intend to address these issues,
+either by changing the compiler and linker or by using the Python extensions to GDB.
+In the meantime, we hope that Go programmers will benefit from having better
+access to this well-known debugging tool.</p>
+<p>P.S. The DWARF information can also be read by tools other than GDB.
+For example, on Linux you can use it with the sysprof system-wide profiler.</p>
+
+      
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

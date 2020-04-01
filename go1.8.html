@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/go1.8" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>Go 1.8 is released | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>Go 1.8 is released</h2>
+    <p class="author">
+    Chris Broadfoot<br/>
+    16 February 2017
+    </p>
+    
+  
+  
+    
+      
+        <p>Today the Go team is happy to announce the release of Go 1.8.
+You can get it from the <a href="https://golang.google.cn/dl/" target="_blank" rel="noopener">download page</a>.
+There are significant performance improvements and changes across the standard library.</p>
+<p>The compiler back end introduced in <a href="https://TheGoBlog.GitHub.io/go1.7" target="_blank" rel="noopener">Go 1.7</a> for 64-bit x86 is now used
+on all architectures, and those architectures should see significant <a href="https://golang.google.cn/doc/go1.8#compiler" target="_blank" rel="noopener">performance improvements</a>.
+For instance, the CPU time required by our benchmark programs was reduced by 20-30% on 32-bit ARM systems.
+There are also some modest performance improvements in this release for 64-bit x86 systems.
+The compiler and linker have been made faster.
+Compile times should be improved by about 15% over Go 1.7.
+There is still more work to be done in this area: expect faster compilation speeds in future releases.</p>
+<p>Garbage collection pauses should be <a href="https://golang.google.cn/doc/go1.8#gc" target="_blank" rel="noopener">significantly shorter</a>,
+usually under 100 microseconds and often as low as 10 microseconds.</p>
+<p>The HTTP server adds support for <a href="https://golang.google.cn/doc/go1.8#h2push" target="_blank" rel="noopener">HTTP/2 Push</a>,
+allowing servers to preemptively send responses to a client.
+This is useful for minimizing network latency by eliminating roundtrips.
+The HTTP server also adds support for <a href="https://golang.google.cn/doc/go1.8#http_shutdown" target="_blank" rel="noopener">graceful shutdown</a>,
+allowing servers to minimize downtime by shutting down only after serving all requests that are in flight.</p>
+<p><a href="https://golang.google.cn/pkg/context/" target="_blank" rel="noopener">Contexts</a> (added to the standard library in Go 1.7)
+provide a cancelation and timeout mechanism.
+Go 1.8 <a href="https://golang.google.cn/doc/go1.8#more_context" target="_blank" rel="noopener">adds</a> support for contexts in more parts of the standard library,
+including the <a href="https://golang.google.cn/pkg/database/sql" target="_blank" rel="noopener"><code>database/sql</code></a> and <a href="https://golang.google.cn/pkg/net" target="_blank" rel="noopener"><code>net</code></a> packages
+and <a href="http://beta.golang.org/pkg/net/http/#Server.Shutdown" target="_blank" rel="noopener"><code>Server.Shutdown</code></a> in the <code>net/http</code> package.</p>
+<p>It&#39;s now much simpler to sort slices using the newly added <a href="https://golang.google.cn/pkg/sort/#Slice" target="_blank" rel="noopener"><code>Slice</code></a>
+function in the <code>sort</code> package. For example, to sort a slice of structs by their <code>Name</code> field:</p>
+<pre><code>sort.Slice(s, func(i, j int) bool { return s[i].Name &lt; s[j].Name })
+</code></pre>
+<p>Go 1.8 includes many more additions, improvements, and fixes.
+Find the complete set of changes, and more information about the improvements listed above, in the
+<a href="https://golang.google.cn/doc/go1.8.html" target="_blank" rel="noopener">Go 1.8 release notes</a>.</p>
+<p>To celebrate the release, Go User Groups around the world are holding <a href="https://github.com/golang/go/wiki/Go-1.8-release-party" target="_blank" rel="noopener">release parties</a> this week.
+Release parties have become a tradition in the Go community, so if you missed out this time, keep an eye out when 1.9 nears.</p>
+<p>Thank you to over 200 contributors who helped with this release.</p>
+
+      
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/pkg.go.dev-2020" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>Next steps for pkg.go.dev | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>Next steps for pkg.go.dev</h2>
+    <p class="author">
+    Julie Qiu<br/>
+    31 January 2020
+    </p>
+    
+  
+  
+    
+      
+  <h4 id="TOC_1.">Introduction</h4>
+  <p>In 2019, we launched <a href="https://go.dev" target="_blank" rel="noopener">go.dev</a>, a new hub for Go
+developers.</p>
+<p>As part of the site, we also launched <a href="https://pkg.go.dev" target="_blank" rel="noopener">pkg.go.dev</a>, a
+central source of information about Go packages and modules. Like
+<a href="https://godoc.org" target="_blank" rel="noopener">godoc.org</a>, pkg.go.dev serves Go
+documentation. However, it also understands modules and has information about
+past versions of a package!</p>
+<p>Throughout this year, we will be adding features to
+<a href="https://pkg.go.dev" target="_blank" rel="noopener">pkg.go.dev</a> to help our users better understand their
+dependencies and help them make better decisions around what libraries to
+import.</p>
+
+
+    
+      
+  <h4 id="TOC_2.">Redirecting godoc.org requests to pkg.go.dev</h4>
+  <p>To minimize confusion about which site to use, later this year we are planning
+to redirect traffic from <a href="https://godoc.org" target="_blank" rel="noopener">godoc.org</a> to the corresponding
+page on <a href="https://pkg.go.dev" target="_blank" rel="noopener">pkg.go.dev</a>. We need your help to ensure that
+pkg.go.dev addresses all of our users&#39; needs. We encourage everyone to begin
+using pkg.go.dev today for all of their needs and provide feedback.</p>
+<p>Your feedback will inform our transition plan, with the goal of making
+<a href="https://pkg.go.dev" target="_blank" rel="noopener">pkg.go.dev</a> our primary source of information and
+documentation for packages and modules. We’re sure there are things that you
+want to see on pkg.go.dev, and we want to hear from you
+about what those features are!</p>
+<p>You can share your feedback with us on these channels:</p>
+<ul>
+<li>Post on the <a href="https://golang.google.cn/s/discovery-feedback" target="_blank" rel="noopener">Go issue tracker</a>.</li>
+<li>Email <a href="mailto:go-discovery-feedback@google.com" target="_blank" rel="noopener">go-discovery-feedback@google.com</a>.</li>
+<li>Click “Share Feedback” or “Report an Issue” in the go.dev footer.</li>
+</ul>
+<p>As part of this transition, we will also be discussing plans for API access to
+<a href="https://pkg.go.dev" target="_blank" rel="noopener">pkg.go.dev</a>. We will be posting updates on
+<a href="https://golang.google.cn/s/discovery-updates" target="_blank" rel="noopener">Go issue 33654</a>.</p>
+
+
+    
+      
+  <h4 id="TOC_3.">Frequently asked questions</h4>
+  <p>Since our launch in November, we’ve received tons of great feedback about
+<a href="https://pkg.go.dev" target="_blank" rel="noopener">pkg.go.dev</a> from Go users. For the remainder of this post, we thought it would
+be helpful to answer some frequently asked questions.</p>
+
+  <h4 id="TOC_3.1.">My package doesn’t show up on pkg.go.dev! How do I add it?</h4>
+  <p>We monitor the <a href="https://index.golang.org/index" target="_blank" rel="noopener">Go Module Index</a> regularly for
+new packages to add to <a href="https://pkg.go.dev" target="_blank" rel="noopener">pkg.go.dev</a>. If you don’t see a
+package on pkg.go.dev, you can add it by fetching the module version from
+<a href="https://proxy.golang.org" target="_blank" rel="noopener">proxy.golang.org</a>. See
+<a href="https://go.dev/about" target="_blank" rel="noopener">go.dev/about</a> for instructions.</p>
+
+
+  <h4 id="TOC_3.2.">My package has license restrictions. What’s wrong with it?</h4>
+  <p>We understand it can be a frustrating experience to not be able to see the
+package you want in its entirety on <a href="https://pkg.go.dev" target="_blank" rel="noopener">pkg.go.dev</a>. We
+appreciate your patience as we improve our license detection algorithm.</p>
+<p>Since our launch in November, we&#39;ve made the following improvements:</p>
+<ul>
+<li>Updated our <a href="https://pkg.go.dev/license-policy" target="_blank" rel="noopener">license policy</a> to include the list of licenses that we detect and recognize</li>
+<li>Worked with the <a href="https://github.com/google/licensecheck" target="_blank" rel="noopener">licensecheck</a> team to improve detection for copyright notices</li>
+<li>Established a manual review process for special cases</li>
+</ul>
+<p>As always, our license policy is at
+<a href="https://pkg.go.dev/license-policy" target="_blank" rel="noopener">pkg.go.dev/license-policy</a>. If you are
+having issues, feel free to <a href="https://golang.google.cn/s/discovery-feedback" target="_blank" rel="noopener">file an issue on the Go issue tracker</a>, or email
+<a href="mailto:go-discovery-feedback@google.com" target="_blank" rel="noopener">go-discovery-feedback@google.com</a>
+so that we can work with you directly!</p>
+
+
+  <h4 id="TOC_3.3.">Will pkg.go.dev be open-sourced so I can run it at work for my private code?</h4>
+  <p>We understand that corporations with private code want to run a documentation
+server that provides module support. We want to help meet that need, but we
+feel we don’t yet understand it as well as we need to.</p>
+<p>We’ve heard from users that running the <a href="https://godoc.org" target="_blank" rel="noopener">godoc.org</a> server
+is more complex than it should be, because it is designed for serving at public
+internet scale instead of just within a company. We believe the current
+<a href="https://pkg.go.dev" target="_blank" rel="noopener">pkg.go.dev</a> server would have the same problem.</p>
+<p>We think a new server is more likely to be the right answer for use with
+private code, instead of exposing every company to the complexity of running
+the internet-scale <a href="https://pkg.go.dev" target="_blank" rel="noopener">pkg.go.dev</a> codebase. In addition to
+serving documentation, a new server could also serve information to
+<a href="https://pkg.go.dev/golang.org/x/tools/cmd/goimports?tab=doc" target="_blank" rel="noopener">goimports</a> and
+<a href="https://pkg.go.dev/golang.org/x/tools/gopls" target="_blank" rel="noopener">gopls</a>.</p>
+<p>If you want to run such a server, please fill out this
+<a href="https://google.qualtrics.com/jfe/form/SV_6FHmaLveae6d8Bn" target="_blank" rel="noopener"><strong>3-5 minute survey</strong></a>
+to help us better understand your needs. This survey will be available until
+March 1st, 2020.</p>
+<p>We’re excited about the future of <a href="https://pkg.go.dev" target="_blank" rel="noopener">pkg.go.dev</a> in 2020,
+and we hope you are too! We look forward to hearing your feedback and working
+with the Go community on this transition.</p>
+
+
+
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

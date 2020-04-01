@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/normalization" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>Text normalization in Go | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>Text normalization in Go</h2>
+    <p class="author">
+    Marcel van Lohuizen<br/>
+    26 November 2013
+    </p>
+    
+  
+  
+    
+      
+  <h4 id="TOC_1.">Introduction</h4>
+  <p>An earlier <a href="https://TheGoBlog.GitHub.io/strings" target="_blank" rel="noopener">post</a> talked about strings, bytes
+and characters in Go. I&#39;ve been working on various packages for multilingual
+text processing for the go.text repository. Several of these packages deserve a
+separate blog post, but today I want to focus on
+<a href="https://godoc.org/code.google.com/p/go.text/unicode/norm" target="_blank" rel="noopener">go.text/unicode/norm</a>,
+which handles normalization, a topic touched in the
+<a href="https://TheGoBlog.GitHub.io/strings" target="_blank" rel="noopener">strings article</a> and the subject of this
+post. Normalization works at a higher level of abstraction than raw bytes.</p>
+<p>To learn pretty much everything you ever wanted to know about normalization
+(and then some), <a href="http://unicode.org/reports/tr15/" target="_blank" rel="noopener">Annex 15 of the Unicode Standard</a>
+is a good read. A more approachable article is the corresponding
+<a href="http://en.wikipedia.org/wiki/Unicode_equivalence" target="_blank" rel="noopener">Wikipedia page</a>. Here we
+focus on how normalization relates to Go.</p>
+
+
+    
+      
+  <h4 id="TOC_2.">What is normalization?</h4>
+  <p>There are often several ways to represent the same string. For example, an é
+(e-acute) can be represented in a string as a single rune (&#34;\u00e9&#34;) or an &#39;e&#39;
+followed by an acute accent (&#34;e\u0301&#34;). According to the Unicode standard,
+these two are &#34;canonically equivalent&#34; and should be treated as equal.</p>
+<p>Using a byte-to-byte comparison to determine equality would clearly not give
+the right result for these two strings. Unicode defines a set of normal forms
+such that if two strings are canonically equivalent and are normalized to the
+same normal form, their byte representations are the same.</p>
+<p>Unicode also defines a &#34;compatibility equivalence&#34; to equate characters that
+represent the same characters, but may have a different visual appearance. For
+example, the superscript digit &#39;⁹&#39; and the regular digit &#39;9&#39; are equivalent in
+this form.</p>
+<p>For each of these two equivalence forms, Unicode defines a composing and
+decomposing form. The former replaces runes that can combine into a single rune
+with this single rune. The latter breaks runes apart into their components.
+This table shows the names, all starting with NF, by which the Unicode
+Consortium identifies these forms:</p>
+<style>
+	.padtable td, .padtable th { padding-right: 10px; }
+</style>
+<table class="codetable padtable">
+	<tbody><tr>
+		<th> </th>
+		<th>Composing</th>
+		<th>Decomposing</th>
+	</tr>
+	<tr>
+		<th>Canonical equivalence</th>
+		<td>NFC</td>
+		<td>NFD</td>
+	</tr>
+	<tr>
+		<th>Compatibility equivalence</th>
+		<td>NFKC</td>
+		<td>NFKD</td>
+	</tr>
+</tbody></table>
+
+
+    
+      
+  <h4 id="TOC_3.">Go&#39;s approach to normalization</h4>
+  <p>As mentioned in the strings blog post, Go does not guarantee that characters in
+a string are normalized. However, the go.text packages can compensate. For
+example, the
+<a href="https://godoc.org/code.google.com/p/go.text/collate" target="_blank" rel="noopener">collate</a> package, which
+can sort strings in a language-specific way, works correctly even with
+unnormalized strings. The packages in go.text do not always require normalized
+input, but in general normalization may be necessary for consistent results.</p>
+<p>Normalization isn&#39;t free but it is fast, particularly for collation and
+searching or if a string is either in NFD or in NFC and can be converted to NFD
+by decomposing without reordering its bytes. In practice,
+<a href="http://www.macchiato.com/unicode/nfc-faq#TOC-How-much-text-is-already-NFC-" target="_blank" rel="noopener">99.98%</a> of
+the web&#39;s HTML page content is in NFC form (not counting markup, in which case
+it would be more). By far most NFC can be decomposed to NFD without the need
+for reordering (which requires allocation). Also, it is efficient to detect
+when reordering is necessary, so we can save time by doing it only for the rare
+segments that need it.</p>
+<p>To make things even better, the collation package typically does not use the
+norm package directly, but instead uses the norm package to interleave
+normalization information with its own tables. Interleaving the two problems
+allows for reordering and normalization on the fly with almost no impact on
+performance. The cost of on-the-fly normalization is compensated by not having
+to normalize text beforehand and ensuring that the normal form is maintained
+upon edits. The latter can be tricky. For instance, the result of concatenating
+two NFC-normalized strings is not guaranteed to be in NFC.</p>
+<p>Of course, we can also avoid the overhead outright if we know in advance that a
+string is already normalized, which is often the case.</p>
+
+
+    
+      
+  <h4 id="TOC_4.">Why bother?</h4>
+  <p>After all this discussion about avoiding normalization, you might ask why it&#39;s
+worth worrying about at all. The reason is that there are cases where
+normalization is required and it is important to understand what those are, and
+in turn how to do it correctly.</p>
+<p>Before discussing those, we must first clarify the concept of &#39;character&#39;.</p>
+
+
+    
+      
+  <h4 id="TOC_5.">What is a character?</h4>
+  <p>As was mentioned in the strings blog post, characters can span multiple runes.
+For example, an &#39;e&#39; and &#39;◌́&#39; (acute &#34;\u0301&#34;) can combine to form &#39;é&#39; (&#34;e\u0301&#34;
+in NFD).  Together these two runes are one character. The definition of a
+character may vary depending on the application. For normalization we will
+define it as a sequence of runes that starts with a starter, a rune that does
+not modify or combine backwards with any other rune, followed by possibly empty
+sequence of non-starters, that is, runes that do (typically accents). The
+normalization algorithm processes one character at at time.</p>
+<p>Theoretically, there is no bound to the number of runes that can make up a
+Unicode character. In fact, there are no restrictions on the number of
+modifiers that can follow a character and a modifier may be repeated, or
+stacked. Ever seen an &#39;e&#39; with three acutes? Here you go: &#39;é́́&#39;. That is a
+perfectly valid 4-rune character according to the standard.</p>
+<p>As a consequence, even at the lowest level, text needs to be processed in
+increments of unbounded chunk sizes. This is especially awkward with a
+streaming approach to text processing, as used by Go&#39;s standard Reader and
+Writer interfaces, as that model potentially requires any intermediate buffers
+to have unbounded size as well. Also, a straightforward implementation of
+normalization will have a O(n²) running time.</p>
+<p>There are really no meaningful interpretations for such large sequences of
+modifiers for practical applications. Unicode defines a Stream-Safe Text
+format, which allows capping the number of modifiers (non-starters) to at most
+30, more than enough for any practical purpose. Subsequent modifiers will be
+placed after a freshly inserted Combining Grapheme Joiner (CGJ or U+034F). Go
+adopts this approach for all normalization algorithms. This decision gives up a
+little conformance but gains a little safety.</p>
+
+
+    
+      
+  <h4 id="TOC_6.">Writing in normal form</h4>
+  <p>Even if you don&#39;t need to normalize text within your Go code, you might still
+want to do so when communicating to the outside world. For example, normalizing
+to NFC might compact your text, making it cheaper to send down a wire. For some
+languages, like Korean, the savings can be substantial. Also, some external
+APIs might expect text in a certain normal form. Or you might just want to fit
+in and output your text as NFC like the rest of the world.</p>
+<p>To write your text as NFC, use the
+<a href="https://godoc.org/code.google.com/p/go.text/unicode/norm" target="_blank" rel="noopener">unicode/norm</a> package
+to wrap your <code>io.Writer</code> of choice:</p>
+<pre><code>wc := norm.NFC.Writer(w)
+defer wc.Close()
+// write as before...
+</code></pre>
+<p>If you have a small string and want to do a quick conversion, you can use this
+simpler form:</p>
+<pre><code>norm.NFC.Bytes(b)
+</code></pre>
+<p>Package norm provides various other methods for normalizing text.
+Pick the one that suits your needs best.</p>
+
+
+    
+      
+  <h4 id="TOC_7.">Catching look-alikes</h4>
+  <p>Can you tell the difference between &#39;K&#39; (&#34;\u004B&#34;) and &#39;K&#39; (Kelvin sign
+&#34;\u212A&#34;) or &#39;Ω&#39; (&#34;\u03a9&#34;) and &#39;Ω&#39; (Ohm sign &#34;\u2126&#34;)? It is easy to overlook
+the sometimes minute differences between variants of the same underlying
+character. It is generally a good idea to disallow such variants in identifiers
+or anything where deceiving users with such look-alikes can pose a security
+hazard.</p>
+<p>The compatibility normal forms, NFKC and NFKD, will map many visually nearly
+identical forms to a single value. Note that it will not do so when two symbols
+look alike, but are really from two different alphabets. For example the Latin
+&#39;o&#39;, Greek &#39;ο&#39;, and Cyrillic &#39;о&#39; are still different characters as defined by
+these forms.</p>
+
+
+    
+      
+  <h4 id="TOC_8.">Correct text modifications</h4>
+  <p>The norm package might also come to the rescue when one needs to modify text.
+Consider a case where you want to search and replace the word &#34;cafe&#34; with its
+plural form &#34;cafes&#34;.  A code snippet could look like this.</p>
+<pre><code>s := &#34;We went to eat at multiple cafe&#34;
+cafe := &#34;cafe&#34;
+if p := strings.Index(s, cafe); p != -1 {
+    p += len(cafe)
+    s = s[:p] + &#34;s&#34; + s[p:]
+}
+fmt.Println(s)
+</code></pre>
+<p>This prints &#34;We went to eat at multiple cafes&#34; as desired and expected. Now
+consider our text contains the French spelling &#34;café&#34; in NFD form:</p>
+<pre><code>s := &#34;We went to eat at multiple cafe\u0301&#34;
+</code></pre>
+<p>Using the same code from above, the plural &#34;s&#34; would still be inserted after
+the &#39;e&#39;, but before the acute, resulting in  &#34;We went to eat at multiple
+cafeś&#34;.  This behavior is undesirable.</p>
+<p>The problem is that the code does not respect the boundaries between multi-rune
+characters and inserts a rune in the middle of a character.  Using the norm
+package, we can rewrite this piece of code as follows:</p>
+<pre><code>s := &#34;We went to eat at multiple cafe\u0301&#34;
+cafe := &#34;cafe&#34;
+if p := strings.Index(s, cafe); p != -1 {
+    p += len(cafe)
+    if bp := norm.FirstBoundary(s[p:]); bp &gt; 0 {
+        p += bp
+    }
+    s = s[:p] + &#34;s&#34; + s[p:]
+}
+fmt.Println(s)
+</code></pre>
+<p>This may be a contrived example, but the gist should be clear. Be mindful of
+the fact that characters can span multiple runes. Generally these kinds of
+problems can be avoided by using search functionality that respects character
+boundaries (such as the planned go.text/search package.)</p>
+
+
+    
+      
+  <h4 id="TOC_9.">Iteration</h4>
+  <p>Another tool provided by the norm package that may help dealing with character
+boundaries is its iterator,
+<a href="https://godoc.org/code.google.com/p/go.text/unicode/norm#Iter" target="_blank" rel="noopener"><code>norm.Iter</code></a>.
+It iterates over characters one at a time in the normal form of choice.</p>
+
+
+    
+      
+  <h4 id="TOC_10.">Performing magic</h4>
+  <p>As mentioned earlier, most text is in NFC form, where base characters and
+modifiers are combined into a single rune whenever possible.  For the purpose
+of analyzing characters, it is often easier to handle runes after decomposition
+into their smallest components. This is where the NFD form comes in handy. For
+example, the following piece of code creates a <code>transform.Transformer</code> that
+decomposes text into its smallest parts, removes all accents, and then
+recomposes the text into NFC:</p>
+<pre><code>import (
+    &#34;unicode&#34;
+
+    &#34;golang.org/x/text/transform&#34;
+    &#34;golang.org/x/text/unicode/norm&#34;
+)
+
+isMn := func(r rune) bool {
+    return unicode.Is(unicode.Mn, r) // Mn: nonspacing marks
+}
+t := transform.Chain(norm.NFD, transform.RemoveFunc(isMn), norm.NFC)
+</code></pre>
+<p>The resulting <code>Transformer</code> can be used to remove accents from an <code>io.Reader</code>
+of choice as follows:</p>
+<pre><code>r = transform.NewReader(r, t)
+// read as before ...
+</code></pre>
+<p>This will, for example, convert any mention of &#34;cafés&#34; in the text to &#34;cafes&#34;,
+regardless of the normal form in which the original text was encoded.</p>
+
+
+    
+      
+  <h4 id="TOC_11.">Normalization info</h4>
+  <p>As mentioned earlier, some packages precompute normalizations into their tables
+to minimize the need for normalization at run time. The type <code>norm.Properties</code>
+provides access to the per-rune information needed by these packages, most
+notably the Canonical Combining Class and decomposition information. Read the
+<a href="https://godoc.org/code.google.com/p/go.text/unicode/norm/#Properties" target="_blank" rel="noopener">documentation</a>
+for this type if you want to dig deeper.</p>
+
+
+    
+      
+  <h4 id="TOC_12.">Performance</h4>
+  <p>To give an idea of the performance of normalization, we compare it against the
+performance of strings.ToLower. The sample in the first row is both lowercase
+and NFC and can in every case be returned as is. The second sample is neither
+and requires writing a new version.</p>
+<table class="codetable padtable">
+	<tbody><tr>
+		<th>Input</th>
+		<th>ToLower</th>
+		<th>NFC Append</th>
+		<th>NFC Transform</th>
+		<th>NFC Iter</th>
+	</tr>
+	<tr>
+		<td>nörmalization</td>
+		<td>199 ns</td>
+		<td>137 ns</td>
+		<td>133 ns</td>
+		<td>251 ns (621 ns)</td>
+	</tr>
+	<tr>
+		<td>No\u0308rmalization</td>
+		<td>427 ns</td>
+		<td>836 ns</td>
+		<td>845 ns</td>
+		<td>573 ns (948 ns)</td>
+	</tr>
+</tbody></table>
+<p>The column with the results for the iterator shows both the measurement with
+and without initialization of the iterator, which contain buffers that don&#39;t
+need to be reinitialized upon reuse.</p>
+<p>As you can see, detecting whether a string is normalized can be quite
+efficient. A lot of the cost of normalizing in the second row is for the
+initialization of buffers, the cost of which is amortized when one is
+processing larger strings. As it turns out, these buffers are rarely needed, so
+we may change the implementation at some point to speed up the common case for
+small strings even further.</p>
+
+
+    
+      
+  <h4 id="TOC_13.">Conclusion</h4>
+  <p>If you&#39;re dealing with text inside Go, you generally do not have to use the
+unicode/norm package to normalize your text. The package may still be useful
+for things like ensuring that strings are normalized before sending them out or
+to do advanced text manipulation.</p>
+<p>This article briefly mentioned the existence of other go.text packages as well
+as multilingual text processing and it may have raised more questions than it
+has given answers. The discussion of these topics, however, will have to wait
+until another day.</p>
+
+
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

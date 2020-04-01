@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/contributor-workshop" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>Contribution Workshop | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>Contribution Workshop</h2>
+    <p class="author">
+    Steve Francia, Cassandra Salisbury, Matt Broberg, and Dmitri Shuralyov<br/>
+    9 August 2017
+    </p>
+    
+  
+  
+    
+      
+  <h4 id="TOC_1.">Event Overview</h4>
+  <p>by <a href="https://twitter.com/spf13" target="_blank" rel="noopener">Steve</a></p>
+<p>During the community day at GopherCon, the Go team held two workshops
+where we worked with people to help them make their first contribution to the
+Go project. This was the first time the Go project has ever attempted anything
+like this. We had about 140 participants and about 35 people who volunteered as
+mentors. Mentors not only received warm fuzzy feelings for helping others, but
+also a very stylish Go Mentor trucker hat. We had contributors of all
+ages and experience levels coming from North and South America, Africa, Europe,
+Asia, and Australia. It was truly a worldwide effort of Gophers coming together
+at GopherCon.</p>
+<p>One of our reasons for running the workshop was for it to act as a forcing
+function to make us improve our contributor experience. In preparation for the
+workshop, we rewrote our contributor guide, including adding a &#34;troubleshooting&#34;
+section and built a tool <code>go-contrib-init</code>, which automated the process of
+setting up a development environment to be able to contribute to Go.</p>
+<p>For the workshop itself, we developed a presentation <em>&#34;Contributing to Go,&#34;</em>
+and a dashboard / scoreboard that was presented during the event. The
+scoreboard was designed to encourage us all to work together towards a common
+goal of seeing our collective score increase. Participants added 1, 2 or 3 points to
+the total score when they performed actions like registering an account, making
+a change list (also known as a CL, similar to a pull request),
+amending a CL, or submitting a CL.</p>
+
+<div class="image">
+  <img src="contributor-workshop/image17.png" alt=""/>
+</div>
+<p>Brad Fitzpatrick, who stayed home from GopherCon this year, was ready and
+waiting to review all CLs submitted. He was so quick to review that many people
+thought he was an automated bot. Internally our team is now calling him
+&#34;BradBot&#34; mostly because we are in awe and a bit jealous.</p>
+
+<div class="image">
+  <img src="contributor-workshop/image9.jpg" alt=""/>
+</div>
+
+<div class="image">
+  <img src="contributor-workshop/image6.png" alt=""/>
+</div>
+
+  <h4 id="TOC_1.1.">Impact</h4>
+  <p>We had a total of 65 CLs submitted from the people who participated in the
+workshop (within a week of the workshop). Of these, 44 were from contributors
+who had never previously contributed to any of the repos in the Go project.
+Half (22) of these contributions were already merged. Many of the others are
+waiting on the codebase to thaw as we are in the middle of a freeze for the
+upcoming 1.9 release. In addition to CLs, many contributed to the project in
+the form of bug reports,
+<a href="https://github.com/golang/go/wiki/Gardening" target="_blank" rel="noopener">gardening tasks</a>, and other types
+of contributions.</p>
+<p>The most common type of contribution was an example function to be used in the
+documentation. The <a href="https://TheGoBlog.GitHub.io/survey2016-results" target="_blank" rel="noopener">Go User survey</a>
+identified that our documentation was significantly lacking examples. In the
+presentation, we asked users to find a package they loved and to add an example. In
+the Go project, examples are written as code in Go files
+(with specific naming) and the <code>go doc</code> tool displays them along side the documentation.
+This is a perfect first contribution as it&#39;s something that can be merged
+during a freeze, it&#39;s of critical importance to our users, and it&#39;s an addition
+that has a relatively narrow scope.</p>
+<p>One of the examples added is that of creating a Stringer, one of the more
+widely used interfaces in Go.
+<a href="https://golang.google.cn/cl/49270/" target="_blank" rel="noopener">CL 49270</a></p>
+<p>In addition to examples, many people contributed critical bug fixes including:</p>
+<ul>
+<li><a href="https://golang.google.cn/cl/48988/" target="_blank" rel="noopener">CL 48988</a> fixing <a href="https://github.com/golang/go/issues/21029" target="_blank" rel="noopener">issue #21029</a></li>
+<li><a href="https://golang.google.cn/cl/49050/" target="_blank" rel="noopener">CL 49050</a> fixing <a href="https://github.com/golang/go/issues/20054" target="_blank" rel="noopener">issue #20054</a></li>
+<li><a href="https://golang.google.cn/cl/49031/" target="_blank" rel="noopener">CL 49031</a> fixing <a href="https://github.com/golang/go/issues/20166" target="_blank" rel="noopener">issue #20166</a></li>
+<li><a href="https://golang.google.cn/cl/49170/" target="_blank" rel="noopener">CL 49170</a> fixing <a href="https://github.com/golang/go/issues/20877" target="_blank" rel="noopener">issue #20877</a></li>
+</ul>
+<p>Some people even surprised us by arriving with a bug in mind that they wanted
+to fix. Nikhita arrived ready to tackle
+<a href="https://github.com/golang/go/issues/20786" target="_blank" rel="noopener">issue #20786</a>
+and she did submitting
+<a href="https://golang.google.cn/cl/48871/" target="_blank" rel="noopener">CL 48871</a>,
+after which she tweeted:</p>
+
+<div class="image">
+  <img src="contributor-workshop/image19.png" alt=""/>
+</div>
+<p>Not only were some great improvements made, but most importantly, we narrowed
+the gap between the core Go team and the broader community members. Many people
+on the Go team remarked that the community members were teaching them things
+about the Go project. People in the community (in person, and on Twitter)
+remarked that felt welcome to participate in the project.</p>
+
+<div class="image">
+  <img src="contributor-workshop/image12.png" alt=""/>
+</div>
+
+<div class="image">
+  <img src="contributor-workshop/image13.png" alt=""/>
+</div>
+
+<div class="image">
+  <img src="contributor-workshop/image3.png" alt=""/>
+</div>
+
+
+  <h4 id="TOC_1.2.">Future</h4>
+  <p>The event was successful well beyond our expectations. Sameer Ajmani, Go team
+manager said, &#34;The contributor workshop was incredibly fun and educational–for
+the Go team.  We cringed as users hit the rough edges in our process, and
+celebrated when they got up on the dashboard. The cheer when the group score
+hit 1000 was awesome.&#34;</p>
+<p>We are looking into ways to make this workshop easier to run for future events
+(like meetups and conferences). Our biggest challenge is providing enough
+mentorship so that users feel supported. If you have any ideas or would like to
+help with this process please <a href="mailto:spf@golang.org" target="_blank" rel="noopener">let me know</a>.</p>
+<p>I&#39;ve asked a few participants of the event to share their experiences below:</p>
+
+
+
+    
+      
+  <h4 id="TOC_2.">My Contribution Experience</h4>
+  <p>by <a href="https://twitter.com/cassandraoid" target="_blank" rel="noopener">Cassandra</a></p>
+<p>When I heard about the go-contrib workshop I was very excited and then I was
+extremely intimidated. I was encouraged by a member of the Go team to
+participate, so I thought what the heck.</p>
+<p>As I walked into the room (let&#39;s be real, I ran into the room because I was
+running late) I was pleased to see the room was jam-packed. I looked around for
+people in Gopher caps, which was the main indicator they were teachers. I sat
+down at one of the 16 round tables that had two hats and three non-hats.
+Brought up my screen and was ready to roll…</p>
+<p>Jess Frazelle stood up and started the presentation and provided the group with
+<a href="https://docs.google.com/presentation/d/1ap2fycBSgoo-jCswhK9lqgCIFroE1pYpsXC1ffYBCq4/edit#slide=id.p" target="_blank" rel="noopener">a link</a>
+to make it easy to follow.</p>
+
+<div class="image">
+  <img src="contributor-workshop/image16.png" alt=""/>
+</div>
+<p>The murmurs grew from a deep undercurrent to a resounding melody of voices,
+people were getting their computers set up with Go, they were skipping ahead to
+make sure their GOPATH was set, and were… wait what&#39;s Gerrit?</p>
+<p>Most of us had to get a little intro to Gerrit. I had no clue what it was, but
+luckily there was a handy slide. Jess explained that it was an alternative to
+GitHub with slightly more advanced code review tools. We then went through
+GitHub vs Geritt terminology, so we had better understanding of the process.</p>
+
+<div class="image">
+  <img src="contributor-workshop/image10.png" alt=""/>
+</div>
+<p>Ok, now it was time to become a <strong>freaking Go contributor</strong>.</p>
+<p>To make this more exciting than it already is, the Go team set up a game where
+we could track as a group how many points we could rack up based on the Gerrit
+score system.</p>
+
+<div class="image">
+  <img src="contributor-workshop/image7.png" alt=""/>
+</div>
+<p>Seeing your name pop up on the board and listening to everyone&#39;s excitement was
+intoxicating. It also invoked a sense of teamwork that lead to a feeling of
+inclusion and feeling like you were truly a part of the Go community.</p>
+
+<div class="image">
+  <img src="contributor-workshop/image11.png" alt=""/>
+</div>
+<p>In 6 steps a room of around 80 people were able to learn how to contribute to
+go within an hour. That&#39;s a feat!</p>
+<p>It wasn&#39;t nearly as difficult as I anticipated and it wasn&#39;t out of scope for a
+total newbie. It fostered a sense of community in an active and tangible way as
+well as a sense of inclusion in the illustrious process of Go contributions.</p>
+<p>I&#39;d personally like to thank the Go Team, the Gopher mentors in hats, and my
+fellow participants for making it one of my most memorable moments at
+GopherCon.</p>
+
+
+    
+      
+  <h4 id="TOC_3.">My Contribution Experience</h4>
+  <p>by <a href="https://twitter.com/mbbroberg" target="_blank" rel="noopener">Matt</a></p>
+<p>I&#39;ve always found programming languages to be intimidating. It&#39;s the code that
+enables the world to write code. Given the impact, surely smarter people than
+me should be working on it... but that fear was something to overcome. So when
+the opportunity to join a workshop to contribute to my new favorite programming
+language came up, I was excite to see how I could and how I could help. A month
+later, I&#39;m now certain that anyone and everyone can (and should) contribute back to Go.</p>
+<p>Here are my very verbose steps to go from 0 to 2 contributions to Go:</p>
+
+  <h4 id="TOC_3.1.">The Setup</h4>
+  <p>Given Go&#39;s use of Gerrit, I started by setting up my environment for it. <a href="https://docs.google.com/presentation/d/1ap2fycBSgoo-jCswhK9lqgCIFroE1pYpsXC1ffYBCq4/edit#slide=id.g1f953ef7df_0_9" target="_blank" rel="noopener">Jess Frazzelle&#39;s guide</a>
+is a great place to start to not miss a step.</p>
+<p>The real fun starts when you clone the Go repo. Ironically, you don&#39;t hack on
+Go under <code>$GOPATH</code>, so I put it in my other workspace (which is <code>~/Develop</code>).</p>
+<pre><code>cd $DEV # That&#39;s my source code folder outside of $GOPATH
+git clone --depth 1 https://go.googlesource.com/go
+</code></pre>
+<p>Then install the handy dandy helper tool, <code>go-contrib-init</code>:</p>
+<pre><code>go get -u golang.org/x/tools/cmd/go-contrib-init
+</code></pre>
+<p>Now you can run <code>go-contrib-init</code> from the <code>go/</code> folder we cloned above and see
+whether or not we&#39;re ready to contribute. But hold on if you&#39;re following along,
+you&#39;re not ready just yet.</p>
+<p>Next, install <code>codereview</code> so you can participate in a Gerrit code review:</p>
+<pre><code>go get -u golang.org/x/review/git-codereview
+</code></pre>
+<p>This package includes <code>git change</code> and <code>git mail</code> which will replace your
+normal workflow of <code>git commit</code> and <code>git push</code> respectively.</p>
+<p>Okay, installations are out of the way. Now setup your <a href="https://go-review.googlesource.com/settings/#Profile" target="_blank" rel="noopener">Gerrit account here</a>,
+then <a href="https://go-review.googlesource.com/settings#Agreements" target="_blank" rel="noopener">sign the CLA</a> appropriate for
+you (I signed a personal one for all Google projects, but choose the right option for you.
+You can see all CLAs you&#39;ve signed at <a href="https://cla.developers.google.com/clas" target="_blank" rel="noopener">cla.developers.google.com/clas</a>).</p>
+<p>AND BAM. You&#39;re good (to go)! But where to contribute?</p>
+
+
+  <h4 id="TOC_3.2.">Contributing</h4>
+  <p>In the workshop, they sent us into the <code>scratch</code> repository, which is a safe place to
+fool around in order to master the workflow:</p>
+<pre><code>cd $(go env GOPATH)/src/golang.org/x
+git clone --depth 1 [[https://go.googlesource.com/scratch][go.googlesource.com/scratch]]
+</code></pre>
+<p>First stop is to <code>cd</code> in and run <code>go-contrib-init</code> to make sure you&#39;re ready to contribute:</p>
+<pre><code>go-contrib-init
+All good. Happy hacking!
+</code></pre>
+<p>From there, I made a folder named after my GitHub account, did a <code>git add -u</code>
+then took <code>git change</code> for a spin. It has a hash that keeps track of your work,
+which is the one line you shouldn&#39;t touch. Other than that, it feels just like
+<code>git commit</code>. Once I got the commit message matching the format of
+<code>package: description</code> (description begins with a lowercase), I used
+<code>git mail</code> to send it over to Gerrit.</p>
+<p>Two good notes to take at this point: <code>git change</code> also works like <code>git commit --amend</code>, so
+if you need to update your patch you can <code>add</code> then <code>change</code> and it will all
+link to the same patch. Secondly, you can always review your patch from your
+<a href="https://go-review.googlesource.com/dashboard/" target="_blank" rel="noopener">personal Gerrit dashboard</a>.</p>
+<p>After a few back and forths, I officially had a contribute to Go! And if Jaana
+is right, it might be the first with emojis ✌️.</p>
+
+<div class="image">
+  <img src="contributor-workshop/image15.png" alt=""/>
+</div>
+
+<div class="image">
+  <img src="contributor-workshop/image23.png" alt=""/>
+</div>
+
+
+  <h4 id="TOC_3.3.">Contributing, For Real</h4>
+  <p>The scratch repo is fun and all, but there&#39;s a ton of ways to get into the
+depths of Go&#39;s packages and give back. It&#39;s at this point where I cruised
+around the many packages available to see what was available and interesting to
+me. And by &#34;cruised around&#34; I mean attempted to find a list of packages, then
+went to my source code to see what&#39;s around under the <code>go/src/</code> folder:</p>
+
+<div class="image">
+  <img src="contributor-workshop/image22.png" alt=""/>
+</div>
+<p>I decided to see what I can do in the <code>regexp</code> package, maybe out of love and
+fear of regex. Here&#39;s where I switched to the
+<a href="https://godoc.org/regexp" target="_blank" rel="noopener">website&#39;s view of the package</a> (it&#39;s good to know
+that each standard package can be found at https://godoc.org/$PACKAGENAME). In
+there I noticed that <code>QuoteMeta</code> was missing the same level of detailed examples
+other functions have (and I could use the practice using Gerrit).</p>
+
+<div class="image">
+  <img src="contributor-workshop/image1.png" alt=""/>
+</div>
+<p>I started looking at <code>go/src/regexp</code> to try to find where to add examples and I
+got lost pretty quickly. Lucky for me, <a href="https://twitter.com/francesc" target="_blank" rel="noopener">Francesc</a> was around that day. He walked
+me through how all examples are actually in-line tests in a <code>example_test.go</code>
+file. They follow the format of test cases followed by &#34;Output&#34; commented out
+and then the answers to the tests. For example:</p>
+<pre><code>func ExampleRegexp_FindString() {
+    re := regexp.MustCompile(&#34;fo.?&#34;)
+    fmt.Printf(&#34;%q\n&#34;, re.FindString(&#34;seafood&#34;))
+    fmt.Printf(&#34;%q\n&#34;, re.FindString(&#34;meat&#34;))
+    // Output:
+    // &#34;foo&#34;
+    // &#34;&#34;
+}
+</code></pre>
+<p>Kind of cool, right?? I followed Francesc&#39;s lead and added a function
+<code>ExampleQuoteMeta</code> and added a few I thought would be helpful. From there it&#39;s
+a <code>git change</code> and <code>git mail</code> to Gerrit!</p>
+<p>I have to say that Steve Francia challenged me to &#34;find something that isn&#39;t an
+open issue and fix it,&#34; so I included some documentation changes for QuoteMeta
+in my patch. It&#39;s going to be open for a bit longer given the additional scope,
+but I think it&#39;s worth it on this one.</p>
+<p>I can hear your question already: how did I verify it worked? Well it wasn&#39;t
+easy to be honest. Running <code>go test example_test.go -run QuoteMeta -v</code> won&#39;t do
+it since we&#39;re working outside of our $GOPATH. I struggled to figure it out
+until <a href="https://medium.com/@vCabbage/go-testing-standard-library-changes-1e9cbed11339" target="_blank" rel="noopener">Kale Blakenship wrote this awesome post on testing in Go</a>.
+Bookmark this one for later.</p>
+<p>You can see my completed <a href="https://go-review.googlesource.com/c/49130/" target="_blank" rel="noopener">contribution here</a>. What I also hope you see is
+how simple it is to get into the flow of contributing. If you&#39;re like me,
+you&#39;ll be good at finding a small typo or missing example in the docs to start to
+get used to the <code>git codereview</code> workflow. After that, you&#39;ll be ready to find
+an open issue, ideally one <a href="https://github.com/golang/go/milestones" target="_blank" rel="noopener">tagged for an upcoming release</a>, and give it a go. No matter
+what you choose to do, definitely go forth and do it. The Go team proved to me
+just how much they care about helping us all contribute back. I can&#39;t wait for
+my next <code>git mail</code>.</p>
+
+
+
+    
+      
+  <h4 id="TOC_4.">My Mentorship Experience</h4>
+  <p>by <a href="https://twitter.com/dmitshur" target="_blank" rel="noopener">Dmitri</a></p>
+<p>I was looking forward to participating in the Contribution Workshop event as a
+mentor. I had high expectations for the event, and thought it was a great idea
+before it started.</p>
+<p>I made my first contribution to Go on May 10th, 2014. I remember it was about
+four months from the moment I wanted to contribute, until that day, when I
+actually sent my first CL. It took that long to build up the courage and fully
+commit to figuring out the process. I was an experienced software engineer at
+the time. Despite that, the Go contribution process felt alien—being unlike all
+other processes I was already familiar with—and therefore seemed intimidating.
+It was well documented though, so I knew it would be just a matter of finding
+the time, sitting down, and doing it. The &#34;unknown&#34; factor kept me from giving
+it a shot.</p>
+<p>After a few months passed, I thought &#34;enough is enough,&#34; and decided to
+dedicate an entire day of an upcoming weekend to figuring out the process. I
+set aside all of Saturday for doing one thing: sending my first CL to Go. I
+opened up <a href="https://golang.google.cn/doc/contribute.html" target="_blank" rel="noopener">the Contribution Guide</a>
+and started following all the steps, from the very top. Within an hour, I was
+done. I had send my first CL. I was both in awe and shock. In awe, because I
+had finally sent a contribution to Go, and it was accepted! In shock, because,
+why did I wait so long to finally do this? Following the steps in
+<a href="https://golang.google.cn/doc/contribute.html" target="_blank" rel="noopener">the Contribution Guide</a> was very
+easy, and the entire process went completely smoothly. If only someone had told
+me that I&#39;d be done within an hour and nothing would go wrong, I would&#39;ve done
+it much sooner!</p>
+<p>Which brings me to this event and why I thought it was such a good idea. For
+anyone who ever wanted to contribute to Go, but felt daunted by the unfamiliar
+and seemingly lengthy process (like I was during those four months), this was
+their chance! Not only is it easy to commit to figuring it out by attending the
+event, but also the Go team and helpful volunteer mentors would be there to
+help you along the way.</p>
+<p>Despite the already high expectations I had for the event, my expectations were
+exceeded. For one, the Go team had prepared really well and invested a lot in
+making the event that much more enjoyable for everyone. There was a very fun
+presentation that went over all the contributing steps quickly. There was a
+dashboard made for the event, where everyone&#39;s successfully completed steps
+were rewarded with points towards a global score. That made it into a very
+collaborative and social event! Finally, and most importantly, they were Go
+team members like Brad Fitzpatrick behind the scenes, helping review CLs
+promptly! That meant the CLs that were submitted received reviews quickly, with
+actionable next steps, so everyone could move forward and learn more.</p>
+<p>I originally anticipated the event to be somewhat dull, in that the
+contribution steps are extremely simple to follow. However, I found that wasn&#39;t
+always the case, and I was able to use my expertise in Go to help out people
+who got stuck in various unexpected places. It turns out, the real world is
+filled with edge cases. For instance, someone had two git emails, one personal
+and another for work. There was a delay with signing the CLA for the work
+email, so they tried to use their personal email instead. That meant each
+commit had to be amended to use the right email, something the tools didn&#39;t
+take into account. (Luckily, there is a troubleshooting section in the
+contribution guide covering this exact issue!) There were other subtle mistakes
+or environment misconfiguration that some people ran into, because having more
+than one Go installation was a bit unusual. Sometimes, the GOROOT environment
+variable had to be explicitly set, temporarily, to get godoc to show changes in
+the right standard library (I was tongue-in-cheek looking over my shoulder to
+check for Dave Cheney as I uttered those words).</p>
+<p>Overall, I oversaw a few new gophers make their first Go contributions. They
+sent the CLs, responded to review feedback, made edits, iterated until everyone
+was happy, and eventually saw their first Go contributions get merged to
+master! It was very rewarding to see the happiness on their faces, because the
+joy of making one&#39;s first contribution is something I can relate to myself. It
+was also great to be able to help them out, and explain tricky situations that
+they sometimes found themselves. From what I can tell, many happy gophers
+walked away from the event, myself included!</p>
+
+
+    
+      
+  <h4 id="TOC_5.">Photos from the event</h4>
+  
+<div class="image">
+  <img src="contributor-workshop/image2.jpg" alt=""/>
+</div>
+
+<div class="image">
+  <img src="contributor-workshop/image4.jpg" alt=""/>
+</div>
+
+<div class="image">
+  <img src="contributor-workshop/image5.jpg" alt=""/>
+</div>
+
+<div class="image">
+  <img src="contributor-workshop/image8.jpg" alt=""/>
+</div>
+
+<div class="image">
+  <img src="contributor-workshop/image14.jpg" alt=""/>
+</div>
+
+<div class="image">
+  <img src="contributor-workshop/image18.jpg" alt=""/>
+</div>
+
+<div class="image">
+  <img src="contributor-workshop/image20.jpg" alt=""/>
+</div>
+
+<div class="image">
+  <img src="contributor-workshop/image21.jpg" alt=""/>
+</div>
+<p>Photos by Sameer Ajmani &amp; Steve Francia</p>
+
+
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

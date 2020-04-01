@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/go1" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>Go version 1 is released | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>Go version 1 is released</h2>
+    <p class="author">
+    Andrew Gerrand<br/>
+    28 March 2012
+    </p>
+    
+  
+  
+    
+      
+        
+<div class="image">
+  <img src="go1/gophermega.jpg" alt=""/>
+</div>
+
+      
+        <p>Today marks a major milestone in the development of the Go programming language.
+We&#39;re announcing Go version 1, or Go 1 for short,
+which defines a language and a set of core libraries to provide a stable
+foundation for creating reliable products,
+projects, and publications.</p>
+<p>Go 1 is the first release of Go that is available in supported binary distributions.
+They are available for Linux, FreeBSD, Mac OS X and,
+we are thrilled to announce, Windows.</p>
+<p>The driving motivation for Go 1 is stability for its users.
+People who write Go 1 programs can be confident that those programs will
+continue to compile and run without change,
+in many environments, on a time scale of years.
+Similarly, authors who write books about Go 1 can be sure that their examples
+and explanations will be helpful to readers today and into the future.</p>
+<p>Forward compatibility is part of stability.
+Code that compiles in Go 1 should, with few exceptions,
+continue to compile and run throughout the lifetime of that version,
+even as we issue updates and bug fixes such as Go version 1.1, 1.2, and so on.
+The <a href="https://golang.google.cn/doc/go1compat.html" target="_blank" rel="noopener">Go 1 compatibility document</a>
+explains the compatibility guidelines in more detail.</p>
+<p>Go 1 is a representation of Go as it is used today,
+not a major redesign.
+In its planning, we focused on cleaning up problems and inconsistencies
+and improving portability.
+There had long been many changes to Go that we had designed and prototyped
+but not released because they were backwards-incompatible.
+Go 1 incorporates these changes, which provide significant improvements
+to the language and libraries but sometimes introduce incompatibilities for old programs.
+Fortunately, the <a href="https://golang.google.cn/cmd/go/#Run_go_tool_fix_on_packages" target="_blank" rel="noopener">go fix</a>
+tool can automate much of the work needed to bring programs up to the Go 1 standard.</p>
+<p>Go 1 introduces changes to the language (such as new types for <a href="https://golang.google.cn/doc/go1.html#rune" target="_blank" rel="noopener">Unicode characters</a>
+and <a href="https://golang.google.cn/doc/go1.html#errors" target="_blank" rel="noopener">errors</a>) and the standard
+library (such as the new <a href="https://golang.google.cn/doc/go1.html#time" target="_blank" rel="noopener">time package</a>
+and renamings in the <a href="https://golang.google.cn/doc/go1.html#strconv" target="_blank" rel="noopener">strconv package</a>).
+Also, the package hierarchy has been rearranged to group related items together,
+such as moving the networking facilities,
+for instance the <a href="https://golang.google.cn/pkg/net/rpc/" target="_blank" rel="noopener">rpc package</a>,
+into subdirectories of net.
+A complete list of changes is documented in the <a href="https://golang.google.cn/doc/go1.html" target="_blank" rel="noopener">Go 1 release notes</a>.
+That document is an essential reference for programmers migrating code from
+earlier versions of Go.</p>
+<p>We also restructured the Go tool suite around the new <a href="https://golang.google.cn/doc/go1.html#cmd_go" target="_blank" rel="noopener">go command</a>,
+a program for fetching, building, installing and maintaining Go code.
+The go command eliminates the need for Makefiles to write Go code because
+it uses the Go program source itself to derive the build instructions.
+No more build scripts!</p>
+<p>Finally, the release of Go 1 triggers a new release of the <a href="https://developers.google.com/appengine/docs/go" target="_blank" rel="noopener">Google App Engine SDK</a>.
+A similar process of revision and stabilization has been applied to the
+App Engine libraries,
+providing a base for developers to build programs for App Engine that will run for years.</p>
+<p>Go 1 is the result of a major effort by the core Go team and our many contributors
+from the open source community.
+We thank everyone who helped make this happen.</p>
+<p>There has never been a better time to be a Go programmer.
+Everything you need to get started is at <a href="https://golang.google.cn/" target="_blank" rel="noopener">golang.org</a>.</p>
+
+      
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

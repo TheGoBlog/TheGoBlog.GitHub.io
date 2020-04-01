@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/4years" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>Four years of Go | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>Four years of Go</h2>
+    <p class="author">
+    Andrew Gerrand<br/>
+    10 November 2013
+    </p>
+    
+  
+  
+    
+      
+        <p>Today marks the fourth anniversary of Go as an open source project.</p>
+
+      
+        
+<div class="image">
+  <img src="4years/4years-gopher.png" alt=""/>
+</div>
+
+      
+        <p>Rather than talk about our technical progress (there&#39;ll be much to talk about
+when we release Go 1.2 in a couple of weeks) we thought we would instead take
+this occasion to look at how the Go community has grown.</p>
+<p>Let&#39;s start with a chart:</p>
+
+      
+        
+<div class="image">
+  <img src="4years/4years-graph.png" alt=""/>
+</div>
+
+      
+        <p>This chart shows the growth of Google searches for the term
+&#34;<a href="http://www.google.com/trends/explore?hl=en-US#q=golang&amp;date=10/2009+50m&amp;cmpt=q" target="_blank" rel="noopener">golang</a>&#34;
+over the past four years.
+Notice the knee in the curve around March 2012, when Go 1.0 was released.
+If these searches are a decent proxy for interest, then it&#39;s clear that
+interest in Go has grown remarkably since launch, and particularly so in the
+last 2 years.</p>
+<p>But where is the interest coming from?</p>
+<p>The open source community has embraced Go,
+with our community wiki listing <a href="https://github.com/golang/go/wiki/Projects" target="_blank" rel="noopener">hundreds of Go projects</a>. Some popular ones:</p>
+<ul>
+<li>
+<p><a href="http://docker.io" target="_blank" rel="noopener">Docker</a> is a tool for packaging and running applications
+in lightweight containers.
+Docker makes it easy to isolate, package,
+and deploy applications, and is beloved by system administrators.
+Its creator Solomon Hykes cited Go&#39;s standard library,
+concurrency primitives, and ease of deployment as key factors,
+and said &#34;To put it simply, if Docker had not been written in Go,
+it would not have been as successful.&#34;</p>
+</li>
+<li>
+<p><a href="http://packer.io" target="_blank" rel="noopener">Packer</a> is a tool for automating the creation of
+machine images for deployment to virtual machines or cloud services.
+Its author, Mitchell Hashimoto, is now working on another Go project,
+<a href="http://www.serfdom.io/" target="_blank" rel="noopener">serf</a>, a decentralized discovery service.
+Like Docker, these projects help with management of large-scale,
+cluster-based services.</p>
+</li>
+<li>
+<p><a href="http://bit.ly" target="_blank" rel="noopener">Bitly</a>&#39;s <a href="http://bitly.github.io/nsq/" target="_blank" rel="noopener">NSQ</a> is a realtime
+distributed messaging platform designed for fault-tolerance and high-availability,
+and is used in production at bitly and a bunch of other companies.</p>
+</li>
+<li>
+<p><a href="http://canonical.com/" target="_blank" rel="noopener">Canonical</a>&#39;s <a href="https://juju.ubuntu.com/" target="_blank" rel="noopener">JuJu</a>
+infrastructure automation system was rewritten in Go.
+Project lead Gustavo Niemeyer said &#34;It&#39;s not a single aspect of Go that
+makes it a compelling choice,
+but rather the careful organization of well-crafted small pieces.&#34;</p>
+</li>
+<li>
+<p>The <a href="https://github.com/goraft/raft" target="_blank" rel="noopener">raft</a> package provides an implementation
+of the <a href="https://ramcloud.stanford.edu/wiki/download/attachments/11370504/raft.pdf" target="_blank" rel="noopener">Raft</a>
+distributed consensus protocol.
+It is the basis of Go projects like <a href="https://github.com/coreos/etcd" target="_blank" rel="noopener">etcd</a>
+and <a href="https://github.com/skynetservices/skydns" target="_blank" rel="noopener">SkyDNS</a>.</p>
+</li>
+<li>
+<p>Other popular projects include <a href="https://github.com/biogo/biogo" target="_blank" rel="noopener">biogo</a>,
+the <a href="http://www.gorillatoolkit.org/" target="_blank" rel="noopener">Gorilla Web Toolkit</a>,
+<a href="https://github.com/golang/groupcache" target="_blank" rel="noopener">groupcache</a>,
+Mozilla&#39;s <a href="https://github.com/mozilla-services/heka" target="_blank" rel="noopener">heka</a>,
+the <a href="https://github.com/cznic/kv" target="_blank" rel="noopener">kv</a> and <a href="https://github.com/cznic/ql" target="_blank" rel="noopener">ql</a>
+lightweight storage systems,
+and the <a href="http://skydb.io/" target="_blank" rel="noopener">Sky</a> behavioral database.</p>
+</li>
+</ul>
+<p>But this is just the tip of the iceberg. The number of high-quality open
+source Go projects is phenomenal.
+Prolific Go hacker <a href="http://xph.us/software/" target="_blank" rel="noopener">Keith Rarick</a> put it well:
+&#34;The state of the Go ecosystem after only four years is astounding.
+Compare Go in 2013 to Python in 1995 or Java in 1999. Or C++ in 1987!&#34;</p>
+<p>Businesses are enjoying Go, too. The <a href="https://github.com/golang/go/wiki/GoUsers" target="_blank" rel="noopener">Go Users wiki page</a>
+lists dozens of success stories (and if you use Go,
+please add yourself to it). Some examples:</p>
+<ul>
+<li>
+<p><a href="https://blog.cloudflare.com/go-at-cloudflare" target="_blank" rel="noopener">CloudFlare</a> built their
+distributed DNS service entirely with Go,
+and are in the process of migrating their gigabytes-per-minute logging infrastructure to the language.
+Programmer John Graham-Cumming said &#34;We&#39;ve found Go to be the perfect match for our needs:
+the combination of familiar syntax, a powerful type system,
+a strong network library and built-in concurrency means that more and more
+projects are being built here in Go.&#34;</p>
+</li>
+<li>
+<p><a href="http://soundcloud.com" target="_blank" rel="noopener">SoundCloud</a> is an audio distribution service
+that has &#34;dozens of <a href="http://backstage.soundcloud.com/2012/07/go-at-soundcloud/" target="_blank" rel="noopener">systems in Go</a>,
+touching almost every part of the site, and in many cases powering features
+from top to bottom.&#34; Engineer Peter Bourgon said &#34;Go demonstrates that the
+cruft that burdens other languages and ecosystems—stuff that developers
+have learned to deal with,
+often in anger—is simply not a necessary part of modern programming.
+With Go, I have a straightforward and non-adversarial relationship with my tools,
+from development to production.&#34;</p>
+</li>
+<li>
+<p>The <a href="https://ngrok.com/" target="_blank" rel="noopener">ngrok</a> service allows web developers to provide
+remote access to their development environments.
+Its author Alan Shreve said that &#34;ngrok&#39;s success as a project is due in
+no small part to choosing Go as the implementation language,&#34; citing Go&#39;s HTTP libraries,
+efficiency, cross-platform compatibility,
+and ease of deployment as the major benefits.</p>
+</li>
+<li>
+<p><a href="http://poptip.com" target="_blank" rel="noopener">Poptip</a> provides social analytics services,
+and product engineer Andy Bonventre said &#34;What started as an experiment
+in writing a single service in Go turned into moving almost our entire infrastructure over to it.
+What I love about Go the most is not necessarily the features of the language,
+but the focus on tooling, testing, and other elements that make writing
+large applications much more manageable.&#34;</p>
+</li>
+<li>
+<p>Music collaboration startup <a href="http://splice.com" target="_blank" rel="noopener">Splice</a> chose to build
+their service with Go.
+Co-founder Matt Aimonetti said &#34;We seriously studied and considered many
+programming languages,
+but Go&#39;s simplicity, efficiency, philosophy and community won us over.&#34;</p>
+</li>
+<li>
+<p>And, of course, engineering teams across Google are moving to Go.
+Engineer Matt Welsh recently <a href="http://matt-welsh.blogspot.com.au/2013/08/rewriting-large-production-system-in-go.html" target="_blank" rel="noopener">shared his experience</a>
+rewriting a large production service in Go.
+Other notable public examples include YouTube&#39;s <a href="https://github.com/youtube/vitess" target="_blank" rel="noopener">vitess project</a>
+and <a href="https://talks.golang.org/2013/oscon-dl.slide" target="_blank" rel="noopener">dl.google.com</a>.
+We hope to share more stories like these soon.</p>
+</li>
+</ul>
+<p>In September 2012, <a href="http://apcera.com/" target="_blank" rel="noopener">Apcera</a> CEO Derek Collison <a href="https://twitter.com/derekcollison/status/245522124666716160" target="_blank" rel="noopener">predicted</a>
+that &#34;Go will become the dominant language for systems work in [Infastructure-as-a-Service],
+Orchestration, and [Platform-as-a-Service] in 24 months.&#34; Looking at the list above,
+it&#39;s easy to believe that prediction.</p>
+<p>So how can you get involved? Whether you&#39;re a seasoned Go programmer or just Go-curious,
+there are many ways to get started in the Go community:</p>
+<ul>
+<li>
+<p><a href="https://TheGoBlog.GitHub.io/getthee-to-go-meetup" target="_blank" rel="noopener">Join your nearest Go User Group</a>,
+where your local gophers meet to share their knowledge and experience.
+These groups are popping up all over the world.
+I have personally spoken at Go groups in Amsterdam,
+Berlin, Gothenburg, London, Moscow, Munich,
+New York City, Paris, San Francisco, Seoul,
+Stockholm, Sydney, Tokyo, and Warsaw;
+but there are <a href="https://github.com/golang/go/wiki/GoUserGroups" target="_blank" rel="noopener">many more</a>!</p>
+</li>
+<li>
+<p>Create or contribute to an open source Go project (or <a href="https://golang.google.cn/doc/contribute.html" target="_blank" rel="noopener">to Go itself</a>).
+(And if you&#39;re building something, we&#39;d love to hear from you on the <a href="http://groups.google.com/group/golang-nuts" target="_blank" rel="noopener">Go mailing list</a>.)</p>
+</li>
+<li>
+<p>If you&#39;re in Europe in February 2014, come along to the <a href="https://code.google.com/p/go-wiki/wiki/Fosdem2014" target="_blank" rel="noopener">Go Devroom</a>
+at <a href="https://fosdem.org/2014/" target="_blank" rel="noopener">FOSDEM 2014</a>.</p>
+</li>
+<li>
+<p>Attend <a href="http://gophercon.com" target="_blank" rel="noopener">GopherCon</a>,
+the first major Go conference, in Denver in April 2014.
+The event is organized by the <a href="http://www.gopheracademy.com" target="_blank" rel="noopener">Gopher Academy</a>,
+who also run a <a href="http://www.gopheracademy.com/jobs" target="_blank" rel="noopener">Go job board</a>.</p>
+</li>
+</ul>
+<p>The Go team has been amazed by the growth of the Go community over the past
+four years. We are thrilled to see so many great things being built with Go,
+and deeply grateful to work with our wonderful and dedicated contributors.
+Thank you, everyone.</p>
+<p>Here&#39;s to four more years!</p>
+
+      
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

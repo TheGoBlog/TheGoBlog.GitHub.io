@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/appengine-go111" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>Announcing App Engine’s New Go 1.11 Runtime | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>Announcing App Engine’s New Go 1.11 Runtime</h2>
+    <p class="author">
+    Eno Compton and Tyler Bui-Palsulich<br/>
+    16 October 2018
+    </p>
+    
+  
+  
+    
+      
+        <p><a href="https://cloud.google.com/appengine/" target="_blank" rel="noopener">App Engine</a> launched
+<a href="https://TheGoBlog.GitHub.io/go-and-google-app-engine" target="_blank" rel="noopener">experimental support for Go</a>
+in 2011. In the subsequent years, the Go community has grown significantly and
+has settled on idiomatic
+patterns for cloud-based applications. Today, Google Cloud is
+<a href="https://cloud.google.com/blog/products/application-development/go-1-11-is-now-available-on-app-engine" target="_blank" rel="noopener">announcing a new Go 1.11 runtime</a>
+for the App Engine standard environment that provides all the
+power of App Engine—things like paying only for what you use, automatic scaling,
+and managed infrastructure—while supporting idiomatic Go.</p>
+<p>Starting with Go 1.11, Go on App Engine has no limits on application structure,
+supported packages, <code>context.Context</code> values, or HTTP clients. Write your Go
+application however you prefer, add an <code>app.yaml</code> file, and your app is ready
+to deploy on App Engine.
+<a href="https://cloud.google.com/appengine/docs/standard/go111/specifying-dependencies" target="_blank" rel="noopener">Specifying Dependencies</a>
+describes how the new runtime
+supports <a href="https://golang.google.cn/cmd/go/#hdr-Vendor_Directories" target="_blank" rel="noopener">vendoring</a> and
+<a href="https://golang.google.cn/doc/go1.11#modules" target="_blank" rel="noopener">modules</a> (experimental) for dependency
+management.</p>
+<p>Along with <a href="https://twitter.com/kelseyhightower/status/1035278586754813952" target="_blank" rel="noopener">Cloud Functions support for Go</a>
+(more on that in a future post), App Engine provides a compelling way to run Go
+code on Google Cloud Platform (GCP) with no concern for the underlying
+infrastructure.</p>
+<p>Let’s take a look at creating a small application for App Engine. For the
+example here, we assume a <code>GOPATH</code>-based workflow, although Go modules have
+<a href="https://cloud.google.com/appengine/docs/standard/go111/specifying-dependencies" target="_blank" rel="noopener">experimental support</a>
+as well.</p>
+<p>First, you create the application in your <code>GOPATH</code>:</p>
+
+      
+        
+  
+	<div class="code">
+<pre><span num="1">// This server can run on App Engine.</span>
+<span num="2">package main</span>
+<span num="3"></span>
+<span num="4">import (</span>
+<span num="5">    &#34;fmt&#34;</span>
+<span num="6">    &#34;log&#34;</span>
+<span num="7">    &#34;net/http&#34;</span>
+<span num="8">    &#34;os&#34;</span>
+<span num="9">)</span>
+<span num="10"></span>
+<span num="11">func main() {</span>
+<span num="12">    port := os.Getenv(&#34;PORT&#34;)</span>
+<span num="13">    if port == &#34;&#34; {</span>
+<span num="14">        port = &#34;8080&#34;</span>
+<span num="15">    }</span>
+<span num="16">    http.HandleFunc(&#34;/&#34;, hello)</span>
+<span num="17"></span>
+<span num="18">    log.Fatal(http.ListenAndServe(fmt.Sprintf(&#34;:%s&#34;, port), nil))</span>
+<span num="19">}</span>
+<span num="20"></span>
+<span num="21">func hello(w http.ResponseWriter, r *http.Request) {</span>
+<span num="22">    w.Write([]byte(&#34;Hello, 世界&#34;))</span>
+<span num="23">}</span>
+</pre>
+</div>
+  
+
+      
+        <p>The code contains an idiomatic setup for a small HTTP server that responds with
+“Hello, 世界.” If you have previous App Engine experience, you’ll notice the
+absence of any call to <code>appengine.Main()</code>, which is now entirely optional.
+Furthermore, the application code is completely portable—there are no ties to
+the infrastructure that your application is deployed on.</p>
+<p>If you need to use external dependencies, you can add those dependencies to a
+<code>vendor</code> directory or to a <code>go.mod</code> file, both of which the new runtime
+supports.</p>
+<p>With the application code complete, create an <code>app.yaml</code> file to specify
+the runtime:</p>
+<pre><code>runtime: go111
+</code></pre>
+<p>Finally, set your machine up with a Google Cloud Platform account:</p>
+<ul>
+<li>Create an account with <a href="GCP" target="_blank" rel="noopener">https://cloud.google.com</a>.</li>
+<li><a href="https://cloud.google.com/resource-manager/docs/creating-managing-projects" target="_blank" rel="noopener">Create a project</a>.</li>
+<li>Install the <a href="https://cloud.google.com/sdk/" target="_blank" rel="noopener">Cloud SDK</a> on your system.</li>
+</ul>
+<p>With all the setup complete, you can deploy using one command:</p>
+<pre><code>gcloud app deploy
+</code></pre>
+<p>We think Go developers will find the new Go 1.11 runtime for App Engine an
+exciting addition to the available options to run Go applications. There is a
+<a href="https://cloud.google.com/free/" target="_blank" rel="noopener">free tier</a>. Check out the
+<a href="https://cloud.google.com/appengine/docs/standard/go111/building-app/" target="_blank" rel="noopener">getting started guide</a>
+or the
+<a href="https://cloud.google.com/appengine/docs/standard/go111/go-differences" target="_blank" rel="noopener">migration guide</a>
+and deploy an app to the new runtime today!</p>
+
+      
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

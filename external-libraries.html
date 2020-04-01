@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/external-libraries" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>Spotlight on external Go libraries | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>Spotlight on external Go libraries</h2>
+    <p class="author">
+    Andrew Gerrand<br/>
+    3 June 2011
+    </p>
+    
+  
+  
+    
+      
+        <p>While the Go authors have been working hard at improving Go&#39;s standard library,
+the greater community has created a growing ecosystem of external libraries.
+In this post we look at some popular Go libraries and how they can be used.</p>
+<p><a href="http://labix.org/mgo" target="_blank" rel="noopener">Mgo</a> (pronounced &#34;mango&#34;) is a MongoDB database driver.
+<a href="http://www.mongodb.org/" target="_blank" rel="noopener">MongoDB</a> is a <a href="http://en.wikipedia.org/wiki/Document-oriented_database" target="_blank" rel="noopener">document-oriented database</a>
+with a long list of features suitable for <a href="http://www.mongodb.org/display/DOCS/Use%2BCases" target="_blank" rel="noopener">a broad range of uses</a>.
+The mgo package provides a rich, idiomatic Go API for working with MongoDB,
+from basic operations such as inserting and updating records to the more
+advanced <a href="http://www.mongodb.org/display/DOCS/MapReduce" target="_blank" rel="noopener">MapReduce</a> and
+<a href="http://www.mongodb.org/display/DOCS/GridFS" target="_blank" rel="noopener">GridFS</a> features.
+Mgo has a bunch of cool features including automated cluster discovery and
+result pre-fetching - see the <a href="http://labix.org/mgo" target="_blank" rel="noopener">mgo homepage</a> for
+details and example code.
+For working with large data sets Go, MongoDB,
+and mgo are a powerful combination.</p>
+<p><a href="https://github.com/dchest/authcookie" target="_blank" rel="noopener">Authcookie</a> is a web library for
+generating and verifying user authentication cookies.
+It allows web servers to hand out cryptographically secure tokens tied to
+a specific user that will expire after a specified time period.
+It has a simple API that makes it straightforward to add authentication
+to existing web applications.
+See the <a href="https://github.com/dchest/authcookie/blob/master/README.md" target="_blank" rel="noopener">README file</a>
+for details and example code.</p>
+<p><a href="http://code.google.com/p/go-charset" target="_blank" rel="noopener">Go-charset</a> provides support for
+converting between Go&#39;s standard UTF-8 encoding and a variety of character sets.
+The go-charset package implements a translating io.Reader and io.Writer
+so you can wrap existing Readers and Writers (such as network connections
+or file descriptors),
+making it easy to communicate with systems that use other character encodings.</p>
+<p><a href="https://github.com/madari/go-socket.io" target="_blank" rel="noopener">Go-socket.io</a> is a Go implementation
+of <a href="http://socket.io/" target="_blank" rel="noopener">Socket.IO</a>,
+a client/server API that allows web servers to push messages to web browsers.
+Depending on the capabilities of the user&#39;s browser,
+Socket.IO uses the best transport for the connection,
+be it modern websockets, AJAX long polling,
+or some <a href="http://socket.io/#transports" target="_blank" rel="noopener">other mechanism</a>.
+Go-socket.io bridges the gap between Go servers and rich JavaScript clients
+for a wide range of browsers.
+To get a feel for go-socket.io see the <a href="https://github.com/madari/go-socket.io/blob/master/example/example.go" target="_blank" rel="noopener">chat server example</a>.</p>
+<p>It&#39;s worth mentioning that these packages are <a href="https://golang.google.cn/cmd/goinstall/" target="_blank" rel="noopener">goinstallable</a>.
+With an up-to-date Go <a href="https://golang.google.cn/doc/install.html" target="_blank" rel="noopener">installation</a>
+you can install them all with a single command:</p>
+<pre><code>goinstall launchpad.net/mgo \
+    github.com/dchest/authcookie \
+    go-charset.googlecode.com/hg/charset \
+    github.com/madari/go-socket.io
+</code></pre>
+<p>Once goinstalled, the packages can be imported using those same paths:</p>
+<pre><code>import (
+    &#34;launchpad.net/mgo&#34;
+    &#34;github.com/dchest/authcookie&#34;
+    &#34;go-charset.googlecode.com/hg/charset&#34;
+    &#34;github.com/madari/go-socket.io&#34;
+)
+</code></pre>
+<p>Also, as they are now a part of the local Go system,
+we can inspect their documentation with <a href="https://golang.google.cn/cmd/godoc/" target="_blank" rel="noopener">godoc</a>:</p>
+<pre><code>godoc launchpad.net/mgo Database # see docs for Database type
+</code></pre>
+<p>Of course, this is just the tip of the iceberg;
+there are more great Go libraries listed on the <a href="http://godashboard.appspot.com/package" target="_blank" rel="noopener">package dashboard</a>
+and many more to come.</p>
+
+      
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

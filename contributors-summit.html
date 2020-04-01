@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/contributors-summit" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>Contributors Summit | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>Contributors Summit</h2>
+    <p class="author">
+    Sam Whited<br/>
+    3 August 2017
+    </p>
+    
+  
+  
+    
+      
+  <h4 id="TOC_1.">Introduction</h4>
+  <p>The day before GopherCon, a group of Go team members and contributors gathered
+in Denver to discuss and plan for the future of the Go project.
+This was the first ever event of its kind, a major milestone for the Go project.
+The event comprised a morning session revolving around focused discussions on a
+theme, and an afternoon session made up of round table discussions in small
+break-out groups.</p>
+
+  <h4 id="TOC_1.1.">Compiler and runtime</h4>
+  <p>The compiler and runtime session started out with a discussion about refactoring
+<code>gc</code> and related tools into importable packages.
+This would reduce overhead in the core tools and in IDEs which could embed the
+compiler themselves to do quick syntax checking.
+Code could also be compiled entirely in memory, which is useful in environments
+that don&#39;t provide a filesystem, or to run tests continually while you develop
+to get a live report of breakages.
+More discussion about whether or not to pursue this line of work will most
+likely be brought up on the mailing lists in the future.</p>
+<p>There was also a great deal of discussion around bridging the gap between
+optimized assembly code and Go.
+Most crypto code in Go is written in assembly for performance reasons; this
+makes it hard to debug, maintain, and read.
+Furthermore, once you&#39;ve ventured into writing assembly, you often can&#39;t call
+back into Go, limiting code reuse.
+A rewrite in Go would make maintenance easier.
+Adding processor intrinsics and better support for 128-bit math would improve
+Go&#39;s crypto performance.
+It was proposed that the new <code>math/bits</code> package coming in 1.9 could be expanded
+for this purpose.</p>
+<p>Not being all that familiar with the development of the compiler and runtime,
+this for me was one of the more interesting sessions of the day.
+I learned a lot about the current state of the world, the problems, and where
+people want to go from here.</p>
+
+
+  <h4 id="TOC_1.2.">Dependency management</h4>
+  <p>After a quick update from the <a href="https://github.com/golang/dep" target="_blank" rel="noopener">dep</a> team on the
+status of the project, the dependency management session gravitated towards how
+the Go world will work once dep (or something dep-like) becomes the primary
+means of package management.
+Work to make Go easier to get started with and make dep easier to use has
+already started.
+In Go 1.8, a default value for <code>GOPATH</code> was introduced, meaning users will only
+have to add Go&#39;s bin directory to their <code>$PATH</code> before they can get started
+with dep.</p>
+<p>Another future usability improvement that dep might enable, is allowing Go to
+work from any directory (not just a workspace in the GOPATH), so that people can
+use the directory structures and workflows they&#39;re used to using with other
+languages.
+It may also be possible to make <code>go install</code> easier in the future by guiding
+users through the process of adding the bin directory to their path, or even
+automating the process.
+There are many good options for making the Go tooling easier to use, and
+discussion will likely continue on the mailing lists.</p>
+
+
+  <h4 id="TOC_1.3.">The standard library</h4>
+  <p>The discussions we had around the future of the Go language are mostly covered
+in Russ Cox&#39;s blog post: <a href="https://TheGoBlog.GitHub.io//toward-go2" target="_blank" rel="noopener">Toward Go 2</a>, so
+let&#39;s move on to the standard library session.</p>
+<p>As a contributor to the standard library and subrepos, this session was
+particularly interesting to me.
+What goes in the standard library and subrepos, and how much it can change, is a
+topic that isn&#39;t well defined.
+It can be hard on the Go team to maintain a huge number of packages when they
+may or may not have anyone with specific expertise in the subject matter.
+To make critical fixes to packages in the standard library, one must wait 6
+months for a new version of Go to ship (or a point release has to be shipped in
+the case of security issues, which drains team resources).
+Better dependency management may facilitate the migration of some packages out
+of the standard library and into their own projects with their own release
+schedules.</p>
+<p>There was also some discussion about things that are difficult to achieve with
+the interfaces in the standard library.
+For instance, it would be nice if <code>io.Reader</code> accepted a context so that
+blocking read operations could be canceled.</p>
+<p>More <a href="https://github.com/golang/go/wiki/experiencereports" target="_blank" rel="noopener">experience reports</a> are
+necessary before we can determine what will change in the standard library.</p>
+
+
+  <h4 id="TOC_1.4.">Tooling and editors</h4>
+  <p>A language server for editors to use was a hot topic in the tooling session,
+with a number of people advocating for IDE and tool developers to adopt a common
+&#34;Go Language Server&#34; to index and display information about code and packages.
+Microsoft&#39;s <a href="https://www.github.com/Microsoft/language-server-protocol" target="_blank" rel="noopener">Language Server Protocol</a>
+was suggested as a good starting point because of its wide support in editors
+and IDEs.</p>
+<p>Jaana Burcu Dogan also discussed her work on distributed tracing and how
+information about runtime events could be made easier to acquire and attached to
+traces.
+Having a standard &#34;counter&#34; API to report statistics was proposed, but specific
+experience reports from the community will be required before such an API can be
+designed.</p>
+
+
+  <h4 id="TOC_1.5.">The contributor experience</h4>
+  <p>The final session of the day was on the contributor experience.
+The first discussion was all about how the current Gerrit workflow could be made
+easier for new contributors which has already resulted in improvements to the
+documentation for several repos, and influenced the new contributors workshop a
+few days later!</p>
+<p>Making it easier to find tasks to work on, empowering users to perform gardening
+tasks on the issue tracker, and making it easier to find reviewers were also
+considered.
+Hopefully we&#39;ll see improvements to these and many more areas of the
+contribution process in the coming weeks and months!</p>
+
+
+  <h4 id="TOC_1.6.">Breakout sessions</h4>
+  <p>In the afternoon, participants broke out into smaller groups to have more
+in-depth discussions about some of the topics from the morning session.
+These discussions had more specific goals.
+For example, one group worked on identifying the useful parts of an experience
+report and a list of existing literature documenting Go user experiences,
+resulting in the experience report
+<a href="https://github.com/golang/go/wiki/experiencereports" target="_blank" rel="noopener">wiki page</a>.</p>
+<p>Another group considered the future of errors in Go.
+Many Go users are initially confused by, or don&#39;t understand the fact that
+<code>error</code> is an interface, and it can be difficult to attach more information to
+errors without masking sentinel errors such as <code>io.EOF</code>.
+The breakout session discussed specific ways it might be possible to fix some of
+these issues in upcoming Go releases, but also ways error handling could be
+improved in Go 2.</p>
+
+
+
+    
+      
+  <h4 id="TOC_2.">Community</h4>
+  <p>Outside of the technical discussions, the summit also provided an opportunity
+for a group of people from all over the world who often talk and work together
+to meet in person, in many cases for the first time.
+There is no substitute for a little face-to-face time to build a sense of mutual
+respect and comradeship, which is critical when a diverse group with different
+backgrounds and ideas needs to come together to work in a single community.
+During the breaks, Go team members dispersed themselves among the contributors
+for discussions both about Go and a little general socialization, which really
+helped to put faces to the names that review our code every day.</p>
+<p>As Russ discussed in <a href="https://TheGoBlog.GitHub.io//toward-go2" target="_blank" rel="noopener">Toward Go 2</a>,
+communicating effectively requires knowing your audience.
+Having a broad sample of Go contributors in a room together helped us all to
+understand the Go audience better and start many productive discussions about
+the future of Go.
+Going forward, we hope to do more frequent events like this to facilitate
+discourse and a sense of community.</p>
+
+<div class="image">
+  <img src="contributors-summit/IMG_20170712_145844.jpg" alt=""/>
+</div>
+
+<div class="image">
+  <img src="contributors-summit/IMG_20170712_145854.jpg" alt=""/>
+</div>
+
+<div class="image">
+  <img src="contributors-summit/IMG_20170712_145905.jpg" alt=""/>
+</div>
+
+<div class="image">
+  <img src="contributors-summit/IMG_20170712_145911.jpg" alt=""/>
+</div>
+
+<div class="image">
+  <img src="contributors-summit/IMG_20170712_145950.jpg" alt=""/>
+</div>
+<p>Photos by Steve Francia</p>
+
+
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

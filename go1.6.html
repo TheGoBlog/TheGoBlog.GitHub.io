@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/go1.6" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>Go 1.6 is released | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>Go 1.6 is released</h2>
+    <p class="author">
+    Andrew Gerrand<br/>
+    17 February 2016
+    </p>
+    
+  
+  
+    
+      
+        <p>Today we release <a href="https://golang.google.cn/doc/go1.6" target="_blank" rel="noopener">Go version 1.6</a>,
+the seventh major stable release of Go.
+You can grab it right now from the <a href="https://golang.google.cn/dl/" target="_blank" rel="noopener">download page</a>.
+Although <a href="https://TheGoBlog.GitHub.io/go1.5" target="_blank" rel="noopener">the release of Go 1.5</a> six months ago
+contained dramatic implementation changes,
+this release is more incremental.</p>
+<p>The most significant change is support for <a href="https://http2.github.io/" target="_blank" rel="noopener">HTTP/2</a>
+in the <a href="https://golang.google.cn/pkg/net/http/" target="_blank" rel="noopener">net/http package</a>.
+HTTP/2 is a new protocol, a follow-on to HTTP that has already seen
+widespread adoption by browser vendors and major websites.
+In Go 1.6, support for HTTP/2 is <a href="https://golang.google.cn/doc/go1.6#http2" target="_blank" rel="noopener">enabled by default</a>
+for both servers and clients when using HTTPS,
+bringing <a href="https://http2.github.io/faq/" target="_blank" rel="noopener">the benefits</a> of the new protocol
+to a wide range of Go projects,
+such as the popular <a href="https://caddyserver.com/download" target="_blank" rel="noopener">Caddy web server</a>.</p>
+<p>The template packages have learned some new tricks,
+with support for <a href="https://golang.google.cn/pkg/text/template/#hdr-Text_and_spaces" target="_blank" rel="noopener">trimming spaces around template actions</a>
+to produce cleaner template output,
+and the introduction of the <a href="https://golang.google.cn/pkg/text/template/#hdr-Actions" target="_blank" rel="noopener"><code>{{block}}</code> action</a>
+that can be used to create templates that build on other templates.
+A <a href="https://github.com/golang/example/tree/master#template-godoc" target="_blank" rel="noopener">new template example program</a> demonstrates these new features.</p>
+<p>Go 1.5 introduced <a href="https://golang.google.cn/s/go15vendor" target="_blank" rel="noopener">experimental support</a>
+for a “vendor” directory that was enabled by an environment variable.
+In Go 1.6, the feature is now <a href="https://golang.google.cn/doc/go1.6#go_command" target="_blank" rel="noopener">enabled by default</a>.
+Source trees that contain a directory named “vendor” that is not used in accordance with the new feature
+will require changes to avoid broken builds (the simplest fix is to rename the directory).</p>
+<p>The runtime has added lightweight, best-effort detection of concurrent misuse of maps.
+As always, if one goroutine is writing to a map, no other goroutine should be reading or writing the map concurrently.
+If the runtime detects this condition, it prints a diagnosis and crashes the program.
+The best way to find out more about the problem is to run it under the
+<a href="https://TheGoBlog.GitHub.io/race-detector" target="_blank" rel="noopener">race detector</a>,
+which will more reliably identify the race and give more detail.</p>
+<p>The runtime has also changed how it prints program-ending panics.
+It now prints only the stack of the panicking goroutine, rather than all existing goroutines.
+This behavior can be configured using the
+<a href="https://golang.google.cn/pkg/runtime/#hdr-Environment_Variables" target="_blank" rel="noopener">GOTRACEBACK</a> environment variable
+or by calling the <a href="https://golang.google.cn/pkg/runtime/debug/#SetTraceback" target="_blank" rel="noopener">debug.SetTraceback</a> function.</p>
+<p>Users of cgo should be aware of major changes to the rules for sharing pointers between Go and C code.
+The rules are designed to ensure that such C code can coexist with Go&#39;s garbage collector
+and are checked during program execution, so code may require changes to avoid crashes.
+See the <a href="https://golang.google.cn/doc/go1.6#cgo" target="_blank" rel="noopener">release notes</a> and
+<a href="https://golang.google.cn/cmd/cgo/#hdr-Passing_pointers" target="_blank" rel="noopener">cgo documentation</a> for the details.</p>
+<p>The compiler, linker, and go command have a new <code>-msan</code> flag
+analogous to <code>-race</code> and only available on linux/amd64,
+that enables interoperation with the
+<a href="http://clang.llvm.org/docs/MemorySanitizer.html" target="_blank" rel="noopener">Clang MemorySanitizer</a>.
+This is useful for testing a program containing suspect C or C++ code.
+You might like to try it while testing your cgo code with the new pointer rules.</p>
+<p>Performance of Go programs built with Go 1.6 remains similar to those built with Go 1.5.
+Garbage-collection pauses are even lower than with Go 1.5,
+but this is particularly noticeable for programs using large amounts of memory.
+With regard to the performance of the compiler tool chain,
+build times should be similar to those of Go 1.5.</p>
+<p>The algorithm inside <a href="https://golang.google.cn/pkg/sort/#Sort" target="_blank" rel="noopener">sort.Sort</a>
+was improved to run about 10% faster,
+but the change may break programs that expect a specific ordering
+of equal but distinguishable elements.
+Such programs should refine their <code>Less</code> methods to indicate the desired ordering
+or use <a href="https://golang.google.cn/pkg/sort/#Stable" target="_blank" rel="noopener">sort.Stable</a>
+to preserve the input order for equal values.</p>
+<p>And, of course, there are many more additions, improvements, and fixes.
+You can find them all in the comprehensive <a href="https://golang.google.cn/doc/go1.6" target="_blank" rel="noopener">release notes</a>.</p>
+<p>To celebrate the release,
+<a href="https://github.com/golang/go/wiki/Go-1.6-release-party" target="_blank" rel="noopener">Go User Groups around the world</a>
+are holding release parties on the 17th of February.
+Online, the Go contributors are hosting a question and answer session
+on the <a href="https://reddit.com/r/golang" target="_blank" rel="noopener">golang subreddit</a> for the next 24 hours.
+If you have questions about the project, the release, or just Go in general,
+then please <a href="https://www.reddit.com/r/golang/comments/46bd5h/ama_we_are_the_go_contributors_ask_us_anything/" target="_blank" rel="noopener">join the discussion</a>.</p>
+<p>Thanks to everyone that contributed to the release.
+Happy hacking.</p>
+
+      
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/json-rpc" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>JSON-RPC: a tale of interfaces | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>JSON-RPC: a tale of interfaces</h2>
+    <p class="author">
+    Andrew Gerrand<br/>
+    27 April 2010
+    </p>
+    
+  
+  
+    
+      
+        <p>Here we present an example where Go&#39;s <a href="https://golang.google.cn/doc/effective_go.html#interfaces_and_types" target="_blank" rel="noopener">interfaces</a>
+made it easy to refactor some existing code to make it more flexible and extensible.
+Originally, the standard library&#39;s <a href="https://golang.google.cn/pkg/net/rpc/" target="_blank" rel="noopener">RPC package</a>
+used a custom wire format called <a href="https://golang.google.cn/pkg/encoding/gob/" target="_blank" rel="noopener">gob</a>.
+For a particular application, we wanted to use <a href="https://golang.google.cn/pkg/encoding/json/" target="_blank" rel="noopener">JSON</a>
+as an alternate wire format.</p>
+<p>We first defined a pair of interfaces to describe the functionality of the
+existing wire format,
+one for the client, and one for the server (depicted below).</p>
+<pre><code>type ServerCodec interface {
+ ReadRequestHeader(*Request) error
+ ReadRequestBody(interface{}) error
+ WriteResponse(*Response, interface{}) error
+ Close() error
+}
+</code></pre>
+<p>On the server side, we then changed two internal function signatures to
+accept the <code>ServerCodec</code> interface instead of our existing <code>gob.Encoder</code>. Here&#39;s one of them:</p>
+<pre><code>func sendResponse(sending *sync.Mutex, req *Request,
+ reply interface{}, enc *gob.Encoder, errmsg string)
+</code></pre>
+<p>became</p>
+<pre><code>func sendResponse(sending *sync.Mutex, req *Request,
+  reply interface{}, enc ServerCodec, errmsg string)
+</code></pre>
+<p>We then wrote a trivial <code>gobServerCodec</code> wrapper to reproduce the original functionality.
+From there it is simple to build a <code>jsonServerCodec</code>.</p>
+<p>After some similar changes to the client side,
+this was the full extent of the work we needed to do on the RPC package.
+This whole exercise took about 20 minutes!
+After tidying up and testing the new code,
+the <a href="https://github.com/golang/go/commit/dcff89057bc0e0d7cb14cf414f2df6f5fb1a41ec" target="_blank" rel="noopener">final changeset</a> was submitted.</p>
+<p>In an inheritance-oriented language like Java or C++,
+the obvious path would be to generalize the RPC class,
+and create JsonRPC and GobRPC subclasses.
+However, this approach becomes tricky if you want to make a further generalization
+orthogonal to that hierarchy.
+(For example, if you were to implement an alternate RPC standard).
+In our Go package, we took a route that is both conceptually simpler and
+requires less code be written or changed.</p>
+<p>A vital quality for any codebase is maintainability.
+As needs change, it is essential to adapt your code easily and cleanly,
+lest it become unwieldy to work with.
+We believe Go&#39;s lightweight, composition-oriented type system provides a
+means of structuring code that scales.</p>
+
+      
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

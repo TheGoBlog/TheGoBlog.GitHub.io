@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/strings" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>Strings, bytes, runes and characters in Go | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>Strings, bytes, runes and characters in Go</h2>
+    <p class="author">
+    Rob Pike<br/>
+    23 October 2013
+    </p>
+    
+  
+  
+    
+      
+  <h4 id="TOC_1.">Introduction</h4>
+  <p>The <a href="https://TheGoBlog.GitHub.io/slices" target="_blank" rel="noopener">previous blog post</a> explained how slices
+work in Go, using a number of examples to illustrate the mechanism behind
+their implementation.
+Building on that background, this post discusses strings in Go.
+At first, strings might seem too simple a topic for a blog post, but to use
+them well requires understanding not only how they work,
+but also the difference between a byte, a character, and a rune,
+the difference between Unicode and UTF-8,
+the difference between a string and a string literal,
+and other even more subtle distinctions.</p>
+<p>One way to approach this topic is to think of it as an answer to the frequently
+asked question, &#34;When I index a Go string at position <em>n</em>, why don&#39;t I get the
+<em>nth</em> character?&#34;
+As you&#39;ll see, this question leads us to many details about how text works
+in the modern world.</p>
+<p>An excellent introduction to some of these issues, independent of Go,
+is Joel Spolsky&#39;s famous blog post,
+<a href="http://www.joelonsoftware.com/articles/Unicode.html" target="_blank" rel="noopener">The Absolute Minimum Every Software Developer Absolutely, Positively Must Know About Unicode and Character Sets (No Excuses!)</a>.
+Many of the points he raises will be echoed here.</p>
+
+
+    
+      
+  <h4 id="TOC_2.">What is a string?</h4>
+  <p>Let&#39;s start with some basics.</p>
+<p>In Go, a string is in effect a read-only slice of bytes.
+If you&#39;re at all uncertain about what a slice of bytes is or how it works,
+please read the <a href="https://TheGoBlog.GitHub.io/slices" target="_blank" rel="noopener">previous blog post</a>;
+we&#39;ll assume here that you have.</p>
+<p>It&#39;s important to state right up front that a string holds <em>arbitrary</em> bytes.
+It is not required to hold Unicode text, UTF-8 text, or any other predefined format.
+As far as the content of a string is concerned, it is exactly equivalent to a
+slice of bytes.</p>
+<p>Here is a string literal (more about those soon) that uses the
+<code>\xNN</code> notation to define a string constant holding some peculiar byte values.
+(Of course, bytes range from hexadecimal values 00 through FF, inclusive.)</p>
+
+  
+	<div class="code">
+<pre><span num="13">    const sample = &#34;\xbd\xb2\x3d\xbc\x20\xe2\x8c\x98&#34;</span>
+</pre>
+</div>
+  
+
+
+    
+      
+  <h4 id="TOC_3.">Printing strings</h4>
+  <p>Because some of the bytes in our sample string are not valid ASCII, not even
+valid UTF-8, printing the string directly will produce ugly output.
+The simple print statement</p>
+
+  
+	<div class="code">
+<pre><span num="18">    fmt.Println(sample)</span>
+</pre>
+</div>
+  
+<p>produces this mess (whose exact appearance varies with the environment):</p>
+<pre><code>��=� ⌘
+</code></pre>
+<p>To find out what that string really holds, we need to take it apart and examine the pieces.
+There are several ways to do this.
+The most obvious is to loop over its contents and pull out the bytes
+individually, as in this <code>for</code> loop:</p>
+
+  
+	<div class="code">
+<pre><span num="23">    for i := 0; i &lt; len(sample); i++ {</span>
+<span num="24">        fmt.Printf(&#34;%x &#34;, sample[i])</span>
+<span num="25">    }</span>
+</pre>
+</div>
+  
+<p>As implied up front, indexing a string accesses individual bytes, not
+characters. We&#39;ll return to that topic in detail below. For now, let&#39;s
+stick with just the bytes.
+This is the output from the byte-by-byte loop:</p>
+<pre><code>bd b2 3d bc 20 e2 8c 98
+</code></pre>
+<p>Notice how the individual bytes match the
+hexadecimal escapes that defined the string.</p>
+<p>A shorter way to generate presentable output for a messy string
+is to use the <code>%x</code> (hexadecimal) format verb of <code>fmt.Printf</code>.
+It just dumps out the sequential bytes of the string as hexadecimal
+digits, two per byte.</p>
+
+  
+	<div class="code">
+<pre><span num="31">    fmt.Printf(&#34;%x\n&#34;, sample)</span>
+</pre>
+</div>
+  
+<p>Compare its output to that above:</p>
+<pre><code>bdb23dbc20e28c98
+</code></pre>
+<p>A nice trick is to use the &#34;space&#34; flag in that format, putting a
+space between the <code>%</code> and the <code>x</code>. Compare the format string
+used here to the one above,</p>
+
+  
+	<div class="code">
+<pre><span num="36">    fmt.Printf(&#34;% x\n&#34;, sample)</span>
+</pre>
+</div>
+  
+<p>and notice how the bytes come
+out with spaces between, making the result a little less imposing:</p>
+<pre><code>bd b2 3d bc 20 e2 8c 98
+</code></pre>
+<p>There&#39;s more. The <code>%q</code> (quoted) verb will escape any non-printable
+byte sequences in a string so the output is unambiguous.</p>
+
+  
+	<div class="code">
+<pre><span num="41">    fmt.Printf(&#34;%q\n&#34;, sample)</span>
+</pre>
+</div>
+  
+<p>This technique is handy when much of the string is
+intelligible as text but there are peculiarities to root out; it produces:</p>
+<pre><code>&#34;\xbd\xb2=\xbc ⌘&#34;
+</code></pre>
+<p>If we squint at that, we can see that buried in the noise is one ASCII equals sign,
+along with a regular space, and at the end appears the well-known Swedish &#34;Place of Interest&#34;
+symbol.
+That symbol has Unicode value U+2318, encoded as UTF-8 by the bytes
+after the space (hex value <code>20</code>): <code>e2</code> <code>8c</code> <code>98</code>.</p>
+<p>If we are unfamiliar or confused by strange values in the string,
+we can use the &#34;plus&#34; flag to the <code>%q</code> verb. This flag causes the output to escape
+not only non-printable sequences, but also any non-ASCII bytes, all
+while interpreting UTF-8.
+The result is that it exposes the Unicode values of properly formatted UTF-8
+that represents non-ASCII data in the string:</p>
+
+  
+	<div class="code">
+<pre><span num="46">    fmt.Printf(&#34;%+q\n&#34;, sample)</span>
+</pre>
+</div>
+  
+<p>With that format, the Unicode value of the Swedish symbol shows up as a
+<code>\u</code> escape:</p>
+<pre><code>&#34;\xbd\xb2=\xbc \u2318&#34;
+</code></pre>
+<p>These printing techiques are good to know when debugging
+the contents of strings, and will be handy in the discussion that follows.
+It&#39;s worth pointing out as well that all these methods behave exactly the
+same for byte slices as they do for strings.</p>
+<p>Here&#39;s the full set of printing options we&#39;ve listed, presented as
+a complete program you can run (and edit) right in the browser:</p>
+
+  
+	<div class="playground">
+<pre style="display: none"><span>// +build OMIT
+
+// Copyright 2013 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+</span></pre><pre contenteditable="true" spellcheck="false"><span num="7">package main</span>
+<span num="8"></span>
+<span num="9">import &#34;fmt&#34;</span>
+<span num="10"></span>
+<span num="11">func main() {</span>
+<span num="13">    const sample = &#34;\xbd\xb2\x3d\xbc\x20\xe2\x8c\x98&#34;</span>
+<span num="15"></span>
+<span num="16">    fmt.Println(&#34;Println:&#34;)</span>
+<span num="18">    fmt.Println(sample)</span>
+<span num="20"></span>
+<span num="21">    fmt.Println(&#34;Byte loop:&#34;)</span>
+<span num="23">    for i := 0; i &lt; len(sample); i++ {</span>
+<span num="24">        fmt.Printf(&#34;%x &#34;, sample[i])</span>
+<span num="25">    }</span>
+<span num="27">    fmt.Printf(&#34;\n&#34;)</span>
+<span num="28"></span>
+<span num="29">    fmt.Println(&#34;Printf with %x:&#34;)</span>
+<span num="31">    fmt.Printf(&#34;%x\n&#34;, sample)</span>
+<span num="33"></span>
+<span num="34">    fmt.Println(&#34;Printf with % x:&#34;)</span>
+<span num="36">    fmt.Printf(&#34;% x\n&#34;, sample)</span>
+<span num="38"></span>
+<span num="39">    fmt.Println(&#34;Printf with %q:&#34;)</span>
+<span num="41">    fmt.Printf(&#34;%q\n&#34;, sample)</span>
+<span num="43"></span>
+<span num="44">    fmt.Println(&#34;Printf with %+q:&#34;)</span>
+<span num="46">    fmt.Printf(&#34;%+q\n&#34;, sample)</span>
+<span num="48">}</span>
+</pre>
+</div>
+  
+<p>[Exercise: Modify the examples above to use a slice of bytes
+instead of a string. Hint: Use a conversion to create the slice.]</p>
+<p>[Exercise: Loop over the string using the <code>%q</code> format on each byte.
+What does the output tell you?]</p>
+
+
+    
+      
+  <h4 id="TOC_4.">UTF-8 and string literals</h4>
+  <p>As we saw, indexing a string yields its bytes, not its characters: a string is just a
+bunch of bytes.
+That means that when we store a character value in a string,
+we store its byte-at-a-time representation.
+Let&#39;s look at a more controlled example to see how that happens.</p>
+<p>Here&#39;s a simple program that prints a string constant with a single character
+three different ways, once as a plain string, once as an ASCII-only quoted
+string, and once as individual bytes in hexadecimal.
+To avoid any confusion, we create a &#34;raw string&#34;, enclosed by back quotes,
+so it can contain only literal text. (Regular strings, enclosed by double
+quotes, can contain escape sequences as we showed above.)</p>
+
+  
+	<div class="playground">
+<pre style="display: none"><span>// +build OMIT
+
+// Copyright 2013 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package main
+
+import &#34;fmt&#34;
+
+</span></pre><pre contenteditable="true" spellcheck="false"><span num="11">func main() {</span>
+<span num="12">    const placeOfInterest = `⌘`</span>
+<span num="13"></span>
+<span num="14">    fmt.Printf(&#34;plain string: &#34;)</span>
+<span num="15">    fmt.Printf(&#34;%s&#34;, placeOfInterest)</span>
+<span num="16">    fmt.Printf(&#34;\n&#34;)</span>
+<span num="17"></span>
+<span num="18">    fmt.Printf(&#34;quoted string: &#34;)</span>
+<span num="19">    fmt.Printf(&#34;%+q&#34;, placeOfInterest)</span>
+<span num="20">    fmt.Printf(&#34;\n&#34;)</span>
+<span num="21"></span>
+<span num="22">    fmt.Printf(&#34;hex bytes: &#34;)</span>
+<span num="23">    for i := 0; i &lt; len(placeOfInterest); i++ {</span>
+<span num="24">        fmt.Printf(&#34;%x &#34;, placeOfInterest[i])</span>
+<span num="25">    }</span>
+<span num="26">    fmt.Printf(&#34;\n&#34;)</span>
+<span num="27">}</span>
+</pre>
+</div>
+  
+<p>The output is:</p>
+<pre><code>plain string: ⌘
+quoted string: &#34;\u2318&#34;
+hex bytes: e2 8c 98
+</code></pre>
+<p>which reminds us that the Unicode character value U+2318, the &#34;Place
+of Interest&#34; symbol ⌘, is represented by the bytes <code>e2</code> <code>8c</code> <code>98</code>, and
+that those bytes are the UTF-8 encoding of the hexadecimal
+value 2318.</p>
+<p>It may be obvious or it may be subtle, depending on your familiarity with
+UTF-8, but it&#39;s worth taking a moment to explain how the UTF-8 representation
+of the string was created.
+The simple fact is: it was created when the source code was written.</p>
+<p>Source code in Go is <em>defined</em> to be UTF-8 text; no other representation is
+allowed. That implies that when, in the source code, we write the text</p>
+<pre><code>`⌘`
+</code></pre>
+<p>the text editor used to create the program places the UTF-8 encoding
+of the symbol ⌘ into the source text.
+When we print out the hexadecimal bytes, we&#39;re just dumping the
+data the editor placed in the file.</p>
+<p>In short, Go source code is UTF-8, so
+<em>the source code for the string literal is UTF-8 text</em>.
+If that string literal contains no escape sequences, which a raw
+string cannot, the constructed string will hold exactly the
+source text  between the quotes.
+Thus by definition and
+by construction the raw string will always contain a valid UTF-8
+representation of its contents.
+Similarly, unless it contains UTF-8-breaking escapes like those
+from the previous section, a regular string literal will also always
+contain valid UTF-8.</p>
+<p>Some people think Go strings are always UTF-8, but they
+are not: only string literals are UTF-8.
+As we showed in the previous section, string <em>values</em> can contain arbitrary
+bytes;
+as we showed in this one, string <em>literals</em> always contain UTF-8 text
+as long as they have no byte-level escapes.</p>
+<p>To summarize, strings can contain arbitrary bytes, but when constructed
+from string literals, those bytes are (almost always) UTF-8.</p>
+
+
+    
+      
+  <h4 id="TOC_5.">Code points, characters, and runes</h4>
+  <p>We&#39;ve been very careful so far in how we use the words &#34;byte&#34; and &#34;character&#34;.
+That&#39;s partly because strings hold bytes, and partly because the idea of &#34;character&#34;
+is a little hard to define.
+The Unicode standard uses the term &#34;code point&#34; to refer to the item represented
+by a single value.
+The code point U+2318, with hexadecimal value 2318, represents the symbol ⌘.
+(For lots more information about that code point, see
+<a href="http://unicode.org/cldr/utility/character.jsp?a=2318" target="_blank" rel="noopener">its Unicode page</a>.)</p>
+<p>To pick a more prosaic example, the Unicode code point U+0061 is the lower
+case Latin letter &#39;A&#39;: a.</p>
+<p>But what about the lower case grave-accented letter &#39;A&#39;, à?
+That&#39;s a character, and it&#39;s also a code point (U+00E0), but it has other
+representations.
+For example we can use the &#34;combining&#34; grave accent code point, U+0300,
+and attach it to the lower case letter a, U+0061, to create the same character à.
+In general, a character may be represented by a number of different
+sequences of code points, and therefore different sequences of UTF-8 bytes.</p>
+<p>The concept of character in computing is therefore ambiguous, or at least
+confusing, so we use it with care.
+To make things dependable, there are <em>normalization</em> techniques that guarantee that
+a given character is always represented by the same code points, but that
+subject takes us too far off the topic for now.
+A later blog post will explain how the Go libraries address normalization.</p>
+<p>&#34;Code point&#34; is a bit of a mouthful, so Go introduces a shorter term for the
+concept: <em>rune</em>.
+The term appears in the libraries and source code, and means exactly
+the same as &#34;code point&#34;, with one interesting addition.</p>
+<p>The Go language defines the word <code>rune</code> as an alias for the type <code>int32</code>, so
+programs can be clear when an integer value represents a code point.
+Moreover, what you might think of as a character constant is called a
+<em>rune constant</em> in Go.
+The type and value of the expression</p>
+<pre><code>&#39;⌘&#39;
+</code></pre>
+<p>is <code>rune</code> with integer value <code>0x2318</code>.</p>
+<p>To summarize, here are the salient points:</p>
+<ul>
+<li>Go source code is always UTF-8.</li>
+<li>A string holds arbitrary bytes.</li>
+<li>A string literal, absent byte-level escapes, always holds valid UTF-8 sequences.</li>
+<li>Those sequences represent Unicode code points, called runes.</li>
+<li>No guarantee is made in Go that characters in strings are normalized.</li>
+</ul>
+
+
+    
+      
+  <h4 id="TOC_6.">Range loops</h4>
+  <p>Besides the axiomatic detail that Go source code is UTF-8,
+there&#39;s really only one way that Go treats UTF-8 specially, and that is when using
+a <code>for</code> <code>range</code> loop on a string.</p>
+<p>We&#39;ve seen what happens with a regular <code>for</code> loop.
+A <code>for</code> <code>range</code> loop, by contrast, decodes one UTF-8-encoded rune on each
+iteration.
+Each time around the loop, the index of the loop is the starting position of the
+current rune, measured in bytes, and the code point is its value.
+Here&#39;s an example using yet another handy <code>Printf</code> format, <code>%#U</code>, which shows
+the code point&#39;s Unicode value and its printed representation:</p>
+
+  
+	<div class="playground">
+<pre style="display: none"><span>// +build OMIT
+
+// Copyright 2013 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package main
+
+import &#34;fmt&#34;
+
+func main() {
+</span></pre><pre contenteditable="true" spellcheck="false"><span num="12">    const nihongo = &#34;日本語&#34;</span>
+<span num="13">    for index, runeValue := range nihongo {</span>
+<span num="14">        fmt.Printf(&#34;%#U starts at byte position %d\n&#34;, runeValue, index)</span>
+<span num="15">    }</span>
+</pre>
+<pre style="display: none"><span>}
+</span></pre></div>
+  
+<p>The output shows how each code point occupies multiple bytes:</p>
+<pre><code>U+65E5 &#39;日&#39; starts at byte position 0
+U+672C &#39;本&#39; starts at byte position 3
+U+8A9E &#39;語&#39; starts at byte position 6
+</code></pre>
+<p>[Exercise: Put an invalid UTF-8 byte sequence into the string. (How?)
+What happens to the iterations of the loop?]</p>
+
+
+    
+      
+  <h4 id="TOC_7.">Libraries</h4>
+  <p>Go&#39;s standard library provides strong support for interpreting UTF-8 text.
+If a <code>for</code> <code>range</code> loop isn&#39;t sufficient for your purposes,
+chances are the facility you need is provided by a package in the library.</p>
+<p>The most important such package is
+<a href="https://golang.google.cn/pkg/unicode/utf8/" target="_blank" rel="noopener"><code>unicode/utf8</code></a>,
+which contains
+helper routines to validate, disassemble, and reassemble UTF-8 strings.
+Here is a program equivalent to the <code>for</code> <code>range</code> example above,
+but using the <code>DecodeRuneInString</code> function from that package to
+do the work.
+The return values from the function are the rune and its width in
+UTF-8-encoded bytes.</p>
+
+  
+	<div class="playground">
+<pre style="display: none"><span>// +build OMIT
+
+// Copyright 2013 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package main
+
+import (
+	&#34;fmt&#34;
+	&#34;unicode/utf8&#34;
+)
+
+func main() {
+</span></pre><pre contenteditable="true" spellcheck="false"><span num="15">    const nihongo = &#34;日本語&#34;</span>
+<span num="16">    for i, w := 0, 0; i &lt; len(nihongo); i += w {</span>
+<span num="17">        runeValue, width := utf8.DecodeRuneInString(nihongo[i:])</span>
+<span num="18">        fmt.Printf(&#34;%#U starts at byte position %d\n&#34;, runeValue, i)</span>
+<span num="19">        w = width</span>
+<span num="20">    }</span>
+</pre>
+<pre style="display: none"><span>}
+</span></pre></div>
+  
+<p>Run it to see that it performs the same.
+The <code>for</code> <code>range</code> loop and <code>DecodeRuneInString</code> are defined to produce
+exactly the same iteration sequence.</p>
+<p>Look at the
+<a href="https://golang.google.cn/pkg/unicode/utf8/" target="_blank" rel="noopener">documentation</a>
+for the <code>unicode/utf8</code> package to see what
+other facilities it provides.</p>
+
+
+    
+      
+  <h4 id="TOC_8.">Conclusion</h4>
+  <p>To answer the question posed at the beginning: Strings are built from bytes
+so indexing them yields bytes, not characters.
+A string might not even hold characters.
+In fact, the definition of &#34;character&#34; is ambiguous and it would
+be a mistake to try to resolve the ambiguity by defining that strings are made
+of characters.</p>
+<p>There&#39;s much more to say about Unicode, UTF-8, and the world of multilingual
+text processing, but it can wait for another post.
+For now, we hope you have a better understanding of how Go strings behave
+and that, although they may contain arbitrary bytes, UTF-8 is a central part
+of their design.</p>
+
+
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

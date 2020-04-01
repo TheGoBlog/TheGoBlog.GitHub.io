@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/go12" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>Go 1.2 is released | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>Go 1.2 is released</h2>
+    <p class="author">
+    Andrew Gerrand<br/>
+    1 December 2013
+    </p>
+    
+  
+  
+    
+      
+        <p>We are pleased to announce the release of Go 1.2, the latest stable version of
+the Go Programming Language.</p>
+<p>Binary distributions may be downloaded from the
+<a href="https://golang.google.cn/doc/install" target="_blank" rel="noopener">usual place</a> or if you prefer to
+<a href="https://golang.google.cn/doc/install/source" target="_blank" rel="noopener">compile from source</a> you should use
+the <code>release</code> or <code>go1.2</code> tags.</p>
+<p>This new release comes nearly seven months after the release of Go 1.1 in May,
+a much shorter period than the 14 months between 1.1 and 1.0.
+We anticipate a comparable interval between future major releases.</p>
+<p><a href="https://golang.google.cn/doc/go1.2" target="_blank" rel="noopener">Go 1.2</a> includes a couple of minor
+language changes, several improvements to the language implementation and
+tools, some performance improvements, and many additions and
+(backward-compatible) changes to the standard library.</p>
+<p>Please read the <a href="https://golang.google.cn/doc/go1.2" target="_blank" rel="noopener">release notes</a> for all
+the details, as some changes may affect the behavior of existing (buggy) programs.
+What follows is the highlights of the release.</p>
+<p>A new <a href="https://golang.google.cn/doc/go1.2#three_index" target="_blank" rel="noopener">three-index slice syntax</a>
+adds the ability to specify capacity as well as length. This allows the
+programmer to pass a slice value that can only access a limited portion of the
+underlying array, a technique that previously required the use of the unsafe
+package.</p>
+<p>A major new feature of the tool chain is the facility to compute and display
+<a href="https://golang.google.cn/doc/go1.2#cover" target="_blank" rel="noopener">test coverage results</a>.
+See the <a href="https://golang.google.cn/cmd/go/#hdr-Description_of_testing_flags" target="_blank" rel="noopener"><code>go test</code></a>
+and <a href="https://godoc.org/code.google.com/p/go.tools/cmd/cover/" target="_blank" rel="noopener">cover tool</a>
+documentation for details. Later this week we will publish an article that
+discusses this new feature in detail.</p>
+<p>Goroutines are now <a href="https://golang.google.cn/doc/go1.2#preemption" target="_blank" rel="noopener">pre-emptively scheduled</a>,
+in that the scheduler is invoked occasionally upon entry to a function.
+This can prevent busy goroutines from starving other goroutines on the same
+thread.</p>
+<p>An increase to the default goroutine stack size should improve the
+performance of some programs. (The old size had a tendency to introduce
+expensive stack-segment switching in performance-critical sections.)
+On the other end, new restrictions on
+<a href="https://golang.google.cn/doc/go1.2#stack_size" target="_blank" rel="noopener">stack sizes</a> and
+<a href="https://golang.google.cn/doc/go1.2#thread_limit" target="_blank" rel="noopener">the number of operating system threads</a>
+should prevent misbehaving programs from consuming all the resources of a
+machine. (These limits may be adjusted using new functions in the
+<a href="https://golang.google.cn/pkg/runtime/debug" target="_blank" rel="noopener"><code>runtime/debug</code> package</a>.)</p>
+<p>Finally, among the <a href="https://golang.google.cn/doc/go1.2#library" target="_blank" rel="noopener">many changes to the standard library</a>,
+significant changes include
+the new <a href="https://golang.google.cn/doc/go1.2#encoding" target="_blank" rel="noopener"><code>encoding</code> package</a>,
+<a href="https://golang.google.cn/doc/go1.2#fmt_indexed_arguments" target="_blank" rel="noopener">indexed arguments</a> in <code>Printf</code> format strings, and
+some <a href="https://golang.google.cn/doc/go1.2#text_template" target="_blank" rel="noopener">convenient additions</a> to the template packages.</p>
+<p>As part of the release, the <a href="http://play.golang.org/" target="_blank" rel="noopener">Go Playground</a> has been
+updated to Go 1.2. This also affects services that use the Playground, such as
+<a href="http://tour.golang.org/" target="_blank" rel="noopener">the Go Tour</a> and this blog.
+The update also adds the ability to use threads and the <code>os</code>, <code>net</code>, and
+<code>unsafe</code> packages inside the sandbox, making it more like a real Go environment.</p>
+<p>To everyone who helped make this release possible, from the many users who
+submitted bug reports to the 116 (!) contributors who committed more than 1600
+changes to the core: Your help is invaluable to the project. Thank you!</p>
+<p><em>This blog post is the first of the</em>
+<a href="http://blog.gopheracademy.com/day-01-go-1.2" target="_blank" rel="noopener">Go Advent Calendar</a>,
+<em>a series of daily articles presented by the</em>
+<a href="http://gopheracademy.com/" target="_blank" rel="noopener">Gopher Academy</a> <em>from December 1 to 25.</em></p>
+
+      
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

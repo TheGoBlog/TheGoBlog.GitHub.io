@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/cgo" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>C? Go? Cgo! | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>C? Go? Cgo!</h2>
+    <p class="author">
+    Andrew Gerrand<br/>
+    17 March 2011
+    </p>
+    
+  
+  
+    
+      
+  <h4 id="TOC_1.">Introduction</h4>
+  <p>Cgo lets Go packages call C code. Given a Go source file written with some special features,
+cgo outputs Go and C files that can be combined into a single Go package.</p>
+<p>To lead with an example, here&#39;s a Go package that provides two functions -
+<code>Random</code> and <code>Seed</code> - that wrap C&#39;s <code>random</code> and <code>srandom</code> functions.</p>
+<pre><code>package rand
+
+/*
+#include &lt;stdlib.h&gt;
+*/
+import &#34;C&#34;
+
+func Random() int {
+    return int(C.random())
+}
+
+func Seed(i int) {
+    C.srandom(C.uint(i))
+}
+</code></pre>
+<p>Let&#39;s look at what&#39;s happening here, starting with the import statement.</p>
+<p>The <code>rand</code> package imports <code>&#34;C&#34;</code>, but you&#39;ll find there&#39;s no such package
+in the standard Go library.
+That&#39;s because <code>C</code> is a &#34;pseudo-package&#34;,
+a special name interpreted by cgo as a reference to C&#39;s name space.</p>
+<p>The <code>rand</code> package contains four references to the <code>C</code> package:
+the calls to <code>C.random</code> and <code>C.srandom</code>, the conversion <code>C.uint(i)</code>,
+and the <code>import</code> statement.</p>
+<p>The <code>Random</code> function calls the standard C library&#39;s <code>random</code> function and returns the result.
+In C, <code>random</code> returns a value of the C type <code>long</code>,
+which cgo represents as the type <code>C.long</code>.
+It must be converted to a Go type before it can be used by Go code outside this package,
+using an ordinary Go type conversion:</p>
+<pre><code>func Random() int {
+    return int(C.random())
+}
+</code></pre>
+<p>Here&#39;s an equivalent function that uses a temporary variable to illustrate the type conversion more explicitly:</p>
+<pre><code>func Random() int {
+    var r C.long = C.random()
+    return int(r)
+}
+</code></pre>
+<p>The <code>Seed</code> function does the reverse, in a way.
+It takes a regular Go <code>int</code>, converts it to the C <code>unsigned int</code> type,
+and passes it to the C function <code>srandom</code>.</p>
+<pre><code>func Seed(i int) {
+    C.srandom(C.uint(i))
+}
+</code></pre>
+<p>Note that cgo knows the <code>unsigned int</code> type as <code>C.uint</code>;
+see the <a href="https://golang.google.cn/cmd/cgo" target="_blank" rel="noopener">cgo documentation</a> for a complete
+list of these numeric type names.</p>
+<p>The one detail of this example we haven&#39;t examined yet is the comment above the <code>import</code> statement.</p>
+<pre><code>/*
+#include &lt;stdlib.h&gt;
+*/
+import &#34;C&#34;
+</code></pre>
+<p>Cgo recognizes this comment.  Any lines starting with <code>#cgo</code> followed by
+a space character are removed;
+these become directives for cgo.
+The remaining lines are used as a header when compiling the C parts of the package.
+In this case those lines are just a single <code>#include</code> statement,
+but they can be almost any C code.
+The <code>#cgo</code> directives are used to provide flags for the compiler and linker
+when building the C parts of the package.</p>
+<p>There is a limitation: if your program uses any <code>//export</code> directives,
+then the C code in the comment may only include declarations (<code>extern int f();</code>),
+not definitions (<code>int f() { return 1; }</code>).
+You can use <code>//export</code> directives to make Go functions accessible to C code.</p>
+<p>The <code>#cgo</code> and <code>//export</code> directives are documented in the <a href="https://golang.google.cn/cmd/cgo/" target="_blank" rel="noopener">cgo documentation</a>.</p>
+
+
+    
+      
+  <h4 id="TOC_2.">Strings and things</h4>
+  <p>Unlike Go, C doesn&#39;t have an explicit string type. Strings in C are represented by a zero-terminated array of chars.</p>
+<p>Conversion between Go and C strings is done with the <code>C.CString</code>,
+<code>C.GoString</code>, and <code>C.GoStringN</code> functions.
+These conversions make a copy of the string data.</p>
+<p>This next example implements a <code>Print</code> function that writes a string to
+standard output using C&#39;s <code>fputs</code> function from the <code>stdio</code> library:</p>
+<pre><code>package print
+
+// #include &lt;stdio.h&gt;
+// #include &lt;stdlib.h&gt;
+import &#34;C&#34;
+import &#34;unsafe&#34;
+
+func Print(s string) {
+    cs := C.CString(s)
+    C.fputs(cs, (*C.FILE)(C.stdout))
+    C.free(unsafe.Pointer(cs))
+}
+</code></pre>
+<p>Memory allocations made by C code are not known to Go&#39;s memory manager.
+When you create a C string with <code>C.CString</code> (or any C memory allocation)
+you must remember to free the memory when you&#39;re done with it by calling <code>C.free</code>.</p>
+<p>The call to <code>C.CString</code> returns a pointer to the start of the char array,
+so before the function exits we convert it to an <a href="https://golang.google.cn/pkg/unsafe/#Pointer" target="_blank" rel="noopener"><code>unsafe.Pointer</code></a>
+and release the memory allocation with <code>C.free</code>.
+A common idiom in cgo programs is to <a href="https://TheGoBlog.GitHub.io/defer_panic_recover.html" target="_blank" rel="noopener"><code>defer</code></a>
+the free immediately after allocating (especially when the code that follows
+is more complex than a single function call),
+as in this rewrite of <code>Print</code>:</p>
+<pre><code>func Print(s string) {
+    cs := C.CString(s)
+    defer C.free(unsafe.Pointer(cs))
+    C.fputs(cs, (*C.FILE)(C.stdout))
+}</code></pre>
+
+
+    
+      
+  <h4 id="TOC_3.">Building cgo packages</h4>
+  <p>To build cgo packages, just use <a href="https://golang.google.cn/cmd/go/#Compile_packages_and_dependencies" target="_blank" rel="noopener"><code>go build</code></a>
+or <a href="https://golang.google.cn/cmd/go/#Compile_and_install_packages_and_dependencies" target="_blank" rel="noopener"><code>go install</code></a> as usual.
+The go tool recognizes the special <code>&#34;C&#34;</code> import and automatically uses cgo for those files.</p>
+
+
+    
+      
+  <h4 id="TOC_4.">More cgo resources</h4>
+  <p>The <a href="https://golang.google.cn/cmd/cgo/" target="_blank" rel="noopener">cgo command</a> documentation has more
+detail about the C pseudo-package and the build process.
+The <a href="https://golang.google.cn/misc/cgo/" target="_blank" rel="noopener">cgo examples</a> in the Go tree demonstrate
+more advanced concepts.</p>
+<p>Finally, if you&#39;re curious as to how all this works internally,
+take a look at the introductory comment of the runtime package&#39;s <a href="https://golang.google.cn/src/runtime/cgocall.go" target="_blank" rel="noopener">cgocall.go</a>.</p>
+
+
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

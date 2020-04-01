@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/module-mirror-launch" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>Module Mirror and Checksum Database Launched | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>Module Mirror and Checksum Database Launched</h2>
+    <p class="author">
+    Katie Hockman<br/>
+    29 August 2019
+    </p>
+    
+  
+  
+    
+      
+  <h4 id="TOC_1."></h4>
+  <p>We are excited to share that our module <a href="https://proxy.golang.org" target="_blank" rel="noopener">mirror</a>,
+<a href="https://index.golang.org" target="_blank" rel="noopener">index</a>, and
+<a href="https://sum.golang.org" target="_blank" rel="noopener">checksum database</a> are now production ready! The <code>go</code> command
+will use the module mirror and checksum database by default for
+<a href="https://golang.google.cn/doc/go1.13#introduction" target="_blank" rel="noopener">Go 1.13 module users</a>.  See
+<a href="https://proxy.golang.org/privacy" target="_blank" rel="noopener">proxy.golang.org/privacy</a> for privacy
+information about these services and the
+<a href="https://golang.google.cn/cmd/go/#hdr-Module_downloading_and_verification" target="_blank" rel="noopener">go command documentation</a>
+for configuration details, including how to disable the use of these servers or
+use different ones.  If you depend on non-public modules, see the
+<a href="https://golang.google.cn/cmd/go/#hdr-Module_configuration_for_non_public_modules" target="_blank" rel="noopener">documentation for configuring your environment</a>.</p>
+<p>This post will describe these services and the benefits of using them, and
+summarizes some of the points from the
+<a href="https://youtu.be/KqTySYYhPUE" target="_blank" rel="noopener">Go Module Proxy: Life of a Query</a> talk at Gophercon 2019.
+See the <a href="https://youtu.be/KqTySYYhPUE" target="_blank" rel="noopener">recording</a> if you are interested in the full talk.</p>
+
+
+    
+      
+  <h4 id="TOC_2.">Module Mirror</h4>
+  <p><a href="https://TheGoBlog.GitHub.io/versioning-proposal" target="_blank" rel="noopener">Modules</a> are sets of Go packages
+that are versioned together, and the contents of each version are immutable.
+That immutability provides new opportunities for caching and authentication.
+When <code>go get</code> runs in module mode, it must fetch the module containing the
+requested packages, as well as any new dependencies introduced by that module,
+updating your
+<a href="https://golang.google.cn/cmd/go/#hdr-The_go_mod_file" target="_blank" rel="noopener">go.mod</a> and
+<a href="https://golang.google.cn/cmd/go/#hdr-Module_downloading_and_verification" target="_blank" rel="noopener">go.sum</a>
+files as needed. Fetching modules from version control can be expensive in terms
+of latency and storage in your system: the <code>go</code> command may be forced to pull down
+the full commit history of a repository containing a transitive dependency, even
+one that isn’t being built, just to resolve its version.</p>
+<p>The solution is to use a module proxy, which speaks an API that is better suited
+to the <code>go</code> command’s needs (see <code>go help goproxy</code>). When <code>go get</code> runs in
+module mode with a proxy, it will work faster by only asking for the specific
+module metadata or source code it needs, and not worrying about the rest. Below is
+an example of how the <code>go</code> command may use a proxy with <code>go get</code> by requesting the list
+of versions, then the info, mod, and zip file for the latest tagged version.</p>
+
+<div class="image">
+  <img src="module-mirror-launch/proxy-protocol.png" width="800" alt=""/>
+</div>
+<p>A module mirror is a special kind of module proxy that caches metadata and
+source code in its own storage system, allowing the mirror to continue to serve
+source code that is no longer available from the original locations. This can
+speed up downloads and protect you from disappearing dependencies. See
+<a href="https://TheGoBlog.GitHub.io/modules2019" target="_blank" rel="noopener">Go Modules in 2019</a> for more information.</p>
+<p>The Go team maintains a module mirror, served at
+<a href="https://proxy.golang.org" target="_blank" rel="noopener">proxy.golang.org</a>, which the <code>go</code> command will use by
+default for module users as of Go 1.13. If you are running an earlier version of the <code>go</code>
+command, then you can use this service by setting
+<code>GOPROXY=https://proxy.golang.org</code> in your local environment.</p>
+
+
+    
+      
+  <h4 id="TOC_3.">Checksum Database</h4>
+  <p>Modules introduced the <code>go.sum</code> file, which is a list of SHA-256 hashes of the
+source code and <code>go.mod</code> files of each dependency when it was first downloaded.
+The <code>go</code> command can use the hashes to detect misbehavior by an origin server or
+proxy that gives you different code for the same version.</p>
+<p>The limitation of this <code>go.sum</code> file is that it works entirely by trust on <em>your</em>
+first use. When you add a version of a dependency that you’ve never seen before
+to your module (possibly by upgrading an existing dependency), the <code>go</code> command
+fetches the code and adds lines to the <code>go.sum</code> file on the fly. The problem is
+that those <code>go.sum</code> lines aren’t being checked against anyone else’s: they might
+be different from the <code>go.sum</code> lines that the <code>go</code> command just generated for
+someone else, perhaps because a proxy intentionally served malicious code
+targeted to you.</p>
+<p>Go&#39;s solution is a global source of <code>go.sum</code> lines, called a
+<a href="https://go.googlesource.com/proposal/+/master/design/25530-sumdb.md#checksum-database" target="_blank" rel="noopener">checksum database</a>,
+which ensures that the <code>go</code> command always adds the same lines to everyone&#39;s
+<code>go.sum</code> file. Whenever the <code>go</code> command receives new source code, it can verify the
+hash of that code against this global database to make sure the hashes match,
+ensuring that everyone is using the same code for a given version.</p>
+<p>The checksum database is served by <a href="https://sum.golang.org" target="_blank" rel="noopener">sum.golang.org</a>, and
+is built on a <a href="https://research.swtch.com/tlog" target="_blank" rel="noopener">Transparent Log</a> (or “Merkle
+tree”) of hashes backed by <a href="https://github.com/google/trillian" target="_blank" rel="noopener">Trillian</a>. The
+main advantage of a Merkle tree is that it is tamper proof and has properties
+that don’t allow for misbehavior to go undetected, which makes it more
+trustworthy than a simple database. The <code>go</code> command uses this tree to check
+“inclusion” proofs (that a specific record exists in the log) and “consistency”
+proofs (that the tree hasn’t been tampered with) before adding new <code>go.sum</code> lines
+to your module’s <code>go.sum</code> file. Below is an example of such a tree.</p>
+
+<div class="image">
+  <img src="module-mirror-launch/tree.png" width="800" alt=""/>
+</div>
+<p>The checksum database supports
+<a href="https://go.googlesource.com/proposal/+/master/design/25530-sumdb.md#checksum-database" target="_blank" rel="noopener">a set of endpoints</a>
+used by the <code>go</code> command to request and verify <code>go.sum</code> lines. The <code>/lookup</code>
+endpoint provides a “signed tree head” (STH) and the requested <code>go.sum</code> lines. The
+<code>/tile</code> endpoint provides chunks of the tree called <em>tiles</em> which the <code>go</code> command
+can use for proofs. Below is an example of how the <code>go</code> command may
+interact with the checksum database by doing a <code>/lookup</code> of a module version, then
+requesting the tiles required for the proofs.</p>
+
+<div class="image">
+  <img src="module-mirror-launch/sumdb-protocol.png" width="800" alt=""/>
+</div>
+<p>This checksum database allows the <code>go</code> command to safely use an otherwise
+untrusted proxy. Because there is an auditable security layer sitting on top of
+it, a proxy or origin server can’t intentionally, arbitrarily, or accidentally
+start giving you the wrong code without getting caught. Even the author of a
+module can’t move their tags around or otherwise change the bits associated with
+a specific version from one day to the next without the change being detected.</p>
+<p>If you are using Go 1.12 or earlier, you can manually check a <code>go.sum</code> file
+against the checksum database with
+<a href="https://godoc.org/golang.org/x/mod/gosumcheck" target="_blank" rel="noopener">gosumcheck</a>:</p>
+<pre><code>$ go get golang.org/x/mod/gosumcheck
+$ gosumcheck /path/to/go.sum
+</code></pre>
+<p>In addition to verification done by the <code>go</code> command, third-party
+auditors can hold the checksum database accountable by iterating over the log
+looking for bad entries. They can work together and gossip about the state of
+the tree as it grows to ensure that it remains uncompromised, and we hope that
+the Go community will run them.</p>
+
+
+    
+      
+  <h4 id="TOC_4.">Module Index</h4>
+  <p>The module index is served by <a href="https://index.golang.org" target="_blank" rel="noopener">index.golang.org</a>, and
+is a public feed of new module versions that become available through
+<a href="https://proxy.golang.org" target="_blank" rel="noopener">proxy.golang.org</a>. This is particularly useful for
+tool developers that want to keep their own cache of what’s available in
+<a href="https://proxy.golang.org" target="_blank" rel="noopener">proxy.golang.org</a>, or keep up-to-date on some of the
+newest modules that people are using.</p>
+
+
+    
+      
+  <h4 id="TOC_5.">Feedback or bugs</h4>
+  <p>We hope these services improve your experience with modules, and encourage you
+to <a href="https://github.com/golang/go/issues/new?title=proxy.golang.org" target="_blank" rel="noopener">file issues</a> if you run into
+problems or have feedback!</p>
+
+
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

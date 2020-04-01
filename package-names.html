@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/package-names" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>Package names | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>Package names</h2>
+    <p class="author">
+    Sameer Ajmani<br/>
+    4 February 2015
+    </p>
+    
+  
+  
+    
+      
+  <h4 id="TOC_1.">Introduction</h4>
+  <p>Go code is organized into packages.
+Within a package, code can refer to any identifier (name) defined within, while
+clients of the package may only reference the package&#39;s exported types,
+functions, constants, and variables.
+Such references always include the package name as a prefix: <code>foo.Bar</code> refers to
+the exported name <code>Bar</code> in the imported package named <code>foo</code>.</p>
+<p>Good package names make code better.
+A package&#39;s name provides context for its contents, making it easier for clients
+to understand what the package is for and how to use it.
+The name also helps package maintainers determine what does and does not belong
+in the package as it evolves.
+Well-named packages make it easier to find the code you need.</p>
+<p>Effective Go provides
+<a href="https://golang.google.cn/doc/effective_go.html#names" target="_blank" rel="noopener">guidelines</a> for naming
+packages, types, functions, and variables.
+This article expands on that discussion and surveys names found in the standard
+library.
+It also discusses bad package names and how to fix them.</p>
+
+
+    
+      
+  <h4 id="TOC_2.">Package names</h4>
+  <p>Good package names are short and clear.
+They are lower case, with no <code>under_scores</code> or <code>mixedCaps</code>.
+They are often simple nouns, such as:</p>
+<ul>
+<li><code>time</code> (provides functionality for measuring and displaying time)</li>
+<li><code>list</code> (implements a doubly linked list)</li>
+<li><code>http</code> (provides HTTP client and server implementations)</li>
+</ul>
+<p>The style of names typical of another language might not be idiomatic in a Go
+program.
+Here are two examples of names that might be good style in other languages but
+do not fit well in Go:</p>
+<ul>
+<li><code>computeServiceClient</code></li>
+<li><code>priority_queue</code></li>
+</ul>
+<p>A Go package may export several types and functions.
+For example, a <code>compute</code> package could export a <code>Client</code> type with methods for
+using the service as well as functions for partitioning a compute task across
+several clients.</p>
+<p><strong>Abbreviate judiciously.</strong>
+Package names may be abbreviated when the abbreviation is familiar to the
+programmer.
+Widely-used packages often have compressed names:</p>
+<ul>
+<li><code>strconv</code> (string conversion)</li>
+<li><code>syscall</code> (system call)</li>
+<li><code>fmt</code> (formatted I/O)</li>
+</ul>
+<p>On the other hand, if abbreviating a package name makes it ambiguous or unclear,
+don&#39;t do it.</p>
+<p><strong>Don&#39;t steal good names from the user.</strong>
+Avoid giving a package a name that is commonly used in client code.
+For example, the buffered I/O package is called <code>bufio</code>, not <code>buf</code>, since <code>buf</code>
+is a good variable name for a buffer.</p>
+
+
+    
+      
+  <h4 id="TOC_3.">Naming package contents</h4>
+  <p>A package name and its contents&#39; names are coupled, since client code uses them
+together.
+When designing a package, take the client&#39;s point of view.</p>
+<p><strong>Avoid stutter.</strong>
+Since client code uses the package name as a prefix when referring to the
+package contents, the names for those contents need not repeat the package name.
+The HTTP server provided by the <code>http</code> package is called <code>Server</code>, not
+<code>HTTPServer</code>.
+Client code refers to this type as <code>http.Server</code>, so there is no ambiguity.</p>
+<p><strong>Simplify function names.</strong>
+When a function in package pkg returns a value of type <code>pkg.Pkg</code> (or
+<code>*pkg.Pkg</code>), the function name can often omit the type name without confusion:</p>
+<pre><code>start := time.Now()                                  // start is a time.Time
+t, err := time.Parse(time.Kitchen, &#34;6:06PM&#34;)         // t is a time.Time
+ctx = context.WithTimeout(ctx, 10*time.Millisecond)  // ctx is a context.Context
+ip, ok := userip.FromContext(ctx)                    // ip is a net.IP
+</code></pre>
+<p>A function named <code>New</code> in package <code>pkg</code> returns a value of type <code>pkg.Pkg</code>.
+This is a standard entry point for client code using that type:</p>
+<pre><code> q := list.New()  // q is a *list.List
+</code></pre>
+<p>When a function returns a value of type <code>pkg.T</code>, where <code>T</code> is not <code>Pkg</code>, the
+function name may include <code>T</code> to make client code easier to understand.
+A common situation is a package with multiple New-like functions:</p>
+<pre><code>d, err := time.ParseDuration(&#34;10s&#34;)  // d is a time.Duration
+elapsed := time.Since(start)         // elapsed is a time.Duration
+ticker := time.NewTicker(d)          // ticker is a *time.Ticker
+timer := time.NewTimer(d)            // timer is a *time.Timer
+</code></pre>
+<p>Types in different packages can have the same name, because from the client&#39;s
+point of view such names are discriminated by the package name.
+For example, the standard library includes several types named <code>Reader</code>,
+including <code>jpeg.Reader</code>, <code>bufio.Reader</code>, and <code>csv.Reader</code>.
+Each package name fits with <code>Reader</code> to yield a good type name.</p>
+<p>If you cannot come up with a package name that&#39;s a meaningful prefix for the
+package&#39;s contents, the package abstraction boundary may be wrong.
+Write code that uses your package as a client would, and restructure your
+packages if the result seems poor.
+This approach will yield packages that are easier for clients to understand and
+for the package developers to maintain.</p>
+
+
+    
+      
+  <h4 id="TOC_4.">Package paths</h4>
+  <p>A Go package has both a name and a path.
+The package name is specified in the package statement of its source files;
+client code uses it as the prefix for the package&#39;s exported names.
+Client code uses the package path when importing the package.
+By convention, the last element of the package path is the package name:</p>
+<pre><code>import (
+    &#34;context&#34;                // package context
+    &#34;fmt&#34;                    // package fmt
+    &#34;golang.org/x/time/rate&#34; // package rate
+    &#34;os/exec&#34;                // package exec
+)
+</code></pre>
+<p>Build tools map package paths onto directories.
+The go tool uses the <a href="https://golang.google.cn/doc/code.html#GOPATH" target="_blank" rel="noopener">GOPATH</a>
+environment variable to find the source files for path <code>&#34;github.com/user/hello&#34;</code>
+in directory <code>$GOPATH/src/github.com/user/hello</code>.
+(This situation should be familiar, of course, but it&#39;s important to be clear
+about the terminology and structure of packages.)</p>
+<p><strong>Directories.</strong>
+The standard library uses like directories <code>crypto</code>, <code>container</code>, <code>encoding</code>,
+and <code>image</code> to group packages for related protocols and algorithms.
+There is no actual relationship among the packages in one of these directories;
+a directory just provides a way to arrange the files.
+Any package can import any other package provided the import does not create a
+cycle.</p>
+<p>Just as types in different packages can have the same name without ambiguity,
+packages in different directories can have the same name.
+For example,
+<a href="https://golang.google.cn/pkg/runtime/pprof" target="_blank" rel="noopener">runtime/pprof</a> provides profiling data
+in the format expected by the <a href="https://github.com/google/pprof" target="_blank" rel="noopener">pprof</a>
+profiling tool, while <a href="https://golang.google.cn/pkg/net/http/pprof" target="_blank" rel="noopener">net/http/pprof</a>
+provides HTTP endpoints to present profiling data in this format.
+Client code uses the package path to import the package, so there is no
+confusion.
+If a source file needs to import both <code>pprof</code> packages, it can
+<a href="https://golang.google.cn/ref/spec#Import_declarations" target="_blank" rel="noopener">rename</a> one or both locally.
+When renaming an imported package, the local name should follow the same
+guidelines as package names (lower case, no <code>under_scores</code> or <code>mixedCaps</code>).</p>
+
+
+    
+      
+  <h4 id="TOC_5.">Bad package names</h4>
+  <p>Bad package names make code harder to navigate and maintain.
+Here are some guidelines for recognizing and fixing bad names.</p>
+<p><strong>Avoid meaningless package names.</strong>
+Packages named <code>util</code>, <code>common</code>, or <code>misc</code> provide clients with no sense of what
+the package contains.
+This makes it harder for clients to use the package and makes it harder for
+maintainers to keep the package focused.
+Over time, they accumulate dependencies that can make compilation significantly
+and unnecessarily slower, especially in large programs.
+And since such package names are generic, they are more likely to collide with
+other packages imported by client code, forcing clients to invent names to
+distinguish them.</p>
+<p><strong>Break up generic packages.</strong>
+To fix such packages, look for types and functions with common name elements and
+pull them into their own package.
+For example, if you have</p>
+<pre><code>package util
+func NewStringSet(...string) map[string]bool {...}
+func SortStringSet(map[string]bool) []string {...}
+</code></pre>
+<p>then client code looks like</p>
+<pre><code>set := util.NewStringSet(&#34;c&#34;, &#34;a&#34;, &#34;b&#34;)
+fmt.Println(util.SortStringSet(set))
+</code></pre>
+<p>Pull these functions out of <code>util</code> into a new package, choosing a name that fits
+the contents:</p>
+<pre><code>package stringset
+func New(...string) map[string]bool {...}
+func Sort(map[string]bool) []string {...}
+</code></pre>
+<p>then the client code becomes</p>
+<pre><code>set := stringset.New(&#34;c&#34;, &#34;a&#34;, &#34;b&#34;)
+fmt.Println(stringset.Sort(set))
+</code></pre>
+<p>Once you&#39;ve made this change, its easier to see how to improve the new package:</p>
+<pre><code>package stringset
+type Set map[string]bool
+func New(...string) Set {...}
+func (s Set) Sort() []string {...}
+</code></pre>
+<p>which yields even simpler client code:</p>
+<pre><code>set := stringset.New(&#34;c&#34;, &#34;a&#34;, &#34;b&#34;)
+fmt.Println(set.Sort())
+</code></pre>
+<p>The name of the package is a critical piece of its design.
+Work to eliminate meaningless package names from your projects.</p>
+<p><strong>Don&#39;t use a single package for all your APIs.</strong>
+Many well-intentioned programmers put all the interfaces exposed by their
+program into a single package named <code>api</code>, <code>types</code>, or <code>interfaces</code>, thinking it
+makes it easier to find the entry points to their code base.
+This is a mistake.
+Such packages suffer from the same problems as those named <code>util</code> or <code>common</code>,
+growing without bound, providing no guidance to users, accumulating
+dependencies, and colliding with other imports.
+Break them up, perhaps using directories to separate public packages from
+implementation.</p>
+<p><strong>Avoid unnecessary package name collisions.</strong>
+While packages in different directories may have the same name, packages that
+are frequently used together should have distinct names.
+This reduces confusion and the need for local renaming in client code.
+For the same reason, avoid using the same name as popular standard packages like
+<code>io</code> or <code>http</code>.</p>
+
+
+    
+      
+  <h4 id="TOC_6.">Conclusion</h4>
+  <p>Package names are central to good naming in Go programs.
+Take the time to choose good package names and organize your code well.
+This helps clients understand and use your packages and helps maintainers to
+grow them gracefully.</p>
+
+
+    
+      
+  <h4 id="TOC_7.">Further reading</h4>
+  <ul>
+<li><a href="https://golang.google.cn/doc/effective_go.html" target="_blank" rel="noopener">Effective Go</a></li>
+<li><a href="https://golang.google.cn/doc/code.html" target="_blank" rel="noopener">How to Write Go Code</a></li>
+<li><a href="https://TheGoBlog.GitHub.io/organizing-go-code" target="_blank" rel="noopener">Organizing Go Code (2012 blog post)</a></li>
+<li><a href="https://talks.golang.org/2014/organizeio.slide" target="_blank" rel="noopener">Organizing Go Code (2014 Google I/O talk)</a></li>
+</ul>
+
+
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>
