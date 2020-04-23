@@ -6,6 +6,16 @@
 
 
 
+## [Go Developer Survey 2019 Results](/survey2019-results)
+
+> Todd Kulesza on 20 April 2020
+
+> `survey` `community` 
+
+<br>
+
+
+
 ## [Go, the Go Community, and the Pandemic](/pandemic)
 
 > Carmen Andoh, Russ Cox, and Steve Francia on 25 March 2020
