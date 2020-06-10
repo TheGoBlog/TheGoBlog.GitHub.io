@@ -6,6 +6,16 @@
 
 
 
+## [The VS Code Go extension joins the Go project](/vscode-go)
+
+> The Go team on 9 June 2020
+
+> 
+
+<br>
+
+
+
 ## [Go Developer Survey 2019 Results](/survey2019-results)
 
 > Todd Kulesza on 20 April 2020
