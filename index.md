@@ -6,6 +6,16 @@
 
 
 
+## [Pkg.go.dev is open source!](/pkgsite)
+
+> Julie Qiu on 15 June 2020
+
+> 
+
+<br>
+
+
+
 ## [The VS Code Go extension joins the Go project](/vscode-go)
 
 > The Go team on 9 June 2020
