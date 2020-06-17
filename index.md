@@ -6,6 +6,16 @@
 
 
 
+## [The Next Step for Generics](/generics-next-step)
+
+> Ian Lance Taylor and Robert Griesemer on 16 June 2020
+
+> `go2` `proposals` `generics` 
+
+<br>
+
+
+
 ## [Pkg.go.dev is open source!](/pkgsite)
 
 > Julie Qiu on 15 June 2020
