@@ -232,7 +232,7 @@ func AddOneToEachElement(slice []byte) {
 	}
 }
 
-</span></pre><pre contenteditable="true" spellcheck="false"><span num="22">func main() {</span>
+</span></pre><pre spellcheck="false"><span num="22">func main() {</span>
 <span num="23">    slice := buffer[10:20]</span>
 <span num="24">    for i := 0; i &lt; len(slice); i++ {</span>
 <span num="25">        slice[i] = byte(i)</span>
@@ -270,7 +270,7 @@ import (
 var buffer [256]byte
 var slice []byte = buffer[100:150]
 
-</span></pre><pre contenteditable="true" spellcheck="false"><span num="16">func SubtractOneFromLength(slice []byte) []byte {</span>
+</span></pre><pre spellcheck="false"><span num="16">func SubtractOneFromLength(slice []byte) []byte {</span>
 <span num="17">    slice = slice[0 : len(slice)-1]</span>
 <span num="18">    return slice</span>
 <span num="19">}</span>
@@ -317,7 +317,7 @@ import (
 var buffer [256]byte
 var slice []byte = buffer[100:150]
 
-</span></pre><pre contenteditable="true" spellcheck="false"><span num="16">func PtrSubtractOneFromLength(slicePtr *[]byte) {</span>
+</span></pre><pre spellcheck="false"><span num="16">func PtrSubtractOneFromLength(slicePtr *[]byte) {</span>
 <span num="17">    slice := *slicePtr</span>
 <span num="18">    *slicePtr = slice[0 : len(slice)-1]</span>
 <span num="19">}</span>
@@ -352,7 +352,7 @@ import (
 	&#34;fmt&#34;
 )
 
-</span></pre><pre contenteditable="true" spellcheck="false"><span num="14">type path []byte</span>
+</span></pre><pre spellcheck="false"><span num="14">type path []byte</span>
 <span num="15"></span>
 <span num="16">func (p *path) TruncateAtFinalSlash() {</span>
 <span num="17">    i := bytes.LastIndex(*p, []byte(&#34;/&#34;))</span>
@@ -390,7 +390,7 @@ import (
 	&#34;fmt&#34;
 )
 
-</span></pre><pre contenteditable="true" spellcheck="false"><span num="13">type path []byte</span>
+</span></pre><pre spellcheck="false"><span num="13">type path []byte</span>
 <span num="14"></span>
 <span num="15">func (p path) ToUpper() {</span>
 <span num="16">    for i, b := range p {</span>
@@ -454,7 +454,7 @@ func Extend(slice []int, element int) []int {
 	return slice
 }
 
-</span></pre><pre contenteditable="true" spellcheck="false"><span num="20">func main() {</span>
+</span></pre><pre spellcheck="false"><span num="20">func main() {</span>
 <span num="21">    var iBuffer [10]int</span>
 <span num="22">    slice := iBuffer[0:0]</span>
 <span num="23">    for i := 0; i &lt; 20; i++ {</span>
@@ -528,7 +528,7 @@ import (
 )
 
 func main() {
-</span></pre><pre contenteditable="true" spellcheck="false"><span num="14">    slice := make([]int, 10, 15)</span>
+</span></pre><pre spellcheck="false"><span num="14">    slice := make([]int, 10, 15)</span>
 <span num="15">    fmt.Printf(&#34;len: %d, cap: %d\n&#34;, len(slice), cap(slice))</span>
 </pre>
 <pre style="display: none"><span>}
@@ -551,7 +551,7 @@ import (
 )
 
 func main() {
-</span></pre><pre contenteditable="true" spellcheck="false"><span num="14">    slice := make([]int, 10, 15)</span>
+</span></pre><pre spellcheck="false"><span num="14">    slice := make([]int, 10, 15)</span>
 <span num="15">    fmt.Printf(&#34;len: %d, cap: %d\n&#34;, len(slice), cap(slice))</span>
 <span num="16">    newSlice := make([]int, len(slice), 2*cap(slice))</span>
 <span num="17">    for i := range slice {</span>
@@ -600,7 +600,7 @@ import (
 func main() {
 	slice := make([]int, 10, 15)
 	fmt.Printf(&#34;len: %d, cap: %d\n&#34;, len(slice), cap(slice))
-</span></pre><pre contenteditable="true" spellcheck="false"><span num="16">    newSlice := make([]int, len(slice), 2*cap(slice))</span>
+</span></pre><pre spellcheck="false"><span num="16">    newSlice := make([]int, len(slice), 2*cap(slice))</span>
 <span num="17">    copy(newSlice, slice)</span>
 </pre>
 <pre style="display: none"><span>	slice = newSlice
@@ -683,7 +683,7 @@ func Insert(slice []int, index, value int) []int {
 }
 
 func main() {
-</span></pre><pre contenteditable="true" spellcheck="false"><span num="28">    slice := make([]int, 10, 20) // Note capacity &gt; length: room to add element.</span>
+</span></pre><pre spellcheck="false"><span num="28">    slice := make([]int, 10, 20) // Note capacity &gt; length: room to add element.</span>
 <span num="29">    for i := range slice {</span>
 <span num="30">        slice[i] = i</span>
 <span num="31">    }</span>
@@ -758,7 +758,7 @@ func Extend(slice []int, element int) []int {
 }
 
 func main() {
-</span></pre><pre contenteditable="true" spellcheck="false"><span num="30">    slice := make([]int, 0, 5)</span>
+</span></pre><pre spellcheck="false"><span num="30">    slice := make([]int, 0, 5)</span>
 <span num="31">    for i := 0; i &lt; 10; i++ {</span>
 <span num="32">        slice = Extend(slice, i)</span>
 <span num="33">        fmt.Printf(&#34;len=%d cap=%d slice=%v\n&#34;, len(slice), cap(slice), slice)</span>
@@ -841,7 +841,7 @@ func Append(slice []int, items ...int) []int {
 }
 
 func main() {
-</span></pre><pre contenteditable="true" spellcheck="false"><span num="39">    slice := []int{0, 1, 2, 3, 4}</span>
+</span></pre><pre spellcheck="false"><span num="39">    slice := []int{0, 1, 2, 3, 4}</span>
 <span num="40">    fmt.Println(slice)</span>
 <span num="41">    slice = Append(slice, 5, 6, 7, 8)</span>
 <span num="42">    fmt.Println(slice)</span>
@@ -901,7 +901,7 @@ func Append(slice []int, items ...int) []int {
 }
 
 func main() {
-</span></pre><pre contenteditable="true" spellcheck="false"><span num="39">    slice1 := []int{0, 1, 2, 3, 4}</span>
+</span></pre><pre spellcheck="false"><span num="39">    slice1 := []int{0, 1, 2, 3, 4}</span>
 <span num="40">    slice2 := []int{55, 66, 77}</span>
 <span num="41">    fmt.Println(slice1)</span>
 <span num="42">    slice1 = Append(slice1, slice2...) // The &#39;...&#39; is essential!</span>
@@ -970,7 +970,7 @@ func Append(slice []int, elements ...int) []int {
 }
 
 func main() {
-</span></pre><pre contenteditable="true" spellcheck="false"><span num="32">    slice1 := []int{0, 1, 2, 3, 4}</span>
+</span></pre><pre spellcheck="false"><span num="32">    slice1 := []int{0, 1, 2, 3, 4}</span>
 <span num="33">    slice2 := []int{55, 66, 77}</span>
 <span num="34">    fmt.Println(slice1)</span>
 <span num="35">    slice1 = Append(slice1, slice2...) // The &#39;...&#39; is essential!</span>
@@ -1011,7 +1011,7 @@ import (
 )
 
 func main() {
-</span></pre><pre contenteditable="true" spellcheck="false"><span num="15">    // Create a couple of starter slices.</span>
+</span></pre><pre spellcheck="false"><span num="15">    // Create a couple of starter slices.</span>
 <span num="16">    slice := []int{1, 2, 3}</span>
 <span num="17">    slice2 := []int{55, 66, 77}</span>
 <span num="18">    fmt.Println(&#34;Start slice: &#34;, slice)</span>

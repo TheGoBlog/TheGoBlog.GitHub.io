@@ -157,7 +157,7 @@ import (
 	&#34;time&#34;
 )
 
-</span></pre><pre contenteditable="true" spellcheck="false"><span num="10">func main() {</span>
+</span></pre><pre spellcheck="false"><span num="10">func main() {</span>
 <span num="11">    stop := time.After(3 * time.Second)</span>
 <span num="12">    tick := time.NewTicker(1 * time.Second)</span>
 <span num="13">    defer tick.Stop()</span>
@@ -238,7 +238,7 @@ import (
 	&#34;log&#34;
 )
 
-</span></pre><pre contenteditable="true" spellcheck="false"><span num="11">func main() {</span>
+</span></pre><pre spellcheck="false"><span num="11">func main() {</span>
 <span num="12">    const filename = &#34;/tmp/file.txt&#34;</span>
 <span num="13"></span>
 <span num="14">    err := ioutil.WriteFile(filename, []byte(&#34;Hello, file system\n&#34;), 0644)</span>
@@ -323,7 +323,7 @@ import (
 	&#34;os&#34;
 )
 
-</span></pre><pre contenteditable="true" spellcheck="false"><span num="12">func main() {</span>
+</span></pre><pre spellcheck="false"><span num="12">func main() {</span>
 <span num="13">    l, err := net.Listen(&#34;tcp&#34;, &#34;127.0.0.1:4000&#34;)</span>
 <span num="14">    if err != nil {</span>
 <span num="15">        log.Fatal(err)</span>

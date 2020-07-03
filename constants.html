@@ -148,7 +148,7 @@ import &#34;fmt&#34;
 const typedHello string = &#34;Hello, 世界&#34;
 
 func main() {
-</span></pre><pre contenteditable="true" spellcheck="false"><span num="11">    var s string</span>
+</span></pre><pre spellcheck="false"><span num="11">    var s string</span>
 <span num="12">    s = typedHello</span>
 <span num="13">    fmt.Println(s)</span>
 </pre>
@@ -168,7 +168,7 @@ import &#34;fmt&#34;
 const typedHello string = &#34;Hello, 世界&#34;
 
 func main() {
-</span></pre><pre contenteditable="true" spellcheck="false"><span num="11">    type MyString string</span>
+</span></pre><pre spellcheck="false"><span num="11">    type MyString string</span>
 <span num="12">    var m MyString</span>
 <span num="13">    m = typedHello // Type error</span>
 <span num="14">    fmt.Println(m)</span>
@@ -192,7 +192,7 @@ const typedHello string = &#34;Hello, 世界&#34;
 func main() {
 	type MyString string
 	var m MyString
-</span></pre><pre contenteditable="true" spellcheck="false"><span num="13">    const myStringHello MyString = &#34;Hello, 世界&#34;</span>
+</span></pre><pre spellcheck="false"><span num="13">    const myStringHello MyString = &#34;Hello, 世界&#34;</span>
 <span num="14">    m = myStringHello // OK</span>
 <span num="15">    fmt.Println(m)</span>
 </pre>
@@ -214,7 +214,7 @@ const typedHello string = &#34;Hello, 世界&#34;
 func main() {
 	type MyString string
 	var m MyString
-</span></pre><pre contenteditable="true" spellcheck="false"><span num="13">    m = MyString(typedHello)</span>
+</span></pre><pre spellcheck="false"><span num="13">    m = MyString(typedHello)</span>
 <span num="14">    fmt.Println(m)</span>
 </pre>
 <pre style="display: none"><span>}
@@ -276,7 +276,7 @@ package main
 import &#34;fmt&#34;
 
 func main() {
-</span></pre><pre contenteditable="true" spellcheck="false"><span num="9">    fmt.Printf(&#34;%s&#34;, &#34;Hello, 世界&#34;)</span>
+</span></pre><pre spellcheck="false"><span num="9">    fmt.Printf(&#34;%s&#34;, &#34;Hello, 世界&#34;)</span>
 </pre>
 <pre style="display: none"><span>}
 </span></pre></div>
@@ -302,7 +302,7 @@ import &#34;fmt&#34;
 const hello = &#34;Hello, 世界&#34;
 
 func main() {
-</span></pre><pre contenteditable="true" spellcheck="false"><span num="11">    fmt.Printf(&#34;%T: %v\n&#34;, &#34;Hello, 世界&#34;, &#34;Hello, 世界&#34;)</span>
+</span></pre><pre spellcheck="false"><span num="11">    fmt.Printf(&#34;%T: %v\n&#34;, &#34;Hello, 世界&#34;, &#34;Hello, 世界&#34;)</span>
 <span num="12">    fmt.Printf(&#34;%T: %v\n&#34;, hello, hello)</span>
 </pre>
 <pre style="display: none"><span>}
@@ -323,7 +323,7 @@ type MyString string
 const myStringHello MyString = &#34;Hello, 世界&#34;
 
 func main() {
-</span></pre><pre contenteditable="true" spellcheck="false"><span num="13">    fmt.Printf(&#34;%T: %v\n&#34;, myStringHello, myStringHello)</span>
+</span></pre><pre spellcheck="false"><span num="13">    fmt.Printf(&#34;%T: %v\n&#34;, myStringHello, myStringHello)</span>
 </pre>
 <pre style="display: none"><span>}
 </span></pre></div>
@@ -356,7 +356,7 @@ package main
 import &#34;fmt&#34;
 
 func main() {
-</span></pre><pre contenteditable="true" spellcheck="false"><span num="9">    fmt.Printf(&#34;%T %v\n&#34;, 0, 0)</span>
+</span></pre><pre spellcheck="false"><span num="9">    fmt.Printf(&#34;%T %v\n&#34;, 0, 0)</span>
 <span num="10">    fmt.Printf(&#34;%T %v\n&#34;, 0.0, 0.0)</span>
 <span num="11">    fmt.Printf(&#34;%T %v\n&#34;, &#39;x&#39;, &#39;x&#39;)</span>
 <span num="12">    fmt.Printf(&#34;%T %v\n&#34;, 0i, 0i)</span>
@@ -383,7 +383,7 @@ package main
 import &#34;fmt&#34;
 
 func main() {
-</span></pre><pre contenteditable="true" spellcheck="false"><span num="9">    type MyBool bool</span>
+</span></pre><pre spellcheck="false"><span num="9">    type MyBool bool</span>
 <span num="10">    const True = true</span>
 <span num="11">    const TypedTrue bool = true</span>
 <span num="12">    var mb MyBool</span>
@@ -414,7 +414,7 @@ package main
 import &#34;fmt&#34;
 
 func main() {
-</span></pre><pre contenteditable="true" spellcheck="false"><span num="9">    type MyFloat64 float64</span>
+</span></pre><pre spellcheck="false"><span num="9">    type MyFloat64 float64</span>
 <span num="10">    const Zero = 0.0</span>
 <span num="11">    const TypedZero float64 = 0.0</span>
 <span num="12">    var mf MyFloat64</span>
@@ -441,7 +441,7 @@ import &#34;fmt&#34;
 func main() {
 	const Zero = 0.0
 	const TypedZero float64 = 0.0
-</span></pre><pre contenteditable="true" spellcheck="false"><span num="11">    var f32 float32</span>
+</span></pre><pre spellcheck="false"><span num="11">    var f32 float32</span>
 <span num="12">    f32 = 0.0</span>
 <span num="13">    f32 = Zero      // OK: Zero is untyped</span>
 <span num="14">    f32 = TypedZero // Bad: TypedZero is float64 not float32.</span>
@@ -474,7 +474,7 @@ import &#34;fmt&#34;
 func main() {
 	const Huge = 1e1000
 	// START OMIT
-</span></pre><pre contenteditable="true" spellcheck="false"><span num="10">    fmt.Println(Huge)</span>
+</span></pre><pre spellcheck="false"><span num="10">    fmt.Println(Huge)</span>
 </pre>
 <pre style="display: none"><span>	// STOP OMIT
 }
@@ -497,7 +497,7 @@ import &#34;fmt&#34;
 func main() {
 	const Huge = 1e1000
 	// START OMIT
-</span></pre><pre contenteditable="true" spellcheck="false"><span num="10">    fmt.Println(Huge / 1e999)</span>
+</span></pre><pre spellcheck="false"><span num="10">    fmt.Println(Huge / 1e999)</span>
 </pre>
 <pre style="display: none"><span>	// STOP OMIT
 }
@@ -527,7 +527,7 @@ import (
 )
 
 func main() {
-</span></pre><pre contenteditable="true" spellcheck="false"><span num="12">    pi := math.Pi</span>
+</span></pre><pre spellcheck="false"><span num="12">    pi := math.Pi</span>
 <span num="13">    fmt.Println(pi)</span>
 </pre>
 <pre style="display: none"><span>}
@@ -558,7 +558,7 @@ package main
 import &#34;fmt&#34;
 
 func main() {
-</span></pre><pre contenteditable="true" spellcheck="false"><span num="9">    type MyComplex128 complex128</span>
+</span></pre><pre spellcheck="false"><span num="9">    type MyComplex128 complex128</span>
 <span num="10">    const I = (0.0 + 1.0i)</span>
 <span num="11">    const TypedI complex128 = (0.0 + 1.0i)</span>
 <span num="12">    var mc MyComplex128</span>
@@ -599,7 +599,7 @@ import &#34;fmt&#34;
 
 func main() {
 	const Two = 2.0 + 0i
-</span></pre><pre contenteditable="true" spellcheck="false"><span num="10">    s := Two</span>
+</span></pre><pre spellcheck="false"><span num="10">    s := Two</span>
 <span num="11">    fmt.Printf(&#34;%T: %v\n&#34;, s, s)</span>
 </pre>
 <pre style="display: none"><span>}
@@ -620,7 +620,7 @@ import &#34;fmt&#34;
 
 func main() {
 	const Two = 2.0 + 0i
-</span></pre><pre contenteditable="true" spellcheck="false"><span num="10">    var f float64</span>
+</span></pre><pre spellcheck="false"><span num="10">    var f float64</span>
 <span num="11">    var g float64 = Two</span>
 <span num="12">    f = Two</span>
 <span num="13">    fmt.Println(f, &#34;and&#34;, g)</span>
@@ -650,7 +650,7 @@ package main
 import &#34;fmt&#34;
 
 func main() {
-</span></pre><pre contenteditable="true" spellcheck="false"><span num="9">    type MyInt int</span>
+</span></pre><pre spellcheck="false"><span num="9">    type MyInt int</span>
 <span num="10">    const Three = 3</span>
 <span num="11">    const TypedThree int = 3</span>
 <span num="12">    var mi MyInt</span>
@@ -699,7 +699,7 @@ package main
 
 func main() {
 	// START OMIT
-</span></pre><pre contenteditable="true" spellcheck="false"><span num="7">    var i8 int8 = 128 // Error: too large.</span>
+</span></pre><pre spellcheck="false"><span num="7">    var i8 int8 = 128 // Error: too large.</span>
 </pre>
 <pre style="display: none"><span>	// STOP OMIT
 	_ = i8
@@ -717,7 +717,7 @@ package main
 
 func main() {
 	// START OMIT
-</span></pre><pre contenteditable="true" spellcheck="false"><span num="7">    var u8 uint8 = -1 // Error: negative value.</span>
+</span></pre><pre spellcheck="false"><span num="7">    var u8 uint8 = -1 // Error: negative value.</span>
 </pre>
 <pre style="display: none"><span>	// STOP OMIT
 	_ = u8
@@ -733,7 +733,7 @@ func main() {
 package main
 
 func main() {
-</span></pre><pre contenteditable="true" spellcheck="false"><span num="7">    type Char byte</span>
+</span></pre><pre spellcheck="false"><span num="7">    type Char byte</span>
 <span num="8">    var c Char = &#39;世&#39; // Error: &#39;世&#39; has value 0x4e16, too large.</span>
 </pre>
 <pre style="display: none"><span>	_ = c
@@ -768,7 +768,7 @@ package main
 
 func main() {
 	// START OMIT
-</span></pre><pre contenteditable="true" spellcheck="false"><span num="7">    const MaxUint uint = -1 // Error: negative value</span>
+</span></pre><pre spellcheck="false"><span num="7">    const MaxUint uint = -1 // Error: negative value</span>
 </pre>
 <pre style="display: none"><span>	// STOP OMIT
 }
@@ -786,7 +786,7 @@ package main
 
 func main() {
 	// START OMIT
-</span></pre><pre contenteditable="true" spellcheck="false"><span num="7">    const MaxUint uint = uint(-1) // Error: negative value</span>
+</span></pre><pre spellcheck="false"><span num="7">    const MaxUint uint = uint(-1) // Error: negative value</span>
 </pre>
 <pre style="display: none"><span>	// STOP OMIT
 }
@@ -803,7 +803,7 @@ That is to say, this works:</p>
 package main
 
 func main() {
-</span></pre><pre contenteditable="true" spellcheck="false"><span num="7">    var u uint</span>
+</span></pre><pre spellcheck="false"><span num="7">    var u uint</span>
 <span num="8">    var v = -1</span>
 <span num="9">    u = uint(v)</span>
 </pre>
@@ -821,7 +821,7 @@ even an untyped constant, we&#39;d be back in forbidden territory:</p>
 package main
 
 func main() {
-</span></pre><pre contenteditable="true" spellcheck="false"><span num="7">    var u uint</span>
+</span></pre><pre spellcheck="false"><span num="7">    var u uint</span>
 <span num="8">    const v = -1</span>
 <span num="9">    u = uint(v) // Error: negative value</span>
 </pre>
@@ -843,7 +843,7 @@ package main
 
 func main() {
 	// START OMIT
-</span></pre><pre contenteditable="true" spellcheck="false"><span num="7">    const MaxUint uint = ^0 // Error: overflow</span>
+</span></pre><pre spellcheck="false"><span num="7">    const MaxUint uint = ^0 // Error: overflow</span>
 </pre>
 <pre style="display: none"><span>	// STOP OMIT
 }
@@ -867,7 +867,7 @@ package main
 import &#34;fmt&#34;
 
 func main() {
-</span></pre><pre contenteditable="true" spellcheck="false"><span num="9">    const MaxUint = ^uint(0)</span>
+</span></pre><pre spellcheck="false"><span num="9">    const MaxUint = ^uint(0)</span>
 <span num="10">    fmt.Printf(&#34;%x\n&#34;, MaxUint)</span>
 </pre>
 <pre style="display: none"><span>}
@@ -911,7 +911,7 @@ package main
 import &#34;fmt&#34;
 
 func main() {
-</span></pre><pre contenteditable="true" spellcheck="false"><span num="9">    var f float32 = 1</span>
+</span></pre><pre spellcheck="false"><span num="9">    var f float32 = 1</span>
 <span num="10">    var i int = 1.000</span>
 <span num="11">    var u uint32 = 1e3 - 99.0*10.0 - 9</span>
 <span num="12">    var c float64 = &#39;\x01&#39;</span>
@@ -936,7 +936,7 @@ package main
 import &#34;fmt&#34;
 
 func main() {
-</span></pre><pre contenteditable="true" spellcheck="false"><span num="9">    var f = &#39;a&#39; * 1.5</span>
+</span></pre><pre spellcheck="false"><span num="9">    var f = &#39;a&#39; * 1.5</span>
 <span num="10">    fmt.Println(f)</span>
 </pre>
 <pre style="display: none"><span>}

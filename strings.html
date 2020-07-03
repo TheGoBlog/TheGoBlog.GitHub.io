@@ -191,7 +191,7 @@ a complete program you can run (and edit) right in the browser:</p>
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-</span></pre><pre contenteditable="true" spellcheck="false"><span num="7">package main</span>
+</span></pre><pre spellcheck="false"><span num="7">package main</span>
 <span num="8"></span>
 <span num="9">import &#34;fmt&#34;</span>
 <span num="10"></span>
@@ -255,7 +255,7 @@ package main
 
 import &#34;fmt&#34;
 
-</span></pre><pre contenteditable="true" spellcheck="false"><span num="11">func main() {</span>
+</span></pre><pre spellcheck="false"><span num="11">func main() {</span>
 <span num="12">    const placeOfInterest = `⌘`</span>
 <span num="13"></span>
 <span num="14">    fmt.Printf(&#34;plain string: &#34;)</span>
@@ -392,7 +392,7 @@ package main
 import &#34;fmt&#34;
 
 func main() {
-</span></pre><pre contenteditable="true" spellcheck="false"><span num="12">    const nihongo = &#34;日本語&#34;</span>
+</span></pre><pre spellcheck="false"><span num="12">    const nihongo = &#34;日本語&#34;</span>
 <span num="13">    for index, runeValue := range nihongo {</span>
 <span num="14">        fmt.Printf(&#34;%#U starts at byte position %d\n&#34;, runeValue, index)</span>
 <span num="15">    }</span>
@@ -441,7 +441,7 @@ import (
 )
 
 func main() {
-</span></pre><pre contenteditable="true" spellcheck="false"><span num="15">    const nihongo = &#34;日本語&#34;</span>
+</span></pre><pre spellcheck="false"><span num="15">    const nihongo = &#34;日本語&#34;</span>
 <span num="16">    for i, w := 0, 0; i &lt; len(nihongo); i += w {</span>
 <span num="17">        runeValue, width := utf8.DecodeRuneInString(nihongo[i:])</span>
 <span num="18">        fmt.Printf(&#34;%#U starts at byte position %d\n&#34;, runeValue, i)</span>
