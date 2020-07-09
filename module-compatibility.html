@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/module-compatibility" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>Keeping Your Modules Compatible | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>Keeping Your Modules Compatible</h2>
+    <p class="author">
+    Jean de Klerk and Jonathan Amsterdam<br/>
+    7 July 2020
+    </p>
+    
+  
+  
+    
+      
+  <h4 id="TOC_1.">Introduction</h4>
+  <p>This post is part 5 in a series.</p>
+<ul>
+<li>Part 1 — <a href="/using-go-modules" target="_blank" rel="noopener">Using Go Modules</a></li>
+<li>Part 2 — <a href="/migrating-to-go-modules" target="_blank" rel="noopener">Migrating To Go Modules</a></li>
+<li>Part 3 — <a href="/publishing-go-modules" target="_blank" rel="noopener">Publishing Go Modules</a></li>
+<li>Part 4 — <a href="/v2-go-modules" target="_blank" rel="noopener">Go Modules: v2 and Beyond</a></li>
+<li><strong>Part 5 — Keeping Your Modules Compatible</strong> (this post)</li>
+</ul>
+<p>Your modules will evolve over time as you add new features, change behaviors, and reconsider parts of the module&#39;s public surface. As discussed in <a href="/v2-go-modules" target="_blank" rel="noopener">Go Modules: v2 and Beyond</a>, breaking changes to a v1+ module must happen as part of a major version bump (or by adopting a new module path).</p>
+<p>However, releasing a new major version is hard on your users. They have to find the new version, learn a new API, and change their code. And some users may never update, meaning you have to maintain two versions for your code forever. So it is usually better to change your existing package in a compatible way.</p>
+<p>In this post, we&#39;ll explore some techniques for introducing non-breaking changes. The common theme is: add, don’t change or remove. We’ll also talk about how to design your API for compatibility from the outset.</p>
+
+
+    
+      
+  <h4 id="TOC_2.">Adding to a function</h4>
+  <p>Often, breaking changes come in the form of new arguments to a function. We’ll describe some ways to deal with this sort of change, but first let’s look at a technique that doesn’t work.</p>
+<p>When adding new arguments with sensible defaults, it’s tempting to add them as a variadic parameter. To extend the function</p>
+<pre><code>func Run(name string)
+</code></pre>
+<p>with an additional <code>size</code> argument which defaults to zero, one might propose</p>
+<pre><code>func Run(name string, size ...int)
+</code></pre>
+<p>on the grounds that all existing call sites will continue to work. While that is true, other uses of <code>Run</code> could break, like this one:</p>
+<pre><code>package mypkg
+var runner func(string) = yourpkg.Run
+</code></pre>
+<p>The original <code>Run</code> function works here because its type is <code>func(string)</code>, but the new <code>Run</code> function’s type is <code>func(string, ...int)</code>, so the assignment fails at compile time.</p>
+<p>This example illustrates that call compatibility is not enough for backward compatibility. There is, in fact, no backward-compatible change you can make to a function’s signature.</p>
+<p>Instead of changing a function’s signature, add a new function. As an example, after the <code>context</code> package was introduced, it became common practice to pass a <code>context.Context</code> as the first argument to a function. However, stable APIs could not change an exported function to accept a <code>context.Context</code> because it would break all uses of that function.</p>
+<p>Instead, new functions were added. For example, the <code>database/sql</code> package&#39;s <code>Query</code> method’s signature was (and still is)</p>
+<pre><code>func (db *DB) Query(query string, args ...interface{}) (*Rows, error)
+</code></pre>
+<p>When the <code>context</code> package was created, the Go team added a new method to <code>database/sql</code>:</p>
+<pre><code>func (db *DB) QueryContext(ctx context.Context, query string, args ...interface{}) (*Rows, error)
+</code></pre>
+<p>To avoid copying code, the old method calls the new one:</p>
+<pre><code>func (db *DB) Query(query string, args ...interface{}) (*Rows, error) {
+    return db.QueryContext(context.Background(), query, args...)
+}
+</code></pre>
+<p>Adding a method allows users to migrate to the new API at their own pace. Since the methods read similarly and sort together, and <code>Context</code> is in the name of the new method, this extension of the <code>database/sql</code> API did not degrade readability or comprehension of the package.</p>
+<p>If you anticipate that a function may need more arguments in the future, you can plan ahead by making optional arguments a part of the function’s signature. The simplest way to do that is to add a single struct argument, as the <a href="https://pkg.go.dev/crypto/tls?tab=doc#Dial" target="_blank" rel="noopener">crypto/tls.Dial</a> function does:</p>
+<pre><code>func Dial(network, addr string, config *Config) (*Conn, error)
+</code></pre>
+<p>The TLS handshake conducted by <code>Dial</code> requires a network and address, but it has many other parameters with reasonable defaults. Passing a <code>nil</code> for <code>config</code> uses those defaults; passing a <code>Config</code> struct with some fields set will override the defaults for those fields. In the future, adding a new TLS configuration parameter only requires a new field on the <code>Config</code> struct, a change that is backward-compatible (almost always—see &#34;Maintaining struct compatibility&#34; below).</p>
+<p>Sometimes the techniques of adding a new function and adding options can be combined by making the options struct a method receiver. Consider the evolution of the <code>net</code> package’s ability to listen at a network address. Prior to Go 1.11, the <code>net</code> package provided only a <code>Listen</code> function with the signature</p>
+<pre><code>func Listen(network, address string) (Listener, error)
+</code></pre>
+<p>For Go 1.11, two features were added to <code>net</code> listening: passing a context, and allowing the caller to provide a “control function” to adjust the raw connection after creation but before binding. The result could have been a new function that took a context, network, address and control function. Instead, the package authors added a  <a href="https://pkg.go.dev/net@go1.11?tab=doc#ListenConfig" target="_blank" rel="noopener"><code>ListenConfig</code></a> struct in anticipation that more options might be needed someday. And rather than define a new top-level function with a cumbersome name, they added a <code>Listen</code> method to <code>ListenConfig</code>:</p>
+<pre><code>type ListenConfig struct {
+    Control func(network, address string, c syscall.RawConn) error
+}
+
+func (*ListenConfig) Listen(ctx context.Context, network, address string) (Listener, error)
+</code></pre>
+<p>Another way to provide new options in the future is the “Option types” pattern, where options are passed as variadic arguments, and each option is a function that changes the state of the value being constructed. They are described in more detail by Rob Pike&#39;s post <a href="https://commandcenter.blogspot.com/2014/01/self-referential-functions-and-design.html" target="_blank" rel="noopener">Self-referential functions and the design of options</a>. One widely used example is <a href="https://pkg.go.dev/google.golang.org/grpc?tab=doc" target="_blank" rel="noopener">google.golang.org/grpc</a>&#39;s <a href="https://pkg.go.dev/google.golang.org/grpc?tab=doc#DialOption" target="_blank" rel="noopener">DialOption</a>.</p>
+<p>Option types fulfill the same role as struct options in function arguments: they are an extensible way to pass behavior-modifying configuration. Deciding which to choose is largely a matter of style. Consider this simple usage of gRPC&#39;s <code>DialOption</code> option type:</p>
+<pre><code>grpc.Dial(&#34;some-target&#34;,
+  grpc.WithAuthority(&#34;some-authority&#34;),
+  grpc.WithMaxDelay(time.Second),
+  grpc.WithBlock())
+</code></pre>
+<p>This could also have been implemented as a struct option:</p>
+<pre><code>notgrpc.Dial(&#34;some-target&#34;, &amp;notgrpc.Options{
+  Authority: &#34;some-authority&#34;,
+  MaxDelay:  time.Minute,
+  Block:     true,
+})
+</code></pre>
+<p>Functional options have some downsides: they require writing the package name before the option for each call; they increase the size of the package namespace; and it&#39;s unclear what the behavior should be if the same option is provided twice. On the other hand, functions which take option structs require a parameter which might almost always be <code>nil</code>, which some find unattractive. And when a type’s zero value has a valid meaning, it is clumsy to specify that the option should have its default value, typically requiring a pointer or an additional boolean field.</p>
+<p>Either one is a reasonable choice for ensuring future extensibility of your module&#39;s public API.</p>
+
+
+    
+      
+  <h4 id="TOC_3.">Working with interfaces</h4>
+  <p>Sometimes, new features require changes to publicly-exposed interfaces: for example, an interface needs to be extended with new methods. Directly adding to an interface is a breaking change, though—how, then, can we support new methods on a publicly-exposed interface?</p>
+<p>The basic idea is to define a new interface with the new method, and then wherever the old interface is used, dynamically check whether the provided type is the older type or the newer type.</p>
+<p>Let&#39;s illustrate this with an example from the <a href="https://pkg.go.dev/archive/tar?tab=doc" target="_blank" rel="noopener"><code>archive/tar</code></a> package. <a href="https://pkg.go.dev/archive/tar?tab=doc#NewReader" target="_blank" rel="noopener"><code>tar.NewReader</code></a> accepts an <code>io.Reader</code>, but over time the Go team realized that it would be more efficient to skip from one file header to the next if you could call <a href="https://pkg.go.dev/io?tab=doc#Seeker" target="_blank" rel="noopener"><code>Seek</code></a>. But, they could not add a <code>Seek</code> method to <code>io.Reader</code>: that would break all implementers of <code>io.Reader</code>.</p>
+<p>Another ruled-out option was to change <code>tar.NewReader</code> to accept <a href="https://pkg.go.dev/io?tab=doc#ReadSeeker" target="_blank" rel="noopener"><code>io.ReadSeeker</code></a> rather than <code>io.Reader</code>, since it supports both <code>io.Reader</code> methods and <code>Seek</code> (by way of <code>io.Seeker</code>). But, as we saw above, changing a function signature is also a breaking change.</p>
+<p>So, they decided to keep <code>tar.NewReader</code> signature unchanged, but type check for (and support) <code>io.Seeker</code> in <code>tar.Reader</code> methods:</p>
+<pre><code>package tar
+
+type Reader struct {
+  r io.Reader
+}
+
+func NewReader(r io.Reader) *Reader {
+  return &amp;Reader{r: r}
+}
+
+func (r *Reader) Read(b []byte) (int, error) {
+  if rs, ok := r.r.(io.Seeker); ok {
+    // Use more efficient rs.Seek.
+  }
+  // Use less efficient r.r.Read.
+}
+</code></pre>
+<p>(See <a href="https://github.com/golang/go/blob/60f78765022a59725121d3b800268adffe78bde3/src/archive/tar/reader.go#L837" target="_blank" rel="noopener">reader.go</a> for the actual code.)</p>
+<p>When you run into a case where you want to add a method to an existing interface, you may be able to follow this strategy. Start by creating a new interface with your new method, or identify an existing interface with the new method. Next, identify the relevant functions that need to support it, type check for the second interface, and add code that uses it.</p>
+<p>This strategy only works when the old interface without the new method can still be supported, limiting the future extensibility of your module.</p>
+<p>Where possible, it is better to avoid this class of problem entirely. When designing constructors, for example, prefer to return concrete types. Working with concrete types allows you to add methods in the future without breaking users, unlike interfaces. That property allows your module to be extended more easily in the future.</p>
+<p>Tip: if you do need to use an interface but don&#39;t intend for users to implement it, you can add an unexported method. This prevents types defined outside your package from satisfying your interface without embedding, freeing you to add methods later without breaking user implementations. For example, see <a href="https://github.com/golang/go/blob/83b181c68bf332ac7948f145f33d128377a09c42/src/testing/testing.go#L564-L567" target="_blank" rel="noopener"><code>testing.TB</code>&#39;s <code>private()</code> function</a>.</p>
+<pre><code>type TB interface {
+    Error(args ...interface{})
+    Errorf(format string, args ...interface{})
+    // ...
+
+    // A private method to prevent users implementing the
+    // interface and so future additions to it will not
+    // violate Go 1 compatibility.
+    private()
+}
+</code></pre>
+<p>This topic is also explored in more detail in Jonathan Amsterdam&#39;s &#34;Detecting Incompatible API Changes&#34; talk (<a href="https://www.youtube.com/watch?v=JhdL5AkH-AQ" target="_blank" rel="noopener">video</a>, <a href="https://github.com/gophercon/2019-talks/blob/master/JonathanAmsterdam-DetectingIncompatibleAPIChanges/slides.pdf" target="_blank" rel="noopener">slides</a>).</p>
+
+
+    
+      
+  <h4 id="TOC_4.">Add configuration methods</h4>
+  <p>So far we&#39;ve talked about overt breaking changes, where changing a type or a function would cause users&#39; code to stop compiling. However, behavior changes can also break users, even if user code continues to compile. For example, many users expect <a href="https://pkg.go.dev/encoding/json?tab=doc#Decoder" target="_blank" rel="noopener"><code>json.Decoder</code></a> to ignore fields in the JSON that are not in the argument struct. When the Go team wanted to return an error in that case, they had to be careful. Doing so without an opt-in mechanism would mean that the many users relying on those methods might start receiving errors where they hadn’t before.</p>
+<p>So, rather than changing the behavior for all users, they added a configuration method to the <code>Decoder</code> struct: <a href="https://pkg.go.dev/encoding/json?tab=doc#Decoder.DisallowUnknownFields" target="_blank" rel="noopener"><code>Decoder.DisallowUnknownFields</code></a>. Calling this method opts a user in to the new behavior, but not doing so preserves the old behavior for existing users.</p>
+
+
+    
+      
+  <h4 id="TOC_5.">Maintaining struct compatibility</h4>
+  <p>We saw above that any change to a function’s signature is a breaking change. The situation is much better with structs. If you have an exported struct type, you can almost always add a field or remove an unexported field without breaking compatibility. When adding a field, make sure that its zero value is meaningful and preserves the old behavior, so that existing code that doesn’t set the field continues to work.</p>
+<p>Recall that the authors of the <code>net</code> package added <code>ListenConfig</code> in Go 1.11 because they thought more options might be forthcoming. Turns out they were right. In Go 1.13, the <a href="https://pkg.go.dev/net@go1.13?tab=doc#ListenConfig" target="_blank" rel="noopener"><code>KeepAlive</code> field</a> was added to allow for disabling keep-alive or changing its period. The default value of zero preserves the original behavior of enabling keep-alive with a default period.</p>
+<p>There is one subtle way a new field can break user code unexpectedly. If all the field types in a struct are comparable—meaning values of those types can be compared with <code>==</code> and <code>!=</code> and used as a map key—then the overall struct type is comparable too. In this case, adding a new field of uncomparable type will make the overall struct type non-comparable, breaking any code that compares values of that struct type.</p>
+<p>To keep a struct comparable, don’t add non-comparable fields to it. You can write a test for that, or rely on the upcoming <a href="https://pkg.go.dev/golang.org/x/exp/cmd/gorelease?tab=doc" target="_blank" rel="noopener">gorelease</a> tool to catch it.</p>
+<p>To prevent comparison in the first place, make sure the struct has a non-comparable field. It may have one already—no slice, map or function type is comparable—but if not, one can be added like so:</p>
+<pre><code>type Point struct {
+        _ [0]func()
+        X int
+        Y int
+}
+</code></pre>
+<p>The <code>func()</code> type is not comparable, and the zero-length array takes up no space. We can define a type to clarify our intent:</p>
+<pre><code>type doNotCompare [0]func()
+
+type Point struct {
+        doNotCompare
+        X int
+        Y int
+}
+</code></pre>
+<p>Should you use <code>doNotCompare</code> in your structs? If you’ve defined the struct to be used as a pointer—that is, it has pointer methods and perhaps a <code>NewXXX</code> constructor function that returns a pointer—then adding a <code>doNotCompare</code> field is probably overkill. Users of a pointer type understand that each value of the type is distinct: that if they want to compare two values, they should compare the pointers.</p>
+<p>If you are defining a struct intended to be used as a value directly, like our <code>Point</code> example, then quite often you want it to be comparable. In the uncommon case that you have a value struct that you don’t want compared, then adding a <code>doNotCompare</code> field will give you the freedom to change the struct later without having to worry about breaking comparisons. On the downside, the type won’t be usable as a map key.</p>
+
+
+    
+      
+  <h4 id="TOC_6.">Conclusion</h4>
+  <p>When planning an API from scratch, consider carefully how extensible the API will be to new changes in the future. And when you do need to add new features, remember the rule: add, don&#39;t change or remove, keeping in mind the exceptions—interfaces, function arguments, and return values can&#39;t be added in backwards-compatible ways.</p>
+<p>If you need to dramatically change an API, or if an API begins to lose its focus as more features are added, then it may be time for a new major version. But most of the time, making a backwards-compatible change is easy and avoids causing pain for your users.</p>
+
+
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>
