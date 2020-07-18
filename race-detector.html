@@ -105,18 +105,8 @@ uses the <a href="https://golang.google.cn/pkg/time/#Timer.Reset" target="_blank
 schedule the next message, re-using the <code>Timer</code> each time.</p>
 
   
-	<div class="playground">
-<pre style="display: none"><span>// +build OMIT
-
-package main
-
-import (
-	&#34;fmt&#34;
-	&#34;math/rand&#34;
-	&#34;time&#34;
-)
-
-</span></pre><pre class="numbers"><span num="11">func main() {</span>
+	<div>
+<pre class="numbers"><span num="11">func main() {</span>
 <span num="12">    start := time.Now()</span>
 <span num="13">    var t *time.Timer</span>
 <span num="14">    t = time.AfterFunc(randomDuration(), func() {</span>
@@ -172,18 +162,8 @@ value to <code>t</code> and so the call to <code>t.Reset</code> is made with a n
 <code>t</code> only from the main goroutine:</p>
 
   
-	<div class="playground">
-<pre style="display: none"><span>// +build OMIT
-
-package main
-
-import (
-	&#34;fmt&#34;
-	&#34;math/rand&#34;
-	&#34;time&#34;
-)
-
-</span></pre><pre class="numbers"><span num="11">func main() {</span>
+	<div>
+<pre class="numbers"><span num="11">func main() {</span>
 <span num="12">    start := time.Now()</span>
 <span num="13">    reset := make(chan bool)</span>
 <span num="14">    var t *time.Timer</span>
@@ -197,11 +177,7 @@ import (
 <span num="22">    }</span>
 <span num="23">}</span>
 </pre>
-<pre style="display: none"><span>
-func randomDuration() time.Duration {
-	return time.Duration(rand.Int63n(1e9))
-}
-</span></pre></div>
+</div>
   
 <p>Here the main goroutine is wholly responsible for setting and resetting the
 <code>Timer</code> <code>t</code> and a new reset channel communicates the need to reset the timer in

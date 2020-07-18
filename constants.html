@@ -138,87 +138,43 @@ This means that <code>typedHello</code> has Go type <code>string</code>, and can
 That is to say, this code works:</p>
 
   
-	<div class="playground">
-<pre style="display: none"><span>// +build OMIT
-
-package main
-
-import &#34;fmt&#34;
-
-const typedHello string = &#34;Hello, 世界&#34;
-
-func main() {
-</span></pre><pre><span num="11">    var s string</span>
+	<div>
+<pre><span num="11">    var s string</span>
 <span num="12">    s = typedHello</span>
 <span num="13">    fmt.Println(s)</span>
 </pre>
-<pre style="display: none"><span>}
-</span></pre></div>
+</div>
   
 <p>but this does not:</p>
 
   
-	<div class="playground">
-<pre style="display: none"><span>// +build OMIT
-
-package main
-
-import &#34;fmt&#34;
-
-const typedHello string = &#34;Hello, 世界&#34;
-
-func main() {
-</span></pre><pre><span num="11">    type MyString string</span>
+	<div>
+<pre><span num="11">    type MyString string</span>
 <span num="12">    var m MyString</span>
 <span num="13">    m = typedHello // Type error</span>
 <span num="14">    fmt.Println(m)</span>
 </pre>
-<pre style="display: none"><span>}
-</span></pre></div>
+</div>
   
 <p>The variable <code>m</code> has type <code>MyString</code> and cannot be assigned a value of a different type.
 It can only be assigned values of type <code>MyString</code>, like this:</p>
 
   
-	<div class="playground">
-<pre style="display: none"><span>// +build OMIT
-
-package main
-
-import &#34;fmt&#34;
-
-const typedHello string = &#34;Hello, 世界&#34;
-
-func main() {
-	type MyString string
-	var m MyString
-</span></pre><pre><span num="13">    const myStringHello MyString = &#34;Hello, 世界&#34;</span>
+	<div>
+<pre><span num="13">    const myStringHello MyString = &#34;Hello, 世界&#34;</span>
 <span num="14">    m = myStringHello // OK</span>
 <span num="15">    fmt.Println(m)</span>
 </pre>
-<pre style="display: none"><span>}
-</span></pre></div>
+</div>
   
 <p>or by forcing the issue with a conversion, like this:</p>
 
   
-	<div class="playground">
-<pre style="display: none"><span>// +build OMIT
-
-package main
-
-import &#34;fmt&#34;
-
-const typedHello string = &#34;Hello, 世界&#34;
-
-func main() {
-	type MyString string
-	var m MyString
-</span></pre><pre><span num="13">    m = MyString(typedHello)</span>
+	<div>
+<pre><span num="13">    m = MyString(typedHello)</span>
 <span num="14">    fmt.Println(m)</span>
 </pre>
-<pre style="display: none"><span>}
-</span></pre></div>
+</div>
   
 <p>Returning to our <em>untyped</em> string constant,
 it has the helpful property that, since it has no type,
@@ -268,18 +224,10 @@ Sometimes when we use a constant, however, the destination of the value is not s
 For instance consider this statement:</p>
 
   
-	<div class="playground">
-<pre style="display: none"><span>// +build OMIT
-
-package main
-
-import &#34;fmt&#34;
-
-func main() {
-</span></pre><pre><span num="9">    fmt.Printf(&#34;%s&#34;, &#34;Hello, 世界&#34;)</span>
+	<div>
+<pre><span num="9">    fmt.Printf(&#34;%s&#34;, &#34;Hello, 世界&#34;)</span>
 </pre>
-<pre style="display: none"><span>}
-</span></pre></div>
+</div>
   
 <p>The signature of <code>fmt.Printf</code> is</p>
 <pre><code>func Printf(format string, a ...interface{}) (n int, err error)
@@ -292,41 +240,19 @@ This process is analogous to what we saw earlier when declaring an initialized v
 the value and <code>%T</code> to print the type of the value being passed to <code>fmt.Printf</code>:</p>
 
   
-	<div class="playground">
-<pre style="display: none"><span>// +build OMIT
-
-package main
-
-import &#34;fmt&#34;
-
-const hello = &#34;Hello, 世界&#34;
-
-func main() {
-</span></pre><pre><span num="11">    fmt.Printf(&#34;%T: %v\n&#34;, &#34;Hello, 世界&#34;, &#34;Hello, 世界&#34;)</span>
+	<div>
+<pre><span num="11">    fmt.Printf(&#34;%T: %v\n&#34;, &#34;Hello, 世界&#34;, &#34;Hello, 世界&#34;)</span>
 <span num="12">    fmt.Printf(&#34;%T: %v\n&#34;, hello, hello)</span>
 </pre>
-<pre style="display: none"><span>}
-</span></pre></div>
+</div>
   
 <p>If the constant has a type, that goes into the interface, as this example shows:</p>
 
   
-	<div class="playground">
-<pre style="display: none"><span>// +build OMIT
-
-package main
-
-import &#34;fmt&#34;
-
-type MyString string
-
-const myStringHello MyString = &#34;Hello, 世界&#34;
-
-func main() {
-</span></pre><pre><span num="13">    fmt.Printf(&#34;%T: %v\n&#34;, myStringHello, myStringHello)</span>
+	<div>
+<pre><span num="13">    fmt.Printf(&#34;%T: %v\n&#34;, myStringHello, myStringHello)</span>
 </pre>
-<pre style="display: none"><span>}
-</span></pre></div>
+</div>
   
 <p>(For more information about how interface values work,
 see the first sections of <a href="https://TheGoBlog.GitHub.io/laws-of-reflection" target="_blank" rel="noopener">this blog post</a>.)</p>
@@ -348,21 +274,13 @@ and imaginary constants to <code>complex128</code>.
 Here&#39;s our canonical print statement used repeatedly to show the default types in action:</p>
 
   
-	<div class="playground">
-<pre style="display: none"><span>// +build OMIT
-
-package main
-
-import &#34;fmt&#34;
-
-func main() {
-</span></pre><pre><span num="9">    fmt.Printf(&#34;%T %v\n&#34;, 0, 0)</span>
+	<div>
+<pre><span num="9">    fmt.Printf(&#34;%T %v\n&#34;, 0, 0)</span>
 <span num="10">    fmt.Printf(&#34;%T %v\n&#34;, 0.0, 0.0)</span>
 <span num="11">    fmt.Printf(&#34;%T %v\n&#34;, &#39;x&#39;, &#39;x&#39;)</span>
 <span num="12">    fmt.Printf(&#34;%T %v\n&#34;, 0i, 0i)</span>
 </pre>
-<pre style="display: none"><span>}
-</span></pre></div>
+</div>
   
 <p>(Exercise: Explain the result for <code>&#39;x&#39;</code>.)</p>
 
@@ -375,15 +293,8 @@ The values <code>true</code> and <code>false</code> are untyped boolean constant
 but once given a type, boolean variables cannot be mixed:</p>
 
   
-	<div class="playground">
-<pre style="display: none"><span>// +build OMIT
-
-package main
-
-import &#34;fmt&#34;
-
-func main() {
-</span></pre><pre><span num="9">    type MyBool bool</span>
+	<div>
+<pre><span num="9">    type MyBool bool</span>
 <span num="10">    const True = true</span>
 <span num="11">    const TypedTrue bool = true</span>
 <span num="12">    var mb MyBool</span>
@@ -392,8 +303,7 @@ func main() {
 <span num="15">    mb = TypedTrue // Bad</span>
 <span num="16">    fmt.Println(mb)</span>
 </pre>
-<pre style="display: none"><span>}
-</span></pre></div>
+</div>
   
 <p>Run the example and see what happens, then comment out the &#34;Bad&#34; line and run it again.
 The pattern here follows exactly that of string constants.</p>
@@ -406,15 +316,8 @@ The pattern here follows exactly that of string constants.</p>
 Our standard example works as expected in translation:</p>
 
   
-	<div class="playground">
-<pre style="display: none"><span>// +build OMIT
-
-package main
-
-import &#34;fmt&#34;
-
-func main() {
-</span></pre><pre><span num="9">    type MyFloat64 float64</span>
+	<div>
+<pre><span num="9">    type MyFloat64 float64</span>
 <span num="10">    const Zero = 0.0</span>
 <span num="11">    const TypedZero float64 = 0.0</span>
 <span num="12">    var mf MyFloat64</span>
@@ -423,32 +326,21 @@ func main() {
 <span num="15">    mf = TypedZero // Bad</span>
 <span num="16">    fmt.Println(mf)</span>
 </pre>
-<pre style="display: none"><span>}
-</span></pre></div>
+</div>
   
 <p>One wrinkle is that there are <em>two</em> floating-point types in Go: <code>float32</code> and <code>float64</code>.
 The default type for a floating-point constant is <code>float64</code>, although an untyped floating-point
 constant can be assigned to a <code>float32</code> value just fine:</p>
 
   
-	<div class="playground">
-<pre style="display: none"><span>// +build OMIT
-
-package main
-
-import &#34;fmt&#34;
-
-func main() {
-	const Zero = 0.0
-	const TypedZero float64 = 0.0
-</span></pre><pre><span num="11">    var f32 float32</span>
+	<div>
+<pre><span num="11">    var f32 float32</span>
 <span num="12">    f32 = 0.0</span>
 <span num="13">    f32 = Zero      // OK: Zero is untyped</span>
 <span num="14">    f32 = TypedZero // Bad: TypedZero is float64 not float32.</span>
 <span num="15">    fmt.Println(f32)</span>
 </pre>
-<pre style="display: none"><span>}
-</span></pre></div>
+</div>
   
 <p>Floating-point values are a good place to introduce the concept of overflow, or the range of values.</p>
 <p>Numeric constants live in an arbitrary-precision numeric space; they are just regular numbers.
@@ -464,21 +356,10 @@ We can declare a constant with a very large value:</p>
 <p>—that&#39;s just a number, after all—but we can&#39;t assign it or even print it. This statement won&#39;t even compile:</p>
 
   
-	<div class="playground">
-<pre style="display: none"><span>// +build OMIT
-
-package main
-
-import &#34;fmt&#34;
-
-func main() {
-	const Huge = 1e1000
-	// START OMIT
-</span></pre><pre><span num="10">    fmt.Println(Huge)</span>
+	<div>
+<pre><span num="10">    fmt.Println(Huge)</span>
 </pre>
-<pre style="display: none"><span>	// STOP OMIT
-}
-</span></pre></div>
+</div>
   
 <p>The error is, &#34;constant 1.00000e+1000 overflows float64&#34;, which is true.
 But <code>Huge</code> might be useful: we can use it in expressions with other constants
@@ -487,21 +368,10 @@ can be represented in the range of a <code>float64</code>.
 The statement,</p>
 
   
-	<div class="playground">
-<pre style="display: none"><span>// +build OMIT
-
-package main
-
-import &#34;fmt&#34;
-
-func main() {
-	const Huge = 1e1000
-	// START OMIT
-</span></pre><pre><span num="10">    fmt.Println(Huge / 1e999)</span>
+	<div>
+<pre><span num="10">    fmt.Println(Huge / 1e999)</span>
 </pre>
-<pre style="display: none"><span>	// STOP OMIT
-}
-</span></pre></div>
+</div>
   
 <p>prints <code>10</code>, as one would expect.</p>
 <p>In a related way, floating-point constants may have very high precision,
@@ -516,22 +386,11 @@ the assignment will create the <code>float64</code> (or <code>float32</code>)
 value closest to the high-precision value. This snippet</p>
 
   
-	<div class="playground">
-<pre style="display: none"><span>// +build OMIT
-
-package main
-
-import (
-	&#34;fmt&#34;
-	&#34;math&#34;
-)
-
-func main() {
-</span></pre><pre><span num="12">    pi := math.Pi</span>
+	<div>
+<pre><span num="12">    pi := math.Pi</span>
 <span num="13">    fmt.Println(pi)</span>
 </pre>
-<pre style="display: none"><span>}
-</span></pre></div>
+</div>
   
 <p>prints <code>3.141592653589793</code>.</p>
 <p>Having so many digits available means that calculations like <code>Pi/2</code> or other
@@ -550,15 +409,8 @@ and when everything is a number there&#39;s no such thing as &#34;not a number&#
 Here&#39;s a version of our now-familiar litany translated into complex numbers:</p>
 
   
-	<div class="playground">
-<pre style="display: none"><span>// +build OMIT
-
-package main
-
-import &#34;fmt&#34;
-
-func main() {
-</span></pre><pre><span num="9">    type MyComplex128 complex128</span>
+	<div>
+<pre><span num="9">    type MyComplex128 complex128</span>
 <span num="10">    const I = (0.0 + 1.0i)</span>
 <span num="11">    const TypedI complex128 = (0.0 + 1.0i)</span>
 <span num="12">    var mc MyComplex128</span>
@@ -567,8 +419,7 @@ func main() {
 <span num="15">    mc = TypedI       // Bad</span>
 <span num="16">    fmt.Println(mc)</span>
 </pre>
-<pre style="display: none"><span>}
-</span></pre></div>
+</div>
   
 <p>The default type of a complex number is <code>complex128</code>, the larger-precision version composed of two <code>float64</code> values.</p>
 <p>For clarity in our example, we wrote out the full expression <code>(0.0+1.0i)</code>,
@@ -590,20 +441,11 @@ Even though it has no imaginary part, the <em>syntax</em> of the expression defi
 Therefore, if we use it to declare a variable, the default type will be <code>complex128</code>. The snippet</p>
 
   
-	<div class="playground">
-<pre style="display: none"><span>// +build OMIT
-
-package main
-
-import &#34;fmt&#34;
-
-func main() {
-	const Two = 2.0 + 0i
-</span></pre><pre><span num="10">    s := Two</span>
+	<div>
+<pre><span num="10">    s := Two</span>
 <span num="11">    fmt.Printf(&#34;%T: %v\n&#34;, s, s)</span>
 </pre>
-<pre style="display: none"><span>}
-</span></pre></div>
+</div>
   
 <p>prints <code>complex128:</code> <code>(2+0i)</code>.
 But numerically, <code>Two</code> can be stored in a scalar floating-point number,
@@ -611,22 +453,13 @@ a <code>float64</code> or <code>float32</code>, with no loss of information.
 Thus we can assign <code>Two</code> to a <code>float64</code>, either in an initialization or an assignment, without problems:</p>
 
   
-	<div class="playground">
-<pre style="display: none"><span>// +build OMIT
-
-package main
-
-import &#34;fmt&#34;
-
-func main() {
-	const Two = 2.0 + 0i
-</span></pre><pre><span num="10">    var f float64</span>
+	<div>
+<pre><span num="10">    var f float64</span>
 <span num="11">    var g float64 = Two</span>
 <span num="12">    f = Two</span>
 <span num="13">    fmt.Println(f, &#34;and&#34;, g)</span>
 </pre>
-<pre style="display: none"><span>}
-</span></pre></div>
+</div>
   
 <p>The output is <code>2</code> <code>and</code> <code>2</code>.
 Even though <code>Two</code> is a complex constant, it can be assigned to scalar floating-point variables.
@@ -642,15 +475,8 @@ they play by the same rules.
 For the last time, here is our familiar example, using just <code>int</code> this time:</p>
 
   
-	<div class="playground">
-<pre style="display: none"><span>// +build OMIT
-
-package main
-
-import &#34;fmt&#34;
-
-func main() {
-</span></pre><pre><span num="9">    type MyInt int</span>
+	<div>
+<pre><span num="9">    type MyInt int</span>
 <span num="10">    const Three = 3</span>
 <span num="11">    const TypedThree int = 3</span>
 <span num="12">    var mi MyInt</span>
@@ -659,8 +485,7 @@ func main() {
 <span num="15">    mi = TypedThree // Bad</span>
 <span num="16">    fmt.Println(mi)</span>
 </pre>
-<pre style="display: none"><span>}
-</span></pre></div>
+</div>
   
 <p>The same example could be built for any of the integer types, which are:</p>
 <pre><code>int int8 int16 int32 int64
@@ -692,53 +517,28 @@ For instance, <code>int8</code> has range -128 through 127,
 so constants outside of that range can never be assigned to a variable of type <code>int8</code>:</p>
 
   
-	<div class="playground">
-<pre style="display: none"><span>// +build OMIT
-
-package main
-
-func main() {
-	// START OMIT
-</span></pre><pre><span num="7">    var i8 int8 = 128 // Error: too large.</span>
+	<div>
+<pre><span num="7">    var i8 int8 = 128 // Error: too large.</span>
 </pre>
-<pre style="display: none"><span>	// STOP OMIT
-	_ = i8
-}
-</span></pre></div>
+</div>
   
 <p>Similarly, <code>uint8</code>, also known as <code>byte</code>,
 has range 0 through 255, so a large or negative constant cannot be assigned to a <code>uint8</code>:</p>
 
   
-	<div class="playground">
-<pre style="display: none"><span>// +build OMIT
-
-package main
-
-func main() {
-	// START OMIT
-</span></pre><pre><span num="7">    var u8 uint8 = -1 // Error: negative value.</span>
+	<div>
+<pre><span num="7">    var u8 uint8 = -1 // Error: negative value.</span>
 </pre>
-<pre style="display: none"><span>	// STOP OMIT
-	_ = u8
-}
-</span></pre></div>
+</div>
   
 <p>This type-checking can catch mistakes like this one:</p>
 
   
-	<div class="playground">
-<pre style="display: none"><span>// +build OMIT
-
-package main
-
-func main() {
-</span></pre><pre><span num="7">    type Char byte</span>
+	<div>
+<pre><span num="7">    type Char byte</span>
 <span num="8">    var c Char = &#39;世&#39; // Error: &#39;世&#39; has value 0x4e16, too large.</span>
 </pre>
-<pre style="display: none"><span>	_ = c
-}
-</span></pre></div>
+</div>
   
 <p>If the compiler complains about your use of a constant, it&#39;s likely a real bug like this.</p>
 
@@ -761,73 +561,43 @@ largest unsigned integer.
 We therefore might think we could write</p>
 
   
-	<div class="playground">
-<pre style="display: none"><span>// +build OMIT
-
-package main
-
-func main() {
-	// START OMIT
-</span></pre><pre><span num="7">    const MaxUint uint = -1 // Error: negative value</span>
+	<div>
+<pre><span num="7">    const MaxUint uint = -1 // Error: negative value</span>
 </pre>
-<pre style="display: none"><span>	// STOP OMIT
-}
-</span></pre></div>
+</div>
   
 <p>but that is illegal because -1 cannot be represented by an unsigned variable;
 <code>-1</code> is not in the range of unsigned values.
 A conversion won&#39;t help either, for the same reason:</p>
 
   
-	<div class="playground">
-<pre style="display: none"><span>// +build OMIT
-
-package main
-
-func main() {
-	// START OMIT
-</span></pre><pre><span num="7">    const MaxUint uint = uint(-1) // Error: negative value</span>
+	<div>
+<pre><span num="7">    const MaxUint uint = uint(-1) // Error: negative value</span>
 </pre>
-<pre style="display: none"><span>	// STOP OMIT
-}
-</span></pre></div>
+</div>
   
 <p>Even though at run-time a value of -1 can be converted to an unsigned integer, the rules
 for constant <a href="https://golang.google.cn/ref/spec#Conversions" target="_blank" rel="noopener">conversions</a> forbid this kind of coercion at compile time.
 That is to say, this works:</p>
 
   
-	<div class="playground">
-<pre style="display: none"><span>// +build OMIT
-
-package main
-
-func main() {
-</span></pre><pre><span num="7">    var u uint</span>
+	<div>
+<pre><span num="7">    var u uint</span>
 <span num="8">    var v = -1</span>
 <span num="9">    u = uint(v)</span>
 </pre>
-<pre style="display: none"><span>	_ = u
-}
-</span></pre></div>
+</div>
   
 <p>but only because <code>v</code> is a variable; if we made <code>v</code> a constant,
 even an untyped constant, we&#39;d be back in forbidden territory:</p>
 
   
-	<div class="playground">
-<pre style="display: none"><span>// +build OMIT
-
-package main
-
-func main() {
-</span></pre><pre><span num="7">    var u uint</span>
+	<div>
+<pre><span num="7">    var u uint</span>
 <span num="8">    const v = -1</span>
 <span num="9">    u = uint(v) // Error: negative value</span>
 </pre>
-<pre style="display: none"><span>	_ = u
-}
-</span></pre></div>
+</div>
   
 <p>We return to our previous approach, but instead of <code>-1</code> we try <code>^0</code>,
 the bitwise negation of an arbitrary number of zero bits.
@@ -836,18 +606,10 @@ In the space of numeric values,
 <code>^0</code> represents an infinite number of ones, so we lose information if we assign that to any fixed-size integer:</p>
 
   
-	<div class="playground">
-<pre style="display: none"><span>// +build OMIT
-
-package main
-
-func main() {
-	// START OMIT
-</span></pre><pre><span num="7">    const MaxUint uint = ^0 // Error: overflow</span>
+	<div>
+<pre><span num="7">    const MaxUint uint = ^0 // Error: overflow</span>
 </pre>
-<pre style="display: none"><span>	// STOP OMIT
-}
-</span></pre></div>
+</div>
   
 <p>How then do we represent the largest unsigned integer as a constant?</p>
 <p>The key is to constrain the operation to the number of bits in a <code>uint</code> and avoiding
@@ -859,19 +621,11 @@ If we invert each of those bits, we&#39;ll get the correct number of one bits, w
 Here, then, is our constant:</p>
 
   
-	<div class="playground">
-<pre style="display: none"><span>// +build OMIT
-
-package main
-
-import &#34;fmt&#34;
-
-func main() {
-</span></pre><pre><span num="9">    const MaxUint = ^uint(0)</span>
+	<div>
+<pre><span num="9">    const MaxUint = ^uint(0)</span>
 <span num="10">    fmt.Printf(&#34;%x\n&#34;, MaxUint)</span>
 </pre>
-<pre style="display: none"><span>}
-</span></pre></div>
+</div>
   
 <p>Whatever the number of bits it takes to represent a <code>uint</code> in the current execution environment
 (on the <a href="https://TheGoBlog.GitHub.io/playground" target="_blank" rel="noopener">playground</a>, it&#39;s 32),
@@ -903,15 +657,8 @@ All these constants have numeric value 1:</p>
 written as untyped constants they can be assigned to a variable of any integer type:</p>
 
   
-	<div class="playground">
-<pre style="display: none"><span>// +build OMIT
-
-package main
-
-import &#34;fmt&#34;
-
-func main() {
-</span></pre><pre><span num="9">    var f float32 = 1</span>
+	<div>
+<pre><span num="9">    var f float32 = 1</span>
 <span num="10">    var i int = 1.000</span>
 <span num="11">    var u uint32 = 1e3 - 99.0*10.0 - 9</span>
 <span num="12">    var c float64 = &#39;\x01&#39;</span>
@@ -921,26 +668,17 @@ func main() {
 <span num="16"></span>
 <span num="17">    fmt.Println(f, i, u, c, p, r, b)</span>
 </pre>
-<pre style="display: none"><span>}
-</span></pre></div>
+</div>
   
 <p>The output from this snippet is: <code>1 1 1 1 1 (1+0i) 1</code>.</p>
 <p>You can even do nutty stuff like</p>
 
   
-	<div class="playground">
-<pre style="display: none"><span>// +build OMIT
-
-package main
-
-import &#34;fmt&#34;
-
-func main() {
-</span></pre><pre><span num="9">    var f = &#39;a&#39; * 1.5</span>
+	<div>
+<pre><span num="9">    var f = &#39;a&#39; * 1.5</span>
 <span num="10">    fmt.Println(f)</span>
 </pre>
-<pre style="display: none"><span>}
-</span></pre></div>
+</div>
   
 <p>which yields 145.5, which is pointless except to prove a point.</p>
 <p>But the real point of these rules is flexibility.

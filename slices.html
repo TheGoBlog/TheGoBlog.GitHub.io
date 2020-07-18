@@ -210,29 +210,8 @@ That behavior has important ramifications.</p>
 <p>Try it:</p>
 
   
-	<div class="playground">
-<pre style="display: none"><span>// +build OMIT
-
-// Copyright 2013 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
-
-package main
-
-import (
-	&#34;fmt&#34;
-)
-
-var buffer [256]byte
-var slice []byte = buffer[100:150]
-
-func AddOneToEachElement(slice []byte) {
-	for i := range slice {
-		slice[i]++
-	}
-}
-
-</span></pre><pre><span num="22">func main() {</span>
+	<div>
+<pre><span num="22">func main() {</span>
 <span num="23">    slice := buffer[10:20]</span>
 <span num="24">    for i := 0; i &lt; len(slice); i++ {</span>
 <span num="25">        slice[i] = byte(i)</span>
@@ -254,23 +233,8 @@ be seen through the original slice variable.</p>
 <p>The argument to the function really is a copy, as this example shows:</p>
 
   
-	<div class="playground">
-<pre style="display: none"><span>// +build OMIT
-
-// Copyright 2013 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
-
-package main
-
-import (
-	&#34;fmt&#34;
-)
-
-var buffer [256]byte
-var slice []byte = buffer[100:150]
-
-</span></pre><pre><span num="16">func SubtractOneFromLength(slice []byte) []byte {</span>
+	<div>
+<pre><span num="16">func SubtractOneFromLength(slice []byte) []byte {</span>
 <span num="17">    slice = slice[0 : len(slice)-1]</span>
 <span num="18">    return slice</span>
 <span num="19">}</span>
@@ -301,23 +265,8 @@ which is then stored in <code>newSlice</code>,</p>
 Here&#39;s a variant of our previous example that does this:</p>
 
   
-	<div class="playground">
-<pre style="display: none"><span>// +build OMIT
-
-// Copyright 2013 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
-
-package main
-
-import (
-	&#34;fmt&#34;
-)
-
-var buffer [256]byte
-var slice []byte = buffer[100:150]
-
-</span></pre><pre><span num="16">func PtrSubtractOneFromLength(slicePtr *[]byte) {</span>
+	<div>
+<pre><span num="16">func PtrSubtractOneFromLength(slicePtr *[]byte) {</span>
 <span num="17">    slice := *slicePtr</span>
 <span num="18">    *slicePtr = slice[0 : len(slice)-1]</span>
 <span num="19">}</span>
@@ -338,21 +287,8 @@ It is idiomatic to use a pointer receiver for a method that modifies a slice.</p
 We could write it like this:</p>
 
   
-	<div class="playground">
-<pre style="display: none"><span>// +build OMIT
-
-// Copyright 2013 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
-
-package main
-
-import (
-	&#34;bytes&#34;
-	&#34;fmt&#34;
-)
-
-</span></pre><pre><span num="14">type path []byte</span>
+	<div>
+<pre><span num="14">type path []byte</span>
 <span num="15"></span>
 <span num="16">func (p *path) TruncateAtFinalSlash() {</span>
 <span num="17">    i := bytes.LastIndex(*p, []byte(&#34;/&#34;))</span>
@@ -377,20 +313,8 @@ the ASCII letters in the path (parochially ignoring non-English names), the meth
 be a value because the value receiver will still point to the same underlying array.</p>
 
   
-	<div class="playground">
-<pre style="display: none"><span>// +build OMIT
-
-// Copyright 2013 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
-
-package main
-
-import (
-	&#34;fmt&#34;
-)
-
-</span></pre><pre><span num="13">type path []byte</span>
+	<div>
+<pre><span num="13">type path []byte</span>
 <span num="14"></span>
 <span num="15">func (p path) ToUpper() {</span>
 <span num="16">    for i, b := range p {</span>
@@ -434,27 +358,8 @@ This form of loop avoids writing <code>p[i]</code> multiple times in the body.</
 <p>(Why does it need to return the modified slice?) Now run it:</p>
 
   
-	<div class="playground">
-<pre style="display: none"><span>// +build OMIT
-
-// Copyright 2013 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
-
-package main
-
-import (
-	&#34;fmt&#34;
-)
-
-func Extend(slice []int, element int) []int {
-	n := len(slice)
-	slice = slice[0 : n+1]
-	slice[n] = element
-	return slice
-}
-
-</span></pre><pre><span num="20">func main() {</span>
+	<div>
+<pre><span num="20">func main() {</span>
 <span num="21">    var iBuffer [10]int</span>
 <span num="22">    slice := iBuffer[0:0]</span>
 <span num="23">    for i := 0; i &lt; 20; i++ {</span>
@@ -514,44 +419,17 @@ length of the array that <code>make</code> allocates to hold the slice data.
 This call creates a slice of length 10 with room for 5 more (15-10), as you can see by running it:</p>
 
   
-	<div class="playground">
-<pre style="display: none"><span>// +build OMIT
-
-// Copyright 2013 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
-
-package main
-
-import (
-	&#34;fmt&#34;
-)
-
-func main() {
-</span></pre><pre><span num="14">    slice := make([]int, 10, 15)</span>
+	<div>
+<pre><span num="14">    slice := make([]int, 10, 15)</span>
 <span num="15">    fmt.Printf(&#34;len: %d, cap: %d\n&#34;, len(slice), cap(slice))</span>
 </pre>
-<pre style="display: none"><span>}
-</span></pre></div>
+</div>
   
 <p>This snippet doubles the capacity of our <code>int</code> slice but keeps its length the same:</p>
 
   
-	<div class="playground">
-<pre style="display: none"><span>// +build OMIT
-
-// Copyright 2013 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
-
-package main
-
-import (
-	&#34;fmt&#34;
-)
-
-func main() {
-</span></pre><pre><span num="14">    slice := make([]int, 10, 15)</span>
+	<div>
+<pre><span num="14">    slice := make([]int, 10, 15)</span>
 <span num="15">    fmt.Printf(&#34;len: %d, cap: %d\n&#34;, len(slice), cap(slice))</span>
 <span num="16">    newSlice := make([]int, len(slice), 2*cap(slice))</span>
 <span num="17">    for i := range slice {</span>
@@ -560,8 +438,7 @@ func main() {
 <span num="20">    slice = newSlice</span>
 <span num="21">    fmt.Printf(&#34;len: %d, cap: %d\n&#34;, len(slice), cap(slice))</span>
 </pre>
-<pre style="display: none"><span>}
-</span></pre></div>
+</div>
   
 <p>After running this code the slice has much more room to grow before needing another reallocation.</p>
 <p>When creating slices, it&#39;s often true that the length and capacity will be same.
@@ -584,29 +461,11 @@ Its arguments are two slices, and it copies the data from the right-hand argumen
 Here&#39;s our example rewritten to use <code>copy</code>:</p>
 
   
-	<div class="playground">
-<pre style="display: none"><span>// +build OMIT
-
-// Copyright 2013 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
-
-package main
-
-import (
-	&#34;fmt&#34;
-)
-
-func main() {
-	slice := make([]int, 10, 15)
-	fmt.Printf(&#34;len: %d, cap: %d\n&#34;, len(slice), cap(slice))
-</span></pre><pre><span num="16">    newSlice := make([]int, len(slice), 2*cap(slice))</span>
+	<div>
+<pre><span num="16">    newSlice := make([]int, len(slice), 2*cap(slice))</span>
 <span num="17">    copy(newSlice, slice)</span>
 </pre>
-<pre style="display: none"><span>	slice = newSlice
-	fmt.Printf(&#34;len: %d, cap: %d\n&#34;, len(slice), cap(slice))
-}
-</span></pre></div>
+</div>
   
 <p>The <code>copy</code> function is smart.
 It only copies what it can, paying attention to the lengths of both arguments.
@@ -655,35 +514,8 @@ This expression is the shortest way to say &#34;a slice describing all the eleme
 <p>Now that&#39;s out of the way, let&#39;s run our <code>Insert</code> function.</p>
 
   
-	<div class="playground">
-<pre style="display: none"><span>// +build OMIT
-
-// Copyright 2013 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
-
-package main
-
-import (
-	&#34;fmt&#34;
-)
-
-// Insert inserts the value into the slice at the specified index,
-// which must be in range.
-// The slice must have room for the new element.
-func Insert(slice []int, index, value int) []int {
-	// Grow the slice by one element.
-	slice = slice[0 : len(slice)+1]
-	// Use copy to move the upper part of the slice out of the way and open a hole.
-	copy(slice[index+1:], slice[index:])
-	// Store the new value.
-	slice[index] = value
-	// Return the result.
-	return slice
-}
-
-func main() {
-</span></pre><pre><span num="28">    slice := make([]int, 10, 20) // Note capacity &gt; length: room to add element.</span>
+	<div>
+<pre><span num="28">    slice := make([]int, 10, 20) // Note capacity &gt; length: room to add element.</span>
 <span num="29">    for i := range slice {</span>
 <span num="30">        slice[i] = i</span>
 <span num="31">    }</span>
@@ -691,8 +523,7 @@ func main() {
 <span num="33">    slice = Insert(slice, 5, 99)</span>
 <span num="34">    fmt.Println(slice)</span>
 </pre>
-<pre style="display: none"><span>}
-</span></pre></div>
+</div>
   
 
 
@@ -729,44 +560,15 @@ the resulting slice describes a completely different array.
 Here&#39;s a little snippet to demonstrate what happens as the slice fills up:</p>
 
   
-	<div class="playground">
-<pre style="display: none"><span>// +build OMIT
-
-// Copyright 2013 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
-
-package main
-
-import (
-	&#34;fmt&#34;
-)
-
-// Extend extends the slice by adding the element to the end.
-func Extend(slice []int, element int) []int {
-	n := len(slice)
-	if n == cap(slice) {
-		// Slice is full; must grow.
-		// We double its size and add 1, so if the size is zero we still grow.
-		newSlice := make([]int, len(slice), 2*len(slice)+1)
-		copy(newSlice, slice)
-		slice = newSlice
-	}
-	slice = slice[0 : n+1]
-	slice[n] = element
-	return slice
-}
-
-func main() {
-</span></pre><pre><span num="30">    slice := make([]int, 0, 5)</span>
+	<div>
+<pre><span num="30">    slice := make([]int, 0, 5)</span>
 <span num="31">    for i := 0; i &lt; 10; i++ {</span>
 <span num="32">        slice = Extend(slice, i)</span>
 <span num="33">        fmt.Printf(&#34;len=%d cap=%d slice=%v\n&#34;, len(slice), cap(slice), slice)</span>
 <span num="34">        fmt.Println(&#34;address of 0th element:&#34;, &amp;slice[0])</span>
 <span num="35">    }</span>
 </pre>
-<pre style="display: none"><span>}
-</span></pre></div>
+</div>
   
 <p>Notice the reallocation when the initial array of size 5 is filled up.
 Both the capacity and the address of the zeroth element change when the new array is allocated.</p>
@@ -803,51 +605,13 @@ Also notice the use of the blank identifier <code>_</code> to discard the index 
 <p>Try it:</p>
 
   
-	<div class="playground">
-<pre style="display: none"><span>// +build OMIT
-
-// Copyright 2013 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
-
-package main
-
-import (
-	&#34;fmt&#34;
-)
-
-// Extend extends the slice by adding the element to the end.
-func Extend(slice []int, element int) []int {
-	n := len(slice)
-	if n == cap(slice) {
-		// Slice is full; must grow.
-		// We double its size and add 1, so if the size is zero we still grow.
-		newSlice := make([]int, len(slice), 2*len(slice)+1)
-		copy(newSlice, slice)
-		slice = newSlice
-	}
-	slice = slice[0 : n+1]
-	slice[n] = element
-	return slice
-}
-
-// Append appends the items to the slice.
-// First version: just loop calling Extend.
-func Append(slice []int, items ...int) []int {
-	for _, item := range items {
-		slice = Extend(slice, item)
-	}
-	return slice
-}
-
-func main() {
-</span></pre><pre><span num="39">    slice := []int{0, 1, 2, 3, 4}</span>
+	<div>
+<pre><span num="39">    slice := []int{0, 1, 2, 3, 4}</span>
 <span num="40">    fmt.Println(slice)</span>
 <span num="41">    slice = Append(slice, 5, 6, 7, 8)</span>
 <span num="42">    fmt.Println(slice)</span>
 </pre>
-<pre style="display: none"><span>}
-</span></pre></div>
+</div>
   
 <p>Another new technique in this example is that we initialize the slice by writing a composite literal,
 which consists of the type of the slice followed by its elements in braces:</p>
@@ -863,52 +627,14 @@ Not only can we append elements, we can append a whole second slice
 by &#34;exploding&#34; the slice into arguments using the <code>...</code> notation at the call site:</p>
 
   
-	<div class="playground">
-<pre style="display: none"><span>// +build OMIT
-
-// Copyright 2013 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
-
-package main
-
-import (
-	&#34;fmt&#34;
-)
-
-// Extend extends the slice by adding the element to the end.
-func Extend(slice []int, element int) []int {
-	n := len(slice)
-	if n == cap(slice) {
-		// Slice is full; must grow.
-		// We double its size and add 1, so if the size is zero we still grow.
-		newSlice := make([]int, len(slice), 2*len(slice)+1)
-		copy(newSlice, slice)
-		slice = newSlice
-	}
-	slice = slice[0 : n+1]
-	slice[n] = element
-	return slice
-}
-
-// Append appends the items to the slice.
-// First version: just loop calling Extend.
-func Append(slice []int, items ...int) []int {
-	for _, item := range items {
-		slice = Extend(slice, item)
-	}
-	return slice
-}
-
-func main() {
-</span></pre><pre><span num="39">    slice1 := []int{0, 1, 2, 3, 4}</span>
+	<div>
+<pre><span num="39">    slice1 := []int{0, 1, 2, 3, 4}</span>
 <span num="40">    slice2 := []int{55, 66, 77}</span>
 <span num="41">    fmt.Println(slice1)</span>
 <span num="42">    slice1 = Append(slice1, slice2...) // The &#39;...&#39; is essential!</span>
 <span num="43">    fmt.Println(slice1)</span>
 </pre>
-<pre style="display: none"><span>}
-</span></pre></div>
+</div>
   
 <p>Of course, we can make <code>Append</code> more efficient by allocating no more than once,
 building on the innards of <code>Extend</code>:</p>
@@ -939,45 +665,14 @@ allocated memory, and then to copy the appending items to the end of the old dat
 <p>Try it; the behavior is the same as before:</p>
 
   
-	<div class="playground">
-<pre style="display: none"><span>// +build OMIT
-
-// Copyright 2013 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
-
-package main
-
-import (
-	&#34;fmt&#34;
-)
-
-// Append appends the elements to the slice.
-// Efficient version.
-func Append(slice []int, elements ...int) []int {
-	n := len(slice)
-	total := len(slice) + len(elements)
-	if total &gt; cap(slice) {
-		// Reallocate. Grow to 1.5 times the new size, so we can still grow.
-		newSize := total*3/2 + 1
-		newSlice := make([]int, total, newSize)
-		copy(newSlice, slice)
-		slice = newSlice
-	}
-	slice = slice[:total]
-	copy(slice[n:], elements)
-	return slice
-}
-
-func main() {
-</span></pre><pre><span num="32">    slice1 := []int{0, 1, 2, 3, 4}</span>
+	<div>
+<pre><span num="32">    slice1 := []int{0, 1, 2, 3, 4}</span>
 <span num="33">    slice2 := []int{55, 66, 77}</span>
 <span num="34">    fmt.Println(slice1)</span>
 <span num="35">    slice1 = Append(slice1, slice2...) // The &#39;...&#39; is essential!</span>
 <span num="36">    fmt.Println(slice1)</span>
 </pre>
-<pre style="display: none"><span>}
-</span></pre></div>
+</div>
   
 
 
@@ -997,21 +692,8 @@ In fact, the compiler won&#39;t let you call append without saving the result.</
 <p>Here are some one-liners intermingled with print statements. Try them, edit them and explore:</p>
 
   
-	<div class="playground">
-<pre style="display: none"><span>// +build OMIT
-
-// Copyright 2013 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
-
-package main
-
-import (
-	&#34;fmt&#34;
-)
-
-func main() {
-</span></pre><pre><span num="15">    // Create a couple of starter slices.</span>
+	<div>
+<pre><span num="15">    // Create a couple of starter slices.</span>
 <span num="16">    slice := []int{1, 2, 3}</span>
 <span num="17">    slice2 := []int{55, 66, 77}</span>
 <span num="18">    fmt.Println(&#34;Start slice: &#34;, slice)</span>
@@ -1034,8 +716,7 @@ func main() {
 <span num="35">    slice = append(slice, slice...)</span>
 <span num="36">    fmt.Println(&#34;After append to self:&#34;, slice)</span>
 </pre>
-<pre style="display: none"><span>}
-</span></pre></div>
+</div>
   
 <p>It&#39;s worth taking a moment to think about the final one-liner of that example in detail to understand
 how the design of slices makes it possible for this simple call to work correctly.</p>
