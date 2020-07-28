@@ -185,16 +185,17 @@ refine their public API.</p>
 </li>
 <li>
 <p>Push the new tag to the origin repository.</p>
-<p>$ go mod tidy
+</li>
+</ol>
+<pre><code>$ go mod tidy
 $ go test ./...
 ok      example.com/hello       0.015s
 $ git add go.mod go.sum hello.go hello_test.go
 $ git commit -m &#34;hello: changes for v0.1.0&#34;
 $ git tag v0.1.0
 $ git push origin v0.1.0
-$</p>
-</li>
-</ol>
+$
+</code></pre>
 <p>Now other projects can depend on <code>v0.1.0</code> of <code>example.com/hello</code>. For your own
 module, you can run <code>go list -m example.com/hello@v0.1.0</code> to confirm the latest
 version is available (this example module does not exist, so no versions are
