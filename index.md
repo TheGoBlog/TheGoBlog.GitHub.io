@@ -6,6 +6,16 @@
 
 
 
+## [Go 1.15 is released](/go1.15)
+
+> Alex Rakoczy on 11 August 2020
+
+> 
+
+<br>
+
+
+
 ## [Keeping Your Modules Compatible](/module-compatibility)
 
 > Jean de Klerk and Jonathan Amsterdam on 7 July 2020
