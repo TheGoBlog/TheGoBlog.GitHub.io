@@ -242,8 +242,8 @@ switch to access its values as their concrete types:</p>
     Parents []string
 }
 
-    var m FamilyMember
-    err := json.Unmarshal(b, &amp;m)
+var m FamilyMember
+err := json.Unmarshal(b, &amp;m)
 </code></pre>
 <p>Unmarshaling that data into a <code>FamilyMember</code> value works as expected,
 but if we look closely we can see a remarkable thing has happened.
