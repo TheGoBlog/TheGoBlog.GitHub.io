@@ -6,6 +6,16 @@
 
 
 
+## [Announcing the 2020 Go Developer Survey](/survey2020)
+
+> Alice Merrick on 20 October 2020
+
+> `survey` `community` 
+
+<br>
+
+
+
 ## [Go 1.15 is released](/go1.15)
 
 > Alex Rakoczy on 11 August 2020

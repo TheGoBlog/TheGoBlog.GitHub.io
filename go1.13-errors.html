@@ -150,6 +150,7 @@ if errors.Is(err, ErrNotFound) {
 <pre><code>// Similar to:
 //   if e, ok := err.(*QueryError); ok { … }
 var e *QueryError
+// Note: *QueryError is the type of the error.
 if errors.As(err, &amp;e) {
     // err is a *QueryError, and e is set to the error&#39;s value
 }
@@ -172,6 +173,9 @@ to examine the underlying error:</p>
 result of calling an error&#39;s <code>Unwrap</code> method, or <code>nil</code> when the error has no
 <code>Unwrap</code> method. It is usually better to use <code>errors.Is</code> or <code>errors.As</code>,
 however, since these functions will examine the entire chain in a single call.</p>
+<p>Note: although it may feel odd to take a pointer to a pointer, in this case it
+is correct. Think of it instead as taking a pointer to a value of the error
+type; it so happens in this case that the returned error is a pointer type.</p>
 
 
   <h4 id="TOC_3.3.">Wrapping errors with %w</h4>
