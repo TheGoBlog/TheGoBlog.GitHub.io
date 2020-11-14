@@ -6,6 +6,26 @@
 
 
 
+## [Eleven Years of Go](/11years)
+
+> Russ Cox, for the Go team on 10 November 2020
+
+> 
+
+<br>
+
+
+
+## [Pkg.go.dev has a new look!](/pkgsite-redesign)
+
+> Julie Qiu on 10 November 2020
+
+> 
+
+<br>
+
+
+
 ## [Announcing the 2020 Go Developer Survey](/survey2020)
 
 > Alice Merrick on 20 October 2020

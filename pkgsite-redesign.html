@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/pkgsite-redesign" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>Pkg.go.dev has a new look! | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>Pkg.go.dev has a new look!</h2>
+    <p class="author">
+    Julie Qiu<br/>
+    10 November 2020
+    </p>
+    
+  
+  
+    
+      
+  <h4 id="TOC_1."></h4>
+  <p>Since launching pkg.go.dev, we’ve received a lot of great feedback on
+design and usability.
+In particular, it was clear that the way information was organized confused
+users when navigating the site.</p>
+<p>Today we’re excited to share a redesigned pkg.go.dev,
+which we hope will be clearer and more helpful.
+This blog post presents the highlights. For details,
+see <a href="https://github.com/golang/go/issues/41585" target="_blank" rel="noopener">Go issue 41585</a>.</p>
+
+
+    
+      
+  <h4 id="TOC_2.">Consistent landing page for all paths</h4>
+  <p>The main change is that the pkg.go.dev/&lt;path&gt; page has been reorganized
+around the idea of a path.
+A path represents a directory in a particular version of a module.
+Now, regardless of what’s in that directory,
+every path page will have the same layout,
+with the goal of making the experience consistently useful and predictable.</p>
+<div class="image">
+<img src="pkgsite-redesign/path.png" width="800" height="513" alt="Landing page for cloud.google.com/go/storage" style="border: 1px solid black;"/>
+</div>
+<p>The path page will display the README at that path if there is one.
+Previously, the overview tab only showed the README if present at the module root.
+This is one of many changes we’re making to place the most important information up front.</p>
+
+
+    
+      
+  <h4 id="TOC_3.">Documentation navigation</h4>
+  <p>The documentation section now displays an index along with a sidenav.
+This gives the ability to see the full package API,
+while having context as they are navigating the documentation section.
+There is also a new Jump To input box in the left sidenav,
+to search for identifiers.</p>
+<div class="image">
+<img src="pkgsite-redesign/nav.png" width="800" height="530" alt="Jump To feature navigating net/http" style="border: 1px solid black;"/>
+</div>
+<p>See <a href="https://github.com/golang/go/issues/41587" target="_blank" rel="noopener">Go issue 41587</a> for details on changes in the documentation section.</p>
+
+
+    
+      
+  <h4 id="TOC_4.">Metadata on main page</h4>
+  <p>The top bar on each page now shows additional metadata,
+such as each package’s “imports” and “imported by” counts.
+Banners also show information about the latest minor and major versions of a module.
+See <a href="https://github.com/golang/go/issues/41588" target="_blank" rel="noopener">Go issue 41588</a> for details.</p>
+<div class="image">
+<img src="pkgsite-redesign/meta.png" width="800" height="145" alt="Header metadata for github.com/russross/blackfriday" style="border: 1px solid black;"/>
+</div>
+
+    
+      
+  <h4 id="TOC_5.">Video Walkthrough</h4>
+  <p>Last week at <a href="https://opensourcelive.withgoogle.com/events/go" target="_blank" rel="noopener">Google Open Source Live</a>,
+we presented a walkthrough of the new site experience in our talk,
+<a href="https://www.youtube.com/watch?v=n7ayE29b7QA&amp;feature=emb_logo" target="_blank" rel="noopener">Level Up: Go Package Discovery and Editor Tooling</a>.</p>
+
+<div class="iframe">
+  <iframe src="https://www.youtube.com/embed/n7ayE29b7QA" height="400" width="650" frameborder="0" allowfullscreen="" mozallowfullscreen="" webkitallowfullscreen=""></iframe>
+</div>
+
+
+    
+      
+  <h4 id="TOC_6.">Feedback</h4>
+  <p>We’re excited to share this updated design with you.
+As always, please let us know what you think via the “Share Feedback”
+and “Report an Issue” links at the bottom of every page of the site.</p>
+<p>And if you’re interested in contributing to this project, pkg.go.dev is open source! Check out the
+<a href="https://go.googlesource.com/pkgsite/+/refs/heads/master/CONTRIBUTING.md" target="_blank" rel="noopener">contribution guidelines</a>
+to find out more.</p>
+
+
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>
