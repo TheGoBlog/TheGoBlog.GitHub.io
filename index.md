@@ -8,7 +8,7 @@
 
 ## [Eleven Years of Go](/11years)
 
-> Russ Cox, for the Go team on 10 November 2020
+> Russ Cox on 10 November 2020
 
 > 
 
@@ -138,7 +138,7 @@
 
 ## [Proposals for Go 1.15](/go1.15-proposals)
 
-> Robert Griesemer, for the Go team on 28 January 2020
+> Robert Griesemer on 28 January 2020
 
 > `go1.15` `proposals` `community` `language` `vet` 
 
@@ -168,7 +168,7 @@
 
 ## [Go Turns 10](/10years)
 
-> Russ Cox, for the Go team on 8 November 2019
+> Russ Cox on 8 November 2019
 
 > 
 
@@ -278,7 +278,7 @@
 
 ## [Next steps toward Go 2](/go2-next-steps)
 
-> Robert Griesemer, for the Go team on 26 June 2019
+> Robert Griesemer on 26 June 2019
 
 > `go2` `proposals` `community` 
 
@@ -608,7 +608,7 @@
 
 ## [Go 2016 Survey Results](/survey2016-results)
 
-> Steve Francia, for the Go team on 6 March 2017
+> Steve Francia on 6 March 2017
 
 > `survey` `community` 
 
