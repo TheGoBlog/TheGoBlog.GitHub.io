@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/godoc.org-redirect" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>Redirecting godoc.org requests to pkg.go.dev | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>Redirecting godoc.org requests to pkg.go.dev</h2>
+    <p class="author">
+    Julie Qiu<br/>
+    15 December 2020
+    </p>
+    
+  
+  
+    
+      
+  <h4 id="TOC_1."></h4>
+  <p>With the introduction of Go modules and the growth of the Go ecosystem,
+<a href="https://pkg.go.dev" target="_blank" rel="noopener">pkg.go.dev</a> was
+<a href="https://TheGoBlog.GitHub.io/go.dev" target="_blank" rel="noopener">launched in 2019</a> to provide a central place
+where developers can discover and evaluate Go packages and modules. Like
+godoc.org, pkg.go.dev serves Go documentation, but it also supports modules,
+better search functionality, and signals to help Go users to find the right
+packages.</p>
+<p>As <a href="https://TheGoBlog.GitHub.io/pkg.go.dev-2020" target="_blank" rel="noopener">we shared in January 2020</a>, our
+goal is to eventually redirect traffic from godoc.org to the corresponding page
+on pkg.go.dev. We’ve also made it possible for users to opt in to redirecting
+their own requests from godoc.org to pkg.go.dev.</p>
+<p>We’ve received a lot of great feedback this year, which has been tracked and
+resolved through the
+<a href="https://github.com/golang/go/milestone/157?closed=1" target="_blank" rel="noopener">pkgsite/godoc.org-redirect</a>
+and <a href="https://github.com/golang/go/milestone/159?closed=1" target="_blank" rel="noopener">pkgsite/design-2020</a>
+milestones on the Go issue tracker. Your feedback resulted in support for
+popular feature requests on pkg.go.dev,
+<a href="https://TheGoBlog.GitHub.io/pkgsite" target="_blank" rel="noopener">open sourcing pkgsite</a>, and most recently, a
+<a href="https://TheGoBlog.GitHub.io/pkgsite-redesign" target="_blank" rel="noopener">redesign of pkg.go.dev</a>.</p>
+
+
+    
+      
+  <h4 id="TOC_2.">Next Steps</h4>
+  <p>The next step in this migration is to redirect all requests from godoc.org to
+the corresponding page on pkg.go.dev.</p>
+<p>This will happen in early 2021, once the work tracked at the
+<a href="https://github.com/golang/go/milestone/157" target="_blank" rel="noopener">pkgsite/godoc.org-redirect milestone</a>
+is complete.</p>
+<p>During this migration, updates will be posted to
+<a href="https://github.com/golang/go/issues/43178" target="_blank" rel="noopener">Go issue 43178</a>.</p>
+<p>We encourage everyone to begin using pkg.go.dev today. You can do so by
+visiting <a href="https://godoc.org?redirect=on" target="_blank" rel="noopener">godoc.org?redirect=on</a>, or clicking
+“Always use pkg.go.dev” in the top right corner of any godoc.org page.</p>
+
+
+    
+      
+  <h4 id="TOC_3.">FAQs</h4>
+  <p><strong>Will godoc.org URLs continue to work?</strong></p>
+<p>Yes! We will redirect all requests arriving at godoc.org to the equivalent page
+on pkg.go.dev, so all your bookmarks and links will continue to take you to the
+documentation you need.</p>
+<p><strong>What will happen to the golang/gddo repository?</strong></p>
+<p>The <a href="http://go.googlesource.com/gddo" target="_blank" rel="noopener">gddo repository</a> will remain available
+for anyone who wants to keep running it themselves, or even fork and improve
+it. We will mark it archived to make clear that we will no longer accept
+contributions. However, you will be able to continue forking the repository.</p>
+<p><strong>Will api.godoc.org continue to work?</strong></p>
+<p>This transition will have no impact on api.godoc.org. Until an API is available
+for pkg.go.dev, api.godoc.org will continue to serve traffic. See
+<a href="https://github.com/golang/go/issues/36785" target="_blank" rel="noopener">Go issue 36785</a> for updates on an API for
+pkg.go.dev.</p>
+<p><strong>Will my godoc.org badges keep working?</strong></p>
+<p>Yes! Badge URLs will redirect to the equivalent URL on pkg.go.dev too. Your
+page will automatically get a new pkg.go.dev badge. You can also generate a new
+badge at <a href="https://pkg.go.dev/badge" target="_blank" rel="noopener">pkg.go.dev/badge</a> if you would like to
+update your badge link.</p>
+
+
+    
+      
+  <h4 id="TOC_4.">Feedback</h4>
+  <p>As always, feel free to <a href="https://golang.google.cn/s/pkgsite-feedback" target="_blank" rel="noopener">file an issue</a>
+on the Go issue tracker for any feedback.</p>
+
+
+    
+      
+  <h4 id="TOC_5.">Contributing</h4>
+  <p>Pkg.go.dev is an <a href="https://go.googlesource.com/pkgsite" target="_blank" rel="noopener">open source project</a>. If
+you’re interested in contributing to the pkgsite project, check out the
+<a href="https://go.googlesource.com/pkgsite/+/refs/heads/master/CONTRIBUTING.md" target="_blank" rel="noopener">contribution guidelines</a>
+or join the
+<a href="https://gophers.slack.com/messages/pkgsite" target="_blank" rel="noopener">#pkgsite channel</a> on Gophers Slack
+to learn more.</p>
+
+
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>
