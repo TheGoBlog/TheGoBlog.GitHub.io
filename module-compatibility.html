@@ -97,7 +97,7 @@ func (*ListenConfig) Listen(ctx context.Context, network, address string) (Liste
 <p>This could also have been implemented as a struct option:</p>
 <pre><code>notgrpc.Dial(&#34;some-target&#34;, &amp;notgrpc.Options{
   Authority: &#34;some-authority&#34;,
-  MaxDelay:  time.Minute,
+  MaxDelay:  time.Second,
   Block:     true,
 })
 </code></pre>
