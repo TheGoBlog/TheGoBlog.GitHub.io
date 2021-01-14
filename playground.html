@@ -248,16 +248,16 @@ to run the standard library tests, but we intend to provide playground programs
 with a set of files that can be used in documentation examples, blog posts, and
 the Go Tour.</p>
 <p>The implementation can be found in the
-<a href="https://github.com/golang/go/blob/master/src/syscall/fs_nacl.go" target="_blank" rel="noopener"><code>fs_nacl.go</code></a> and
-<a href="https://github.com/golang/go/blob/master/src/syscall/fd_nacl.go" target="_blank" rel="noopener"><code>fd_nacl.go</code></a> files
+<a href="https://github.com/golang/go/blob/2197321db1dd997165c0091ba2bcb3b6be7633d0/src/syscall/fs_nacl.go" target="_blank" rel="noopener"><code>fs_nacl.go</code></a> and
+<a href="https://github.com/golang/go/blob/2197321db1dd997165c0091ba2bcb3b6be7633d0/src/syscall/fd_nacl.go" target="_blank" rel="noopener"><code>fd_nacl.go</code></a> files
 (which, by virtue of their <code>_nacl</code> suffix, are built into package <code>syscall</code> only
 when <code>GOOS</code> is set to <code>nacl</code>).</p>
 <p>The file system itself is represented by the
-<a href="https://github.com/golang/go/blob/master/src/syscall/fs_nacl.go#L26" target="_blank" rel="noopener"><code>fsys</code> struct</a>,
+<a href="https://github.com/golang/go/blob/2197321db1dd997165c0091ba2bcb3b6be7633d0/src/syscall/fs_nacl.go#L26" target="_blank" rel="noopener"><code>fsys</code> struct</a>,
 of which a global instance (named <code>fs</code>) is created during init time.
 The various file-related functions then operate on <code>fs</code> instead of making the
 actual system call.
-For instance, here is the <a href="https://github.com/golang/go/blob/master/src/syscall/fs_nacl.go#L473" target="_blank" rel="noopener"><code>syscall.Open</code></a> function:</p>
+For instance, here is the <a href="https://github.com/golang/go/blob/2197321db1dd997165c0091ba2bcb3b6be7633d0/src/syscall/fs_nacl.go#L473" target="_blank" rel="noopener"><code>syscall.Open</code></a> function:</p>
 <pre><code>func Open(path string, openmode int, perm uint32) (fd int, err error) {
     fs.mu.Lock()
     defer fs.mu.Unlock()
@@ -269,13 +269,13 @@ For instance, here is the <a href="https://github.com/golang/go/blob/master/src/
 }
 </code></pre>
 <p>File descriptors are tracked by a global slice named
-<a href="https://github.com/golang/go/blob/master/src/syscall/fd_nacl.go#L17" target="_blank" rel="noopener"><code>files</code></a>.
-Each file descriptor corresponds to a <a href="https://github.com/golang/go/blob/master/src/syscall/fd_nacl.go#L23" target="_blank" rel="noopener"><code>file</code></a>
-and each <code>file</code> provides a value that implements the <a href="https://github.com/golang/go/blob/master/src/syscall/fd_nacl.go#L30" target="_blank" rel="noopener"><code>fileImpl</code></a> interface.
+<a href="https://github.com/golang/go/blob/2197321db1dd997165c0091ba2bcb3b6be7633d0/src/syscall/fd_nacl.go#L17" target="_blank" rel="noopener"><code>files</code></a>.
+Each file descriptor corresponds to a <a href="https://github.com/golang/go/blob/2197321db1dd997165c0091ba2bcb3b6be7633d0/src/syscall/fd_nacl.go#L23" target="_blank" rel="noopener"><code>file</code></a>
+and each <code>file</code> provides a value that implements the <a href="https://github.com/golang/go/blob/2197321db1dd997165c0091ba2bcb3b6be7633d0/src/syscall/fd_nacl.go#L30" target="_blank" rel="noopener"><code>fileImpl</code></a> interface.
 There are several implementations of the interface:</p>
 <ul>
-<li>regular files and devices (such as <code>/dev/random</code>) are represented by <a href="https://github.com/golang/go/blob/master/src/syscall/fs_nacl.go#L58" target="_blank" rel="noopener"><code>fsysFile</code></a>,</li>
-<li>standard input, output, and error are instances of <a href="https://github.com/golang/go/blob/master/src/syscall/fd_nacl.go#L216" target="_blank" rel="noopener"><code>naclFile</code></a>,
+<li>regular files and devices (such as <code>/dev/random</code>) are represented by <a href="https://github.com/golang/go/blob/2197321db1dd997165c0091ba2bcb3b6be7633d0/src/syscall/fs_nacl.go#L58" target="_blank" rel="noopener"><code>fsysFile</code></a>,</li>
+<li>standard input, output, and error are instances of <a href="https://github.com/golang/go/blob/2197321db1dd997165c0091ba2bcb3b6be7633d0/src/syscall/fd_nacl.go#L216" target="_blank" rel="noopener"><code>naclFile</code></a>,
 which uses system calls to interact with the actual files (these are a playground
 program&#39;s only way to interact with the outside world),</li>
 <li>network sockets have their own implementation, discussed in the next section.</li>
@@ -326,8 +326,8 @@ listening port, writes a string to the connection, and closes it.</p>
 implementation of the fake network is larger and more complex than the fake
 file system. It must simulate read and write timeouts, different address types
 and protocols, and so on.</p>
-<p>The implementation can be found in <a href="https://github.com/golang/go/blob/master/src/syscall/net_nacl.go" target="_blank" rel="noopener"><code>net_nacl.go</code></a>.
-A good place to start reading is <a href="https://github.com/golang/go/blob/master/src/syscall/net_nacl.go#L461" target="_blank" rel="noopener"><code>netFile</code></a>,
+<p>The implementation can be found in <a href="https://github.com/golang/go/blob/2197321db1dd997165c0091ba2bcb3b6be7633d0/src/syscall/net_nacl.go" target="_blank" rel="noopener"><code>net_nacl.go</code></a>.
+A good place to start reading is <a href="https://github.com/golang/go/blob/2197321db1dd997165c0091ba2bcb3b6be7633d0/src/syscall/net_nacl.go#L461" target="_blank" rel="noopener"><code>netFile</code></a>,
 the network socket implementation of the <code>fileImpl</code> interface.</p>
 
 
@@ -360,22 +360,22 @@ a JSON object to the client as the HTTP response (as described above).</p>
 code for setting up the user interface (the code and output boxes, the run
 button, and so on) and communicating with the playground front end.</p>
 <p>This implementation is in the file
-<a href="https://github.com/golang/tools/blob/master/godoc/static/playground.js" target="_blank" rel="noopener"><code>playground.js</code></a>
+<a href="https://github.com/golang/tools/blob/f8e922be8efeabd06a510065ca5836b62fa10b9a/godoc/static/playground.js" target="_blank" rel="noopener"><code>playground.js</code></a>
 in the <code>go.tools</code> repository, which can be imported from the
 <a href="https://godoc.org/golang.org/x/tools/godoc/static" target="_blank" rel="noopener"><code>golang.org/x/tools/godoc/static</code></a> package.
 Some of it is clean and some is a bit crufty, as it is the result of
 consolidating several divergent implementations of the client code.</p>
-<p>The <a href="https://github.com/golang/tools/blob/master/godoc/static/playground.js#L227" target="_blank" rel="noopener"><code>playground</code></a>
+<p>The <a href="https://github.com/golang/tools/blob/f8e922be8efeabd06a510065ca5836b62fa10b9a/godoc/static/playground.js#L227" target="_blank" rel="noopener"><code>playground</code></a>
 function takes some HTML elements and turns them into an interactive
 playground widget. You should use this function if you want to put the
 playground on your own site (see &#39;Other clients&#39; below).</p>
-<p>The <a href="https://github.com/golang/tools/blob/master/godoc/static/playground.js#L6" target="_blank" rel="noopener"><code>Transport</code></a>
+<p>The <a href="https://github.com/golang/tools/blob/f8e922be8efeabd06a510065ca5836b62fa10b9a/godoc/static/playground.js#L6" target="_blank" rel="noopener"><code>Transport</code></a>
 interface (not formally defined, this being JavaScript)
 abstracts the user interface from the means of talking to the web front end.
-<a href="https://github.com/golang/tools/blob/master/godoc/static/playground.js#L43" target="_blank" rel="noopener"><code>HTTPTransport</code></a>
+<a href="https://github.com/golang/tools/blob/f8e922be8efeabd06a510065ca5836b62fa10b9a/godoc/static/playground.js#L43" target="_blank" rel="noopener"><code>HTTPTransport</code></a>
 is an implementation of <code>Transport</code> that speaks the HTTP-based protocol
 described earlier.
-<a href="https://github.com/golang/tools/blob/master/godoc/static/playground.js#L115" target="_blank" rel="noopener"><code>SocketTransport</code></a>
+<a href="https://github.com/golang/tools/blob/f8e922be8efeabd06a510065ca5836b62fa10b9a/godoc/static/playground.js#L115" target="_blank" rel="noopener"><code>SocketTransport</code></a>
 is another implementation that speaks WebSocket (see &#39;Playing offline&#39; below).</p>
 <p>To comply with the <a href="https://en.wikipedia.org/wiki/Same-origin_policy" target="_blank" rel="noopener">same-origin policy</a>,
 the various web servers (godoc, for instance) proxy requests to

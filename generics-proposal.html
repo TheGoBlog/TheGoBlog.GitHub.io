@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/generics-proposal" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>A Proposal for Adding Generics to Go | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>A Proposal for Adding Generics to Go</h2>
+    <p class="author">
+    Ian Lance Taylor<br/>
+    12 January 2021
+    </p>
+    
+  
+  
+    
+      
+  <h4 id="TOC_1.">Generics proposal</h4>
+  <p>We’ve filed <a href="https://github.com/golang/go/issues/43651" target="_blank" rel="noopener">a Go language change
+proposal</a> to add support for type
+parameters for types and functions, permitting a form of generic
+programming.</p>
+
+
+    
+      
+  <h4 id="TOC_2.">Why generics?</h4>
+  <p>Generics can give us powerful building blocks that let us share code
+and build programs more easily.
+Generic programming means writing functions and data structures where
+some types are left to be specified later.
+For example, you can write a function that operates on a slice of some
+arbitrary data type, where the actual data type is only specified when
+the function is called.
+Or, you can define a data structure that stores values of any type,
+where the actual type to be stored is specified when you create an
+instance of the data structure.</p>
+<p>Since Go was first released in 2009, support for generics has been one
+of the most commonly requested language features.
+You can read more about why generics are useful in
+<a href="https://TheGoBlog.GitHub.io/why-generics" target="_blank" rel="noopener">an earlier blog post</a>.</p>
+<p>Although generics have clear use cases, fitting them cleanly into a
+language like Go is a difficult task.
+One of the <a href="https://golang.google.cn/design/15292/2010-06-type-functions" target="_blank" rel="noopener">first (flawed) attempts to add generics to
+Go</a> dates back
+all the way to 2010.
+There have been several others over the last decade.</p>
+<p>For the last couple of years we’ve been working on a series of design
+drafts that have culminated in <a href="https://golang.google.cn/design/go2draft-type-parameters" target="_blank" rel="noopener">a design based on type
+parameters</a>.
+This design draft has had a lot of input from the Go programming
+community, and many people have experimented with it using the
+<a href="https://go2goplay.golang.org" target="_blank" rel="noopener">generics playground</a> described in <a href="https://TheGoBlog.GitHub.io/generics-next-step" target="_blank" rel="noopener">an
+earlier blog post</a>.
+Ian Lance Taylor gave <a href="https://www.youtube.com/watch?v=WzgLqE-3IhY" target="_blank" rel="noopener">a talk at GopherCon
+2019</a>
+about why to add generics and the strategy we are now following.
+Robert Griesemer gave <a href="https://www.youtube.com/watch?v=TborQFPY2IM" target="_blank" rel="noopener">a follow-up talk about changes in the design,
+and the implementation, at GopherCon
+2020</a>.
+The language changes are fully backward compatible, so existing Go
+programs will continue to work exactly as they do today.
+We have reached the point where we think that the design draft is good
+enough, and simple enough, to propose adding it to Go.</p>
+
+
+    
+      
+  <h4 id="TOC_3.">What happens now?</h4>
+  <p>The <a href="https://golang.google.cn/s/proposal" target="_blank" rel="noopener">language change proposal process</a>
+is how we make changes to the Go language.
+We have now <a href="https://github.com/golang/go/issues/43651" target="_blank" rel="noopener">started this process</a>
+to add generics to a future version of Go.
+We invite substantive criticisms and comments, but please try to avoid
+repeating earlier comments, and please try to <a href="https://github.com/golang/go/wiki/NoPlusOne" target="_blank" rel="noopener">avoid simple plus-one
+and minus-one comments</a>.
+Instead, add thumbs-up/thumbs-down emoji reactions to comments with
+which you agree or disagree, or to the proposal as a whole.</p>
+<p>As with all language change proposals, our goal is to drive toward a
+consensus to either add generics to the language or let the proposal
+drop.
+We understand that for a change of this magnitude it will be
+impossible to make everybody in the Go community happy, but we intend
+to get to a decision that everybody is willing to accept.</p>
+<p>If the proposal is accepted, our goal will be to have a complete,
+though perhaps not fully optimized, implementation for people to try
+by the end of the year, perhaps as part of the Go 1.18 betas.</p>
+
+
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

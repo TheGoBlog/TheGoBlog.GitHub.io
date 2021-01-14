@@ -6,6 +6,16 @@
 
 
 
+## [A Proposal for Adding Generics to Go](/generics-proposal)
+
+> Ian Lance Taylor on 12 January 2021
+
+> `go2` `proposals` `generics` 
+
+<br>
+
+
+
 ## [Go on ARM and Beyond](/ports)
 
 > Russ Cox on 17 December 2020

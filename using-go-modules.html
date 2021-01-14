@@ -421,7 +421,7 @@ Because of the major version change, we should expect that some APIs may have
 been removed, renamed, or otherwise changed in incompatible ways.
 Reading the docs, we can see that <code>Hello</code> has become <code>HelloV3</code>:</p>
 <pre><code>$ go doc rsc.io/quote/v3
-package quote // import &#34;rsc.io/quote&#34;
+package quote // import &#34;rsc.io/quote/v3&#34;
 
 Package quote collects pithy sayings.
 
@@ -432,9 +432,6 @@ func HelloV3() string
 func OptV3() string
 $
 </code></pre>
-<p>(There is also a
-<a href="https://github.com/golang/go/issues/30778" target="_blank" rel="noopener">known bug</a> in the output;
-the displayed import path has incorrectly dropped the <code>/v3</code>.)</p>
 <p>We can update our use of <code>quote.Hello()</code> in <code>hello.go</code> to use <code>quoteV3.HelloV3()</code>:</p>
 <pre><code>package hello
 
