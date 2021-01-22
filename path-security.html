@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/path-security" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>Command PATH security in Go | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>Command PATH security in Go</h2>
+    <p class="author">
+    Russ Cox<br/>
+    19 January 2021
+    </p>
+    
+  
+  
+    
+      
+  <h4 id="TOC_1."></h4>
+  <p>Today’s <a href="https://golang.google.cn/s/go-security-release-jan-2021" target="_blank" rel="noopener">Go security release</a>
+fixes an issue involving PATH lookups in untrusted directories
+that can lead to remote execution during the <code>go</code> <code>get</code> command.
+We expect people to have questions about what exactly this means
+and whether they might have issues in their own programs.
+This post details the bug, the fixes we have applied,
+how to decide whether your own programs are vulnerable to similar problems,
+and what you can do if they are.</p>
+
+
+    
+      
+  <h4 id="TOC_2.">Go command &amp; remote execution</h4>
+  <p>One of the design goals for the <code>go</code> command is that most commands – including
+<code>go</code> <code>build</code>, <code>go</code> <code>doc</code>, <code>go</code> <code>get</code>, <code>go</code> <code>install</code>, and <code>go</code> <code>list</code> – do not run
+arbitrary code downloaded from the internet.
+There are a few obvious exceptions:
+clearly <code>go</code> <code>run</code>, <code>go</code> <code>test</code>, and <code>go</code> <code>generate</code> <em>do</em> run arbitrary code – that&#39;s their job.
+But the others must not, for a variety of reasons including reproducible builds and security.
+So when <code>go</code> <code>get</code> can be tricked into executing arbitrary code, we consider that a security bug.</p>
+<p>If <code>go</code> <code>get</code> must not run arbitrary code, then unfortunately that means
+all the programs it invokes, such as compilers and version control systems, are also inside the security perimeter.
+For example, we&#39;ve had issues in the past in which clever use of obscure compiler features
+or remote execution bugs in version control systems became remote execution bugs in Go.
+(On that note, Go 1.16 aims to improve the situation by introducing a GOVCS setting
+that allows configuration of exactly which version control systems are allowed and when.)</p>
+<p>Today&#39;s bug, however, was entirely our fault, not a bug or obscure feature of <code>gcc</code> or <code>git</code>.
+The bug involves how Go and other programs find other executables,
+so we need to spend a little time looking at that before we can get to the details.</p>
+
+
+    
+      
+  <h4 id="TOC_3.">Commands and PATHs and Go</h4>
+  <p>All operating systems have a concept of an executable path
+(<code>$PATH</code> on Unix, <code>%PATH%</code> on Windows; for simplicity, we&#39;ll just use the term PATH),
+which is a list of directories.
+When you type a command into a shell prompt,
+the shell looks in each of the listed directories,
+in turn, for an executable with the name you typed.
+It runs the first one it finds, or it prints a message like “command not found.”</p>
+<p>On Unix, this idea first appeared in Seventh Edition Unix&#39;s Bourne shell (1979). The manual explained:</p>
+<blockquote>
+<p>The shell parameter <code>$PATH</code> defines the search path for the directory containing the command.
+Each alternative directory name is separated by a colon (<code>:</code>).
+The default path is <code>:/bin:/usr/bin</code>.
+If the command name contains a / then the search path is not used.
+Otherwise, each directory in the path is searched for an executable file.</p>
+</blockquote>
+<p>Note the default: the current directory (denoted here by an empty string,
+but let&#39;s call it “dot”)
+is listed ahead of <code>/bin</code> and <code>/usr/bin</code>.
+MS-DOS and then Windows chose to hard-code that behavior:
+on those systems, dot is always searched first,
+automatically, before considering any directories listed in <code>%PATH%</code>.</p>
+<p>As Grampp and Morris pointed out in their
+classic paper “<a href="https://people.engr.ncsu.edu/gjin2/Classes/246/Spring2019/Security.pdf" target="_blank" rel="noopener">UNIX Operating System Security</a>” (1984),
+placing dot ahead of system directories in the PATH
+means that if you <code>cd</code> into a directory and run <code>ls</code>,
+you might get a malicious copy from that directory
+instead of the system utility.
+And if you can trick a system administrator to run <code>ls</code> in your home directory
+while logged in as <code>root</code>, then you can run any code you want.
+Because of this problem and others like it,
+essentially all modern Unix distributions set a new user&#39;s default PATH
+to exclude dot.
+But Windows systems continue to search dot first, no matter what PATH says.</p>
+<p>For example, when you type the command</p>
+<pre><code>go version
+</code></pre>
+<p>on a typically-configured Unix,
+the shell runs a <code>go</code> executable from a system directory in your PATH.
+But when you type that command on Windows,
+<code>cmd.exe</code> checks dot first.
+If <code>.\go.exe</code> (or <code>.\go.bat</code> or many other choices) exists,
+<code>cmd.exe</code> runs that executable, not one from your PATH.</p>
+<p>For Go, PATH searches are handled by <a href="https://pkg.go.dev/os/exec#LookPath" target="_blank" rel="noopener"><code>exec.LookPath</code></a>,
+called automatically by
+<a href="https://pkg.go.dev/os/exec#Command" target="_blank" rel="noopener"><code>exec.Command</code></a>.
+And to fit well into the host system, Go&#39;s <code>exec.LookPath</code>
+implements the Unix rules on Unix and the Windows rules on Windows.
+For example, this command</p>
+<pre><code>out, err := exec.Command(&#34;go&#34;, &#34;version&#34;).CombinedOutput()
+</code></pre>
+<p>behaves the same as typing <code>go</code> <code>version</code> into the operating system shell.
+On Windows, it runs <code>.\go.exe</code> when that exists.</p>
+<p>(It is worth noting that Windows PowerShell changed this behavior,
+dropping the implicit search of dot, but <code>cmd.exe</code> and the
+Windows C library <a href="https://docs.microsoft.com/en-us/windows/win32/api/processenv/nf-processenv-searchpatha" target="_blank" rel="noopener"><code>SearchPath function</code></a>
+continue to behave as they always have.
+Go continues to match <code>cmd.exe</code>.)</p>
+
+
+    
+      
+  <h4 id="TOC_4.">The Bug</h4>
+  <p>When <code>go</code> <code>get</code> downloads and builds a package that contains
+<code>import</code> <code>&#34;C&#34;</code>, it runs a program called <code>cgo</code> to prepare the Go
+equivalent of the relevant C code.
+The <code>go</code> command runs <code>cgo</code> in the directory containing the package sources.
+Once <code>cgo</code> has generated its Go output files,
+the <code>go</code> command itself invokes the Go compiler
+on the generated Go files
+and the host C compiler (<code>gcc</code> or <code>clang</code>)
+to build any C sources included with the package.
+All this works well.
+But where does the <code>go</code> command find the host C compiler?
+It looks in the PATH, of course. Luckily, while it runs the C compiler
+in the package source directory, it does the PATH lookup
+from the original directory where the <code>go</code> command was invoked:</p>
+<pre><code>cmd := exec.Command(&#34;gcc&#34;, &#34;file.c&#34;)
+cmd.Dir = &#34;badpkg&#34;
+cmd.Run()
+</code></pre>
+<p>So even if <code>badpkg\gcc.exe</code> exists on a Windows system,
+this code snippet will not find it.
+The lookup that happens in <code>exec.Command</code> does not know
+about the <code>badpkg</code> directory.</p>
+<p>The <code>go</code> command uses similar code to invoke <code>cgo</code>,
+and in that case there&#39;s not even a path lookup,
+because <code>cgo</code> always comes from GOROOT:</p>
+<pre><code>cmd := exec.Command(GOROOT+&#34;/pkg/tool/&#34;+GOOS_GOARCH+&#34;/cgo&#34;, &#34;file.go&#34;)
+cmd.Dir = &#34;badpkg&#34;
+cmd.Run()
+</code></pre>
+<p>This is even safer than the previous snippet:
+there&#39;s no chance of running any bad <code>cgo.exe</code> that may exist.</p>
+<p>But it turns out that cgo itself also invokes the host C compiler,
+on some temporary files it creates, meaning it executes this code itself:</p>
+<pre><code>// running in cgo in badpkg dir
+cmd := exec.Command(&#34;gcc&#34;, &#34;tmpfile.c&#34;)
+cmd.Run()
+</code></pre>
+<p>Now, because cgo itself is running in <code>badpkg</code>,
+not in the directory where the <code>go</code> command was run,
+it will run <code>badpkg\gcc.exe</code> if that file exists,
+instead of finding the system <code>gcc</code>.</p>
+<p>So an attacker can create a malicious package that uses cgo and
+includes a <code>gcc.exe</code>, and then any Windows user
+that runs <code>go</code> <code>get</code> to download and build the attacker&#39;s package
+will run the attacker-supplied <code>gcc.exe</code> in preference to any
+<code>gcc</code> in the system path.</p>
+<p>Unix systems avoid the problem first because dot is typically not
+in the PATH and second because module unpacking does not
+set execute bits on the files it writes.
+But Unix users who have dot ahead of system directories
+in their PATH and are using GOPATH mode would be as susceptible
+as Windows users.
+(If that describes you, today is a good day to remove dot from your path
+and to start using Go modules.)</p>
+<p>(Thanks to <a href="https://twitter.com/ryotkak" target="_blank" rel="noopener">RyotaK</a> for <a href="https://golang.google.cn/security" target="_blank" rel="noopener">reporting this issue</a> to us.)</p>
+
+
+    
+      
+  <h4 id="TOC_5.">The Fixes</h4>
+  <p>It&#39;s obviously unacceptable for the <code>go</code> <code>get</code> command to download
+and run a malicious <code>gcc.exe</code>.
+But what&#39;s the actual mistake that allows that?
+And then what&#39;s the fix?</p>
+<p>One possible answer is that the mistake is that <code>cgo</code> does the search for the host C compiler
+in the untrusted source directory instead of in the directory where the <code>go</code> command
+was invoked.
+If that&#39;s the mistake,
+then the fix is to change the <code>go</code> command to pass <code>cgo</code> the full path to the
+host C compiler, so that <code>cgo</code> need not do a PATH lookup in
+to the untrusted directory.</p>
+<p>Another possible answer is that the mistake is to look in dot
+during PATH lookups, whether happens automatically on Windows
+or because of an explicit PATH entry on a Unix system.
+A user may want to look in dot to find a command they typed
+in a console or shell window,
+but it&#39;s unlikely they also want to look there to find a subprocess of a subprocess
+of a typed command.
+If that&#39;s the mistake,
+then the fix is to change the <code>cgo</code> command not to look in dot during a PATH lookup.</p>
+<p>We decided both were mistakes, so we applied both fixes.
+The <code>go</code> command now passes the full host C compiler path to <code>cgo</code>.
+On top of that, <code>cgo</code>, <code>go</code>, and every other command in the Go distribution
+now use a variant of the <code>os/exec</code> package that reports an error if it would
+have previously used an executable from dot.
+The packages <code>go/build</code> and <code>go/import</code> use the same policy for
+their invocation of the <code>go</code> command and other tools.
+This should shut the door on any similar security problems that may be lurking.</p>
+<p>Out of an abundance of caution, we also made a similar fix in
+commands like <code>goimports</code> and <code>gopls</code>,
+as well as the libraries
+<code>golang.org/x/tools/go/analysis</code>
+and
+<code>golang.org/x/tools/go/packages</code>,
+which invoke the <code>go</code> command as a subprocess.
+If you run these programs in untrusted directories –
+for example, if you <code>git</code> <code>checkout</code> untrusted repositories
+and <code>cd</code> into them and then run programs like these,
+and you use Windows or use Unix with dot in your PATH –
+then you should update your copies of these commands too.
+If the only untrusted directories on your computer
+are the ones in the module cache managed by <code>go</code> <code>get</code>,
+then you only need the new Go release.</p>
+<p>After updating to the new Go release, you can update to the latest <code>gopls</code> by using:</p>
+<pre><code>GO111MODULE=on \
+go get golang.org/x/tools/gopls@v0.6.4
+</code></pre>
+<p>and you can update to the latest <code>goimports</code> or other tools by using:</p>
+<pre><code>GO111MODULE=on \
+go get golang.org/x/tools/cmd/goimports@v0.1.0
+</code></pre>
+<p>You can update programs that depend on <code>golang.org/x/tools/go/packages</code>,
+even before their authors do,
+by adding an explicit upgrade of the dependency during <code>go</code> <code>get</code>:</p>
+<pre><code>GO111MODULE=on \
+go get example.com/cmd/thecmd golang.org/x/tools@v0.1.0
+</code></pre>
+<p>For programs that use <code>go/build</code>, it is sufficient for you to recompile them
+using the updated Go release.</p>
+<p>Again, you only need to update these other programs if you
+are a Windows user or a Unix user with dot in the PATH
+<em>and</em> you run these programs in source directories you do not trust
+that may contain malicious programs.</p>
+
+
+    
+      
+  <h4 id="TOC_6.">Are your own programs affected?</h4>
+  <p>If you use <code>exec.LookPath</code> or <code>exec.Command</code> in your own programs,
+you only need to be concerned if you (or your users) run your program
+in a directory with untrusted contents.
+If so, then a subprocess could be started using an executable
+from dot instead of from a system directory.
+(Again, using an executable from dot happens always on Windows
+and only with uncommon PATH settings on Unix.)</p>
+<p>If you are concerned, then we&#39;ve published the more restricted variant
+of <code>os/exec</code> as <a href="https://pkg.go.dev/golang.org/x/sys/execabs" target="_blank" rel="noopener"><code>golang.org/x/sys/execabs</code></a>.
+You can use it in your program by simply replacing</p>
+<pre><code>import &#34;os/exec&#34;
+</code></pre>
+<p>with</p>
+<pre><code>import exec &#34;golang.org/x/sys/execabs&#34;
+</code></pre>
+<p>and recompiling.</p>
+
+
+    
+      
+  <h4 id="TOC_7.">Securing os/exec by default</h4>
+  <p>We have been discussing on
+<a href="https://github.com/golang/go/issues/38736" target="_blank" rel="noopener">github.com/golang/go/issues/38736</a>
+whether the Windows behavior of always preferring the current directory
+in PATH lookups (during <code>exec.Command</code> and <code>exec.LookPath</code>)
+should be changed.
+The argument in favor of the change is that it closes the kinds of
+security problems discussed in this blog post.
+A supporting argument is that although the Windows <code>SearchPath</code> API
+and <code>cmd.exe</code> still always search the current directory,
+PowerShell, the successor to <code>cmd.exe</code>, does not,
+an apparent recognition that the original behavior was a mistake.
+The argument against the change is that it could break existing Windows
+programs that intend to find programs in the current directory.
+We don’t know how many such programs exist,
+but they would get unexplained failures if the PATH lookups
+started skipping the current directory entirely.</p>
+<p>The approach we have taken in <code>golang.org/x/sys/execabs</code> may
+be a reasonable middle ground.
+It finds the result of the old PATH lookup and then returns a
+clear error rather than use a result from the current directory.
+The error returned from <code>exec.Command(&#34;prog&#34;)</code> when <code>prog.exe</code> exists looks like:</p>
+<pre><code>prog resolves to executable in current directory (.\prog.exe)
+</code></pre>
+<p>For programs that do change behavior, this error should make very clear what has happened.
+Programs that intend to run a program from the current directory can use
+<code>exec.Command(&#34;./prog&#34;)</code> instead (that syntax works on all systems, even Windows).</p>
+<p>We have filed this idea as a new proposal, <a href="https://github.com/golang/go/issues/43724" target="_blank" rel="noopener">github.com/golang/go/issues/43724</a>.</p>
+
+
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

@@ -6,6 +6,16 @@
 
 
 
+## [Command PATH security in Go](/path-security)
+
+> Russ Cox on 19 January 2021
+
+> 
+
+<br>
+
+
+
 ## [A Proposal for Adding Generics to Go](/generics-proposal)
 
 > Ian Lance Taylor on 12 January 2021
