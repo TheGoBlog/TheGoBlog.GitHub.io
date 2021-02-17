@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href="https://thegoblog.github.io/gopls-vscode-go" />
+    <link rel="apple-touch-icon" href="/go.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>Gopls on by default in the VS Code Go extension | The Go Blog</title>
+    
+  </head>
+
+  <header>
+    <div class="container-md px-3 my-5 markdown-body"></div>
+  </header>
+
+  <body>
+    <div class="container-md px-3 my-5 markdown-body">
+      <h1><a href="/">The Go Blog</a></h1>
+      
+    <h2>Gopls on by default in the VS Code Go extension</h2>
+    <p class="author">
+    Go tools team<br/>
+    1 February 2021
+    </p>
+    
+  
+  
+    
+      
+  <h4 id="TOC_1."></h4>
+  <p>We&#39;re happy to announce that the VS Code Go extension now enables the <a href="https://github.com/golang/tools/blob/master/gopls/README.md" target="_blank" rel="noopener">gopls
+language server</a>
+by default, to deliver more robust IDE features and better support for Go
+modules.</p>
+
+<div class="image">
+  <img src="gopls/features.gif" width="635" alt=""/>
+</div>
+<p><em>(<code>gopls</code> provides IDE features, such as as intelligent autocompletion, signature help, refactoring, and workspace symbol search.)</em></p>
+<p>When <a href="using-go-modules" target="_blank" rel="noopener">Go modules</a> were
+released two years ago, they completely changed the landscape of Go developer
+tooling. Tools like <code>goimports</code> and <code>godef</code> previously depended on the fact
+that code was stored in your <code>$GOPATH</code>. When the Go team began rewriting these
+tools to work with modules, we immediately realized that we needed a more
+systematic approach to bridge the gap.</p>
+<p>As a result, we began working on a single Go
+<a href="https://microsoft.github.io/language-server-protocol/" target="_blank" rel="noopener">language server</a>,
+<code>gopls</code>, which provides IDE features, such as autocompletion, formatting, and
+diagnostics to any compatible editor frontend. This persistent and unified
+server is a <a href="https://www.youtube.com/watch?v=EFJfdWzBHwE&amp;t=1s" target="_blank" rel="noopener">fundamental
+shift</a> from the earlier
+collections of command-line tools.</p>
+<p>In addition to working on <code>gopls</code>, we sought other ways of creating a stable
+ecosystem of editor tooling. Last year, the Go team took responsibility for the
+<a href="https://TheGoBlog.GitHub.io/vscode-go" target="_blank" rel="noopener">Go extension for VS Code</a>. As part of this
+work, we smoothed the extension’s integration with the language server—automating
+<code>gopls</code> updates, rearranging and clarifying <code>gopls</code> settings, improving the
+troubleshooting workflow, and soliciting feedback through a survey. We’ve also
+continued to foster a community of active users and contributors who have
+helped us improve the stability, performance, and user experience of the Go
+extension.</p>
+
+
+    
+      
+  <h4 id="TOC_2.">Announcement</h4>
+  <p>January 28 marked a major milestone in both the <code>gopls</code> and VS Code Go
+journeys, as <code>gopls</code> is now enabled by default in the Go extension for VS Code.</p>
+<p>In advance of this switch we spent a long time iterating on the design, feature
+set, and user experience of <code>gopls</code>, focusing on improving performance and
+stability. For more than a year, <code>gopls</code> has been the default in most plugins for
+Vim, Emacs, and other editors. We’ve had 24 <code>gopls</code> releases, and we’re
+incredibly grateful to our users for consistently providing feedback and
+reporting issues on each and every one.</p>
+<p>We’ve also dedicated time to smoothing the new user experience. We hope that VS
+Code Go with <code>gopls</code> will be intuitive with clear error messages, but if you have
+a question or need to adjust some configuration, you’ll be able to find answers
+in our <a href="https://github.com/golang/vscode-go/blob/master/README.md" target="_blank" rel="noopener">updated documentation</a>.
+We have also recorded <a href="https://www.youtube.com/watch?v=1MXIGYrMk80" target="_blank" rel="noopener">a screencast</a>
+to help you get started, as well as
+<a href="https://github.com/golang/vscode-go/blob/master/docs/features.md" target="_blank" rel="noopener">animations</a>
+to show off some hard-to-find features.</p>
+<p>Gopls is the best way of working with Go code, especially with Go modules.
+With the upcoming arrival of Go 1.16, in which modules are enabled by default,
+VS Code Go users will have the best possible experience out-of-the-box.</p>
+<p>Still, this switch does not mean that <code>gopls</code> is complete. We will continue
+working on bug fixes, new features, and general stability. Our next area of
+focus will be improving the user experience when <a href="https://github.com/golang/tools/blob/master/gopls/doc/workspace.md" target="_blank" rel="noopener">working with multiple
+modules</a>.
+Feedback from our larger user base will help inform our next steps.</p>
+
+
+    
+      
+  <h4 id="TOC_3.">So, what should you do?</h4>
+  <p>If you use VS Code, you don’t need to do anything.
+When you get the next VS Code Go update, <code>gopls</code> will be enabled automatically.</p>
+<p>If you use another editor, you are likely using <code>gopls</code> already. If not, see
+<a href="https://github.com/golang/tools/blob/master/gopls/README.md" target="_blank" rel="noopener">the <code>gopls</code> user guide</a>
+to learn how to enable <code>gopls</code> in your preferred editor. The Language Server
+Protocol ensures that <code>gopls</code> will continue to offer the same features to every
+editor.</p>
+<p>If <code>gopls</code> is not working for you, please see our <a href="https://github.com/golang/vscode-go/blob/master/docs/troubleshooting.md" target="_blank" rel="noopener">detailed troubleshooting
+guide</a>
+and file an issue. If you need to, you can always <a href="https://github.com/golang/vscode-go/blob/master/docs/settings.md#gouselanguageserver" target="_blank" rel="noopener">disable <code>gopls</code> in VS
+Code</a>.</p>
+
+
+    
+      
+  <h4 id="TOC_4.">Thank you</h4>
+  <p>To our existing users, thank you for bearing with us as we rewrote our caching
+layer for the third time. To our new users, we look forward to hearing your
+experience reports and feedback.</p>
+<p>Finally, no discussion of Go tooling is complete without mentioning the
+valuable contributions of the Go tools community. Thank you for the lengthy
+discussions, detailed bug reports, integration tests, and most importantly,
+thank you for the fantastic contributions. The most exciting <code>gopls</code> features
+come from our passionate open-source contributors, and we are appreciative of
+your hard work and dedication.</p>
+
+
+    
+      
+  <h4 id="TOC_5.">Learn more</h4>
+  <p>Watch <a href="https://www.youtube.com/watch?v=1MXIGYrMk80" target="_blank" rel="noopener">the screencast</a> for a
+walk-through of how to get started with <code>gopls</code> and VS Code Go, and see the
+<a href="https://github.com/golang/vscode-go/blob/master/README.md" target="_blank" rel="noopener">VS Code Go README</a>
+for additional information.</p>
+<p>If you’d like to read about <code>gopls</code> in more detail, see the
+<a href="https://github.com/golang/tools/blob/master/gopls/README.md" target="_blank" rel="noopener"><code>gopls</code> README</a>.</p>
+
+
+    
+  
+
+  
+    </div>
+  </body>
+
+  <footer>
+    <div class="container-md px-3 my-5 markdown-body">
+      <p><br /></p>
+    </div>
+  </footer>
+</html>

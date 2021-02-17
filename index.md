@@ -6,6 +6,26 @@
 
 
 
+## [Go 1.16 is released](/go1.16)
+
+> Matt Pearring and Dmitri Shuralyov on 16 February 2021
+
+> 
+
+<br>
+
+
+
+## [Gopls on by default in the VS Code Go extension](/gopls-vscode-go)
+
+> Go tools team on 1 February 2021
+
+> `tools` `gopls` 
+
+<br>
+
+
+
 ## [Command PATH security in Go](/path-security)
 
 > Russ Cox on 19 January 2021

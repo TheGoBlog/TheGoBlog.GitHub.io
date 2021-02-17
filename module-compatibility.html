@@ -39,6 +39,8 @@
 <li>Part 4 — <a href="/v2-go-modules" target="_blank" rel="noopener">Go Modules: v2 and Beyond</a></li>
 <li><strong>Part 5 — Keeping Your Modules Compatible</strong> (this post)</li>
 </ul>
+<p><strong>Note:</strong> For documentation on developing modules, see
+<a href="https://golang.google.cn/doc/modules/developing" target="_blank" rel="noopener">Developing and publishing modules</a>.</p>
 <p>Your modules will evolve over time as you add new features, change behaviors, and reconsider parts of the module&#39;s public surface. As discussed in <a href="/v2-go-modules" target="_blank" rel="noopener">Go Modules: v2 and Beyond</a>, breaking changes to a v1+ module must happen as part of a major version bump (or by adopting a new module path).</p>
 <p>However, releasing a new major version is hard on your users. They have to find the new version, learn a new API, and change their code. And some users may never update, meaning you have to maintain two versions for your code forever. So it is usually better to change your existing package in a compatible way.</p>
 <p>In this post, we&#39;ll explore some techniques for introducing non-breaking changes. The common theme is: add, don’t change or remove. We’ll also talk about how to design your API for compatibility from the outset.</p>
