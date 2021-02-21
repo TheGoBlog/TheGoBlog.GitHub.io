@@ -6,6 +6,16 @@
 
 
 
+## [New module changes in Go 1.16](/go116-module-changes)
+
+> Jay Conrod on 18 February 2021
+
+> `modules` `versioning` 
+
+<br>
+
+
+
 ## [Go 1.16 is released](/go1.16)
 
 > Matt Pearring and Dmitri Shuralyov on 16 February 2021
